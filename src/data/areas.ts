@@ -12,7 +12,7 @@ export interface AreaDef {
 
 export const AREAS: AreaDef[] = [
   {
-    id: 'area_sunset_plains', name: 'Pianure del Tramonto', steps: 6,
+    id: 'area_sunset_plains', name: 'Porto delle Gemme', steps: 6,
     nodeWeights: { battle: 40, event: 16, chest: 14, rest: 10, recruit: 12, elite: 10 },
     groups: {
       early: [['en_jelly'], ['en_bat'], ['en_jelly', 'en_bat']],
@@ -26,9 +26,9 @@ export const AREAS: AreaDef[] = [
 export const NODE_LABELS: Record<NodeType, { title: string; hint: string }> = {
   battle: { title: 'Battaglia', hint: 'Nemici in vista' },
   elite: { title: 'Élite', hint: 'Duro, ma premia bene' },
-  chest: { title: 'Forziere', hint: 'Un tesoro sul sentiero' },
+  chest: { title: 'Forziere', hint: 'Un tesoro sul molo' },
   rest: { title: 'Fuoco', hint: 'Riposa un attimo' },
   recruit: { title: 'Incontro', hint: 'Qualcuno chiede aiuto' },
   event: { title: 'Mistero', hint: 'Chissà cosa succede...' },
-  boss: { title: 'BOSS', hint: 'Il signore dell\'area' },
+  boss: { title: 'BOSS', hint: 'Il capitano del porto' },
 };

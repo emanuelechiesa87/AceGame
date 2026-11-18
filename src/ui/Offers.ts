@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { COLORS } from '../app/config';
-import { iconKey } from '../art/registry';
+import { iconKey } from '../pixel/keys';
 import { ARTIFACT_BY_ID } from '../data/artifacts';
 import { COMPANION_BY_ID } from '../data/companions';
 import { FRUIT_BY_ID } from '../data/fruits';
@@ -24,7 +24,7 @@ export function modal(scene: Phaser.Scene): Phaser.GameObjects.Container {
 export function fruitCard(scene: Phaser.Scene, parent: Phaser.GameObjects.Container, id: string, x: number, y: number, w: number, h: number): Phaser.GameObjects.Zone {
   const f = FRUIT_BY_ID.get(id)!;
   parent.add(panel(scene, x - w / 2, y - h / 2, w, h, 0x2f2860));
-  const g = scene.add.graphics().lineStyle(5, RARITY_COLOR[f.rarity], 1).strokeRoundedRect(x - w / 2 + 6, y - h / 2 + 6, w - 12, h - 12, 22);
+  const g = scene.add.graphics().lineStyle(6, RARITY_COLOR[f.rarity], 1).strokeRect(x - w / 2 + 14, y - h / 2 + 14, w - 28, h - 28);
   parent.add([
     g,
     icon(scene, x - w / 2 + 70, y, iconKey('fruit', id), 104),
@@ -57,7 +57,7 @@ export function offerFruit(scene: Phaser.Scene, fruitId: string, onDone: (taken:
 
   const m = modal(scene);
   m.add(addTitle(scene, 360, 120, 'POTERI AL MASSIMO!', 56).setAngle(-2));
-  m.add(addBody(scene, 360, 186, 'Puoi tenere solo 3 frutti. Quale sostituisci?', 26, '#e9dcff'));
+  m.add(addBody(scene, 360, 186, 'Puoi tenere solo 3 frutti. Quale sostituisci?', 26, '#fbe9c8'));
   const zNew = fruitCard(scene, m, fruitId, 360, 330, 640, 190);
   zNew.disableInteractive();
   m.add(addTitle(scene, 360, 450, 'SOSTITUISCI:', 34).setColor('#ff9ab0'));
@@ -82,7 +82,7 @@ export function offerCompanion(scene: Phaser.Scene, companionId: string, onDone:
   if (res !== 'needsReplace') { onDone(res === 'added'); return; }
   const m = modal(scene);
   m.add(addTitle(scene, 360, 200, 'SQUADRA AL COMPLETO', 52));
-  m.add(addBody(scene, 360, 270, `Chi lascia il posto a ${COMPANION_BY_ID.get(companionId)!.name}?`, 28, '#e9dcff'));
+  m.add(addBody(scene, 360, 270, `Chi lascia il posto a ${COMPANION_BY_ID.get(companionId)!.name}?`, 28, '#fbe9c8'));
   ctl.run.companions.forEach((c, i) => {
     m.add(new Button(scene, 360, 420 + i * 140, COMPANION_BY_ID.get(c.id)!.name.toUpperCase(), () => { ctl.recruit(companionId, c.id); m.destroy(); onDone(true); }, { variant: 'secondary', width: 420 }));
   });

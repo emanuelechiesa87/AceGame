@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { COLORS, FONT_TITLE, RENDER_SCALE } from '../app/config';
+import { steppedRect } from './widgets';
 
 export interface ButtonOptions {
   width?: number;
@@ -11,13 +12,12 @@ export interface ButtonOptions {
   cooldownMs?: number;
 }
 
-const SLANT = 18;
-const SHADOW = 9;
+const SHADOW = 10;
 
 /**
- * Pulsante in stile anime: forma inclinata, contorno spesso, ombra "a
- * rilievo" che sparisce alla pressione. Area di tocco ampia e blocco dei tap
- * ripetuti, così un doppio tocco accidentale non attiva due azioni.
+ * Pulsante pixel art: tavola con angoli "a gradino", bordo scuro, luce in
+ * alto e ombra piena che sparisce alla pressione. Area di tocco ampia e
+ * blocco dei tap ripetuti contro i doppi tocchi accidentali.
  */
 export class Button extends Phaser.GameObjects.Container {
   private readonly bg: Phaser.GameObjects.Graphics;
@@ -37,19 +37,19 @@ export class Button extends Phaser.GameObjects.Container {
     const w = opts.width ?? 520;
     const h = opts.height ?? 116;
     this.enabledState = opts.enabled ?? true;
-    const size = opts.fontSize ?? 56;
+    const size = Math.round((opts.fontSize ?? 56) * 0.82);
 
     this.bg = scene.add.graphics();
     this.label = scene.add
-      .text(0, -4, text, {
-        fontFamily: FONT_TITLE, fontSize: `${size}px`, color: COLORS.text,
-        stroke: COLORS.inkHex, strokeThickness: Math.round(size / 7),
+      .text(0, -3, text, {
+        fontFamily: FONT_TITLE, fontSize: `${size}px`, fontStyle: '700', color: COLORS.text,
+        stroke: COLORS.inkHex, strokeThickness: Math.max(4, Math.round(size / 6)),
       })
       .setPadding(8)
       .setResolution(RENDER_SCALE)
       .setOrigin(0.5);
     this.add([this.bg, this.label]);
-    this.setSize(w + SLANT * 2, h + SHADOW);
+    this.setSize(w, h + SHADOW);
     this.draw(false);
 
     this.setInteractive({ useHandCursor: true })
@@ -77,34 +77,30 @@ export class Button extends Phaser.GameObjects.Container {
     return this.enabledState && !this.locked;
   }
 
-  private colors(): { fill: number; light: number; text: string } {
-    if (!this.enabledState) return { fill: 0x3a3366, light: 0x463e78, text: '#8f86b8' };
+  private colors(): { fill: number; light: number; dark: number; text: string } {
+    if (!this.enabledState) return { fill: 0x6e6258, light: 0x857a70, dark: 0x564c44, text: '#c9bba8' };
     switch (this.opts.variant ?? 'primary') {
-      case 'secondary': return { fill: 0x5b4bd6, light: 0x7a6cf0, text: COLORS.text };
-      case 'danger': return { fill: COLORS.hot, light: 0xff8a93, text: COLORS.text };
-      default: return { fill: COLORS.accent, light: 0xffe27a, text: COLORS.text };
+      case 'secondary': return { fill: 0x8a5232, light: 0xa9693c, dark: 0x6b3a1e, text: COLORS.text };
+      case 'danger': return { fill: 0xd6334a, light: 0xff6b7a, dark: 0xa8211e, text: COLORS.text };
+      default: return { fill: COLORS.accent, light: 0xffe27a, dark: COLORS.accentDark, text: COLORS.text };
     }
   }
 
   private draw(pressed: boolean): void {
-    const w = (this.opts.width ?? 520) / 2;
-    const h = (this.opts.height ?? 116) / 2;
-    const { fill, light, text } = this.colors();
-    const dy = pressed ? SHADOW - 2 : 0;
-    const shape = (oy: number) => [
-      new Phaser.Geom.Point(-w + SLANT, -h + oy), new Phaser.Geom.Point(w + SLANT, -h + oy),
-      new Phaser.Geom.Point(w - SLANT, h + oy), new Phaser.Geom.Point(-w - SLANT, h + oy),
-    ];
+    const w = this.opts.width ?? 520;
+    const h = this.opts.height ?? 116;
+    const { fill, light, dark, text } = this.colors();
+    const oy = pressed ? SHADOW - 3 : 0;
+    const x = -w / 2, y = -h / 2 + oy;
     const g = this.bg.clear();
-    if (!pressed) g.fillStyle(COLORS.ink, 1).fillPoints(shape(SHADOW), true);
-    g.fillStyle(fill, 1).fillPoints(shape(dy), true);
-    // banda di luce superiore: effetto "cel shading" sul pulsante
-    g.fillStyle(light, 1).fillPoints([
-      new Phaser.Geom.Point(-w + SLANT + 6, -h + dy + 6), new Phaser.Geom.Point(w + SLANT - 6, -h + dy + 6),
-      new Phaser.Geom.Point(w + SLANT - 10, -h + dy + 22), new Phaser.Geom.Point(-w + SLANT + 2, -h + dy + 22),
-    ], true);
-    g.lineStyle(6, COLORS.ink, 1).strokePoints(shape(dy), true, true);
-    this.label.setY(-4 + dy).setColor(text);
+    if (!pressed) steppedRect(g, x + 4, -h / 2 + SHADOW, w, h, COLORS.ink, 8);
+    steppedRect(g, x, y, w, h, COLORS.ink, 8);
+    steppedRect(g, x + 4, y + 4, w - 8, h - 8, fill, 6);
+    g.fillStyle(light, 1).fillRect(x + 12, y + 8, w - 24, 8);
+    g.fillStyle(dark, 1).fillRect(x + 12, y + h - 16, w - 24, 8);
+    // chiodi agli angoli (pulsanti grandi)
+    if (w >= 260) [[x + 14, y + h / 2 - 4], [x + w - 22, y + h / 2 - 4]].forEach(([nx, ny]) => g.fillStyle(COLORS.ink, 0.45).fillRect(nx, ny, 8, 8));
+    this.label.setY(-3 + oy).setColor(text);
     this.label.setAlpha(this.enabledState ? 1 : 0.8);
   }
 }

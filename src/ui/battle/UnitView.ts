@@ -1,12 +1,12 @@
 import Phaser from 'phaser';
 import { TEXTURE_SCALE } from '../../app/config';
-import { CREATURE_SCALE, CREATURES } from '../../art/creatures';
-import { creatureKey, iconKey } from '../../art/registry';
+import { CREATURE_SCALE, CREATURES } from '../../pixel/creatures';
+import { creatureKey, iconKey } from '../../pixel/keys';
 import type { Unit } from '../../systems/combat/types';
 import type { Intent } from '../../types/content';
 import { HeroRig } from '../HeroRig';
 import { addBody } from '../text';
-import { HpBar, icon } from '../widgets';
+import { HpBar, icon, steppedRect } from '../widgets';
 
 /** Rappresentazione grafica di un'unità in battaglia. */
 export class UnitView {
@@ -21,10 +21,10 @@ export class UnitView {
   constructor(private readonly scene: Phaser.Scene, readonly unit: Unit, x: number, y: number, heroId?: 'm' | 'f') {
     this.root = scene.add.container(x, y);
     if (unit.kind === 'hero') {
-      const rig = new HeroRig(scene, 0, 0, heroId!, 0.72).idle();
+      const rig = new HeroRig(scene, 0, 0, heroId!, 0.82).idle();
       scene.children.remove(rig);
       this.sprite = rig;
-      this.height = 250;
+      this.height = 270;
     } else {
       const s = CREATURE_SCALE[unit.defId] ?? 0.8;
       const img = scene.add.image(0, 0, creatureKey(unit.defId)).setOrigin(0.5, 1).setScale(s / TEXTURE_SCALE);
@@ -32,7 +32,7 @@ export class UnitView {
       this.height = CREATURES[unit.defId].h * s;
       this.idleTween = scene.tweens.add({ targets: img, scaleY: (s / TEXTURE_SCALE) * 0.94, scaleX: (s / TEXTURE_SCALE) * 1.04, duration: 520 + (unit.order % 3) * 90, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     }
-    const shadow = scene.add.ellipse(0, 4, 110, 20, 0x1f1633, 0.35);
+    const shadow = scene.add.rectangle(0, 4, 104, 14, 0x1f1633, 0.35);
     this.root.add([shadow, this.sprite]);
     this.hp = new HpBar(scene, 0, 16, 130, 20);
     scene.children.remove(this.hp);
@@ -65,8 +65,10 @@ export class UnitView {
     if (!intent || this.unit.hp <= 0) return;
     const c = this.scene.add.container(0, -this.height - 62);
     const bubble = this.scene.add.graphics();
-    bubble.fillStyle(0x1f1633, 0.9).fillRoundedRect(-60, -24, 120, 48, 22);
-    c.add([bubble, icon(this.scene, -36, 0, iconKey('intent', intent), 40), addBody(this.scene, 14, 0, label, 16, '#fff7e6').setWordWrapWidth(80)]);
+    steppedRect(bubble, -64, -28, 128, 56, 0x1f1633, 6);
+    steppedRect(bubble, -60, -24, 120, 48, 0xf1d7a8, 4);
+    bubble.fillStyle(0x1f1633, 1).fillRect(-8, 28, 16, 8).fillStyle(0xf1d7a8, 1).fillRect(-4, 24, 8, 8);
+    c.add([bubble, icon(this.scene, -36, 0, iconKey('intent', intent), 40), addBody(this.scene, 14, 0, label, 16, '#4a2a14').setWordWrapWidth(80)]);
     this.root.add(c);
     this.intentIcon = c;
     this.scene.tweens.add({ targets: c, y: c.y - 6, duration: 600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
@@ -93,6 +95,7 @@ export class UnitView {
 
   async lunge(towardX: number, speed: number): Promise<void> {
     const dx = Math.sign(towardX - this.root.x) * 50;
+    if (this.sprite instanceof HeroRig) this.sprite.slash(speed);
     await new Promise<void>((r) => this.scene.tweens.add({ targets: this.root, x: this.root.x + dx, duration: 110 / speed, yoyo: true, ease: 'Quad.easeOut', onComplete: () => r() }));
   }
 

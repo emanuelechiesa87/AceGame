@@ -1,6 +1,6 @@
 import { COLORS, GAME_WIDTH, TEXTURE_SCALE } from '../app/config';
-import { CREATURE_SCALE } from '../art/creatures';
-import { creatureKey, iconKey } from '../art/registry';
+import { CREATURE_SCALE } from '../pixel/creatures';
+import { creatureKey, iconKey } from '../pixel/keys';
 import { ARTIFACTS } from '../data/artifacts';
 import { COMPANIONS } from '../data/companions';
 import { FRUITS } from '../data/fruits';
@@ -35,8 +35,8 @@ export class CollectionScene extends BaseScene {
       const x = 105 + (i % 4) * 170, y = 260 + Math.floor(i / 4) * 105;
       const known = s.discoveredFruitIds.includes(f.id);
       const ic = icon(this, x, y - 8, iconKey('fruit', f.id), 72);
-      if (!known) ic.setTintFill(0x2a2352);
-      addBody(this, x, y + 38, known ? f.name : '???', 17, known ? '#fff7e6' : '#8f86b8');
+      if (!known) ic.setTintFill(0x3a2414);
+      addBody(this, x, y + 38, known ? f.name : '???', 17, known ? '#fff7e6' : '#a89580');
     });
 
     const ar = ARTIFACTS.filter((a) => s.discoveredArtifactIds.includes(a.id));
@@ -45,8 +45,8 @@ export class CollectionScene extends BaseScene {
       const x = 80 + i * 140, y = 760;
       const known = s.discoveredArtifactIds.includes(a.id);
       const ic = icon(this, x, y, iconKey('artifact', a.id), 84);
-      if (!known) ic.setTintFill(0x2a2352);
-      addBody(this, x, y + 64, known ? a.name : '???', 17, known ? '#fff7e6' : '#8f86b8').setWordWrapWidth(130);
+      if (!known) ic.setTintFill(0x3a2414);
+      addBody(this, x, y + 64, known ? a.name : '???', 17, known ? '#fff7e6' : '#a89580').setWordWrapWidth(130);
     });
 
     const cm = COMPANIONS.filter((c) => s.metCompanionIds.includes(c.id));
@@ -54,9 +54,9 @@ export class CollectionScene extends BaseScene {
     COMPANIONS.forEach((c, i) => {
       const x = 140 + i * 220, y = 1060;
       const known = s.metCompanionIds.includes(c.id);
-      const img = this.add.image(x, y, creatureKey(c.id)).setOrigin(0.5, 1).setScale((CREATURE_SCALE[c.id] * 0.7) / TEXTURE_SCALE);
-      if (!known) img.setTintFill(0x2a2352);
-      addBody(this, x, y + 22, known ? c.name : '???', 22, known ? '#fff7e6' : '#8f86b8');
+      const img = this.add.image(x, y, creatureKey(c.id)).setOrigin(0.5, 1).setScale((CREATURE_SCALE[c.id] * 0.9) / TEXTURE_SCALE);
+      if (!known) img.setTintFill(0x3a2414);
+      addBody(this, x, y + 22, known ? c.name : '???', 22, known ? '#fff7e6' : '#a89580');
     });
 
     new Button(this, GAME_WIDTH / 2, 1190, 'INDIETRO', () => this.goTo('Menu'), { variant: 'secondary', width: 320, height: 88, fontSize: 40 });

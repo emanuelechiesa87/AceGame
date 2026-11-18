@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { COLORS, GAME_WIDTH } from '../app/config';
-import { iconKey } from '../art/registry';
+import { iconKey } from '../pixel/keys';
 import { NODE_LABELS, type NodeType } from '../data/areas';
 import { BALANCE } from '../data/balance';
 import { GameSession } from '../state/GameSession';
@@ -9,7 +9,7 @@ import { Button } from '../ui/Button';
 import { HeroRig } from '../ui/HeroRig';
 import { mapProgress, RunHud } from '../ui/RunHud';
 import { addBody, addTitle } from '../ui/text';
-import { icon, panel } from '../ui/widgets';
+import { icon, panel, steppedRect } from '../ui/widgets';
 import { BaseScene } from './BaseScene';
 import { enterNode } from './flow';
 
@@ -87,10 +87,13 @@ export class ExplorationScene extends BaseScene {
     const danger = node === 'boss' || node === 'elite';
     const c = this.add.container(x, y);
     const g = this.add.graphics();
-    g.fillStyle(COLORS.ink, 1).fillRoundedRect(-w / 2 + 6, -120 + 8, w, 240, 24);
-    g.fillStyle(danger ? 0x7a1f3a : 0x3d3380, 1).fillRoundedRect(-w / 2, -120, w, 240, 24);
-    g.lineStyle(5, danger ? COLORS.hot : COLORS.accent, 1).strokeRoundedRect(-w / 2, -120, w, 240, 24);
-    c.add([g, icon(this, 0, -40, iconKey('node', node), 110), addTitle(this, 0, 50, L.title.toUpperCase(), 40), addBody(this, 0, 92, L.hint, 21, '#e9dcff')]);
+    steppedRect(g, -w / 2 + 6, -120 + 10, w, 240, COLORS.ink, 10);
+    steppedRect(g, -w / 2, -120, w, 240, COLORS.ink, 10);
+    steppedRect(g, -w / 2 + 5, -115, w - 10, 230, danger ? COLORS.hot : COLORS.accent, 8);
+    g.fillStyle(COLORS.ink, 1).fillRect(-w / 2 + 14, -106, w - 28, 212);
+    g.fillStyle(danger ? 0x7a1f3a : 0x7a4528, 1).fillRect(-w / 2 + 18, -102, w - 36, 204);
+    g.fillStyle(0xffffff, 0.1).fillRect(-w / 2 + 18, -102, w - 36, 6);
+    c.add([g, icon(this, 0, -40, iconKey('node', node), 110), addTitle(this, 0, 50, L.title.toUpperCase(), 40), addBody(this, 0, 92, L.hint, 21, '#fbe9c8')]);
     this.tweens.add({ targets: c, scale: { from: 0.6, to: 1 }, duration: 240, ease: 'Back.easeOut' });
     c.setSize(w, 240).setInteractive({ useHandCursor: true }).on('pointerup', () => {
       this.tweens.add({ targets: c, scale: 1.08, duration: 90, yoyo: true });

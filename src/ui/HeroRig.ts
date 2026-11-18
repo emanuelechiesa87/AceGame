@@ -1,14 +1,9 @@
 import Phaser from 'phaser';
-import { TEXTURE_SCALE } from '../app/config';
-import { PIVOTS, type Eyes, type HeroId, type Mouth } from '../art/heroes';
-import { heroKey } from '../art/registry';
-import { CANVAS } from '../art/svg';
-
-/** Punto del disegno che coincide con l'origine del rig: i piedi. */
-const FEET = { x: 120, y: 334 };
+import { HERO_PX, PARTS, type PartSpec } from '../pixel/heroes';
+import { heroKey, type Eyes, type HeroId, type Mouth } from '../pixel/keys';
 
 /**
- * Personaggio "a pezzi": ogni parte ruota attorno al proprio perno, così con
+ * Personaggio "a blocchi": ogni parte (testa cubica, busto, braccia, gambe) ruota attorno al proprio perno, così con
  * poche texture si ottengono respiro, camminata, battito di ciglia e reazioni.
  * Le animazioni sono solo cosmetiche: usano il random di Phaser, non l'Rng di gioco.
  */
@@ -29,22 +24,22 @@ export class HeroRig extends Phaser.GameObjects.Container {
     this.baseEyes = 'open';
     this.baseMouth = heroId === 'm' ? 'grin' : 'smirk';
 
-    const img = (part: string, pivot: { x: number; y: number }, parentOffset = FEET) =>
+    // ogni parte è posizionata sul proprio perno (coordinate d'arte × HERO_PX, origine ai piedi)
+    const img = (part: string, spec: PartSpec, rel = { x: 0, y: 0 }) =>
       scene.add
-        .image(pivot.x - parentOffset.x, pivot.y - parentOffset.y, heroKey(heroId, part))
-        .setOrigin(pivot.x / CANVAS.w, pivot.y / CANVAS.h)
-        .setScale(1 / TEXTURE_SCALE);
+        .image((spec.pivot.x - rel.x) * HERO_PX, (spec.pivot.y - rel.y) * HERO_PX, heroKey(heroId, part))
+        .setOrigin((spec.pivot.x - spec.x0) / spec.w, (spec.pivot.y - spec.y0) / spec.h)
+        .setScale(HERO_PX);
 
-    this.parts.scarf = img('scarf', PIVOTS.scarfTail);
-    this.parts.legB = img('legB', PIVOTS.legBack);
-    this.parts.legF = img('legF', PIVOTS.legFront);
-    this.parts.armB = img('armB', PIVOTS.armBack);
-    this.parts.armF = img('armF', PIVOTS.armFront);
-    this.parts.body = img('body', PIVOTS.head);
+    this.parts.scarf = img('tail', PARTS.tail);
+    this.parts.legB = img('legB', PARTS.legB);
+    this.parts.legF = img('legF', PARTS.legF);
+    this.parts.armB = img('armB', PARTS.armB);
+    this.parts.armF = img('armF', PARTS.armF);
+    this.parts.body = img('body', PARTS.body);
 
-    this.headGroup = scene.add.container(PIVOTS.head.x - FEET.x, PIVOTS.head.y - FEET.y);
-    const inHead = (key: string) =>
-      scene.add.image(0, 0, heroKey(heroId, key)).setOrigin(PIVOTS.head.x / CANVAS.w, PIVOTS.head.y / CANVAS.h).setScale(1 / TEXTURE_SCALE);
+    this.headGroup = scene.add.container(PARTS.head.pivot.x * HERO_PX, PARTS.head.pivot.y * HERO_PX);
+    const inHead = (key: string) => img(key, PARTS.head, PARTS.head.pivot);
     this.eyesImg = inHead(`eyes-${this.baseEyes}`);
     this.mouthImg = inHead(`mouth-${this.baseMouth}`);
     this.headGroup.add([inHead('head'), this.eyesImg, this.mouthImg]);
@@ -52,8 +47,8 @@ export class HeroRig extends Phaser.GameObjects.Container {
     this.body_ = scene.add.container(0, 0, [this.parts.scarf, this.parts.armB, this.parts.body, this.headGroup, this.parts.armF]);
     // ordine di disegno: dietro → davanti
     this.add([this.parts.legB, this.parts.legF, this.body_]);
-    // l'ombra a terra rende il personaggio "appoggiato" allo sfondo
-    const shadow = scene.add.ellipse(0, 2, 120, 22, 0x1f1633, 0.35);
+    // ombra a terra squadrata (pixel art)
+    const shadow = scene.add.rectangle(0, 2, 112, 14, 0x1f1633, 0.35);
     this.addAt(shadow, 0);
 
     this.setScale(scale);
@@ -123,6 +118,22 @@ export class HeroRig extends Phaser.GameObjects.Container {
       },
     });
     this.scene.tweens.add({ targets: this.parts.armF, angle: -150, duration: 200, yoyo: true, hold: 300 });
+    return this;
+  }
+
+  /** Fendente di sciabola: braccio alzato e colpo in avanti, faccia grintosa. */
+  slash(speed = 1): this {
+    this.setExpression('fierce', 'shout');
+    const arm = this.parts.armF;
+    this.scene.tweens.chain({
+      targets: arm,
+      tweens: [
+        { angle: -130, duration: 110 / speed, ease: 'Quad.easeOut' },
+        { angle: 35, duration: 90 / speed, ease: 'Quad.easeIn' },
+        { angle: 0, duration: 160 / speed, ease: 'Sine.easeOut' },
+      ],
+      onComplete: () => { if (this.active && !this.busy) this.setExpression(this.baseEyes, this.baseMouth); },
+    });
     return this;
   }
 

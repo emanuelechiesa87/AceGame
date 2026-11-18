@@ -9,18 +9,18 @@ export const EVENTS: EventDef[] = [
     choices: [{ label: 'Bevi! (70% cura, 30% mal di pancia)', outcome: 'spring_drink' }, { label: 'Meglio di no', outcome: 'nothing' }],
   },
   {
-    id: 'ev_hooded_trader', title: 'Viandante Incappucciato',
+    id: 'ev_hooded_trader', title: 'Mercante del Molo',
     text: '«Psst! Una pozione per un frutto misterioso? Affare dell\'anno, garantito al 40%!»',
     choices: [{ label: 'Scambia 1 pozione', outcome: 'trade_potion_fruit' }, { label: 'Non mi fido', outcome: 'nothing' }],
   },
   {
-    id: 'ev_old_altar', title: 'Altare Antico',
-    text: 'Un altare chiede un piccolo sacrificio di energia vitale. In cambio, promette forza.',
+    id: 'ev_old_altar', title: 'Idolo del Relitto',
+    text: 'Un idolo sul relitto chiede un piccolo sacrificio di energia vitale. In cambio, promette forza.',
     choices: [{ label: 'Offri 12 HP max: +3 ATT', outcome: 'altar_strength' }, { label: 'Lascia stare', outcome: 'nothing' }],
   },
   {
     id: 'ev_lost_cat', title: 'Gatto Smarrito',
-    text: 'Un gatto con il mantello ti fissa. Poi indica un cespuglio. Poi ti fissa di nuovo.',
-    choices: [{ label: 'Guarda nel cespuglio', outcome: 'cat_bush' }, { label: 'Accarezza il gatto', outcome: 'cat_pet' }],
+    text: 'Il gatto di bordo ti fissa. Poi indica un barile. Poi ti fissa di nuovo.',
+    choices: [{ label: 'Guarda nel barile', outcome: 'cat_bush' }, { label: 'Accarezza il gatto', outcome: 'cat_pet' }],
   },
 ];

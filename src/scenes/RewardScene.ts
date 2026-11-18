@@ -1,5 +1,6 @@
-import { COLORS, GAME_WIDTH, TEXTURE_SCALE } from '../app/config';
-import { iconKey } from '../art/registry';
+import { FX_SCALE } from '../pixel/backgrounds';
+import { COLORS, GAME_WIDTH } from '../app/config';
+import { iconKey } from '../pixel/keys';
 import type { NodeType } from '../data/areas';
 import { ARTIFACT_BY_ID } from '../data/artifacts';
 import { BALANCE } from '../data/balance';
@@ -31,7 +32,7 @@ export class RewardScene extends BaseScene {
     new BiomeBackdrop(this, { groundTop: 980 });
     this.fullRect(COLORS.background, 0.55);
     new RunHud(this, ctl.run);
-    const lines = this.add.image(GAME_WIDTH / 2, 640, 'fx-speedlines').setScale(1 / TEXTURE_SCALE).setAlpha(0.6);
+    const lines = this.add.image(GAME_WIDTH / 2, 640, 'fx-speedlines').setScale(FX_SCALE).setAlpha(0.6);
     this.tweens.add({ targets: lines, angle: 360, duration: 40000, repeat: -1 });
 
     if (data.mode === 'chest') {
@@ -39,12 +40,12 @@ export class RewardScene extends BaseScene {
       const fruit = ctl.rng.next() < 0.4 ? ctl.randomNewFruit() : undefined;
       const art = fruit ? undefined : ctl.randomNewArtifact();
       const reward: Reward = fruit ? { kind: 'fruit', id: fruit } : art ? { kind: 'artifact', id: art } : { kind: 'potion' };
-      addBody(this, GAME_WIDTH / 2, 350, 'Dentro c\'è...', 30, '#e9dcff');
+      addBody(this, GAME_WIDTH / 2, 350, 'Dentro c\'è...', 30, '#fbe9c8');
       this.card(reward, GAME_WIDTH / 2, 620, 560, true);
       return;
     }
     addTitle(this, GAME_WIDTH / 2, 280, data.node === 'boss' ? 'BOTTINO DEL BOSS!' : 'SCEGLI UNA RICOMPENSA', 56).setAngle(-3);
-    addBody(this, GAME_WIDTH / 2, 346, 'Una sola: scegli bene!', 26, '#e9dcff');
+    addBody(this, GAME_WIDTH / 2, 346, 'Una sola: scegli bene!', 26, '#fbe9c8');
     ctl.rewardOptions(data.node).forEach((r, i) => this.card(r, GAME_WIDTH / 2, 500 + i * 230, 640, false));
     new Button(this, GAME_WIDTH / 2, 1200, 'SALTA', () => this.finish(), { variant: 'secondary', width: 260, height: 80, fontSize: 36 });
   }
@@ -75,7 +76,7 @@ export class RewardScene extends BaseScene {
     c.setScale(0.5);
     this.tweens.add({ targets: c, scale: 1, duration: 260, ease: 'Back.easeOut' });
     c.setSize(w, h).setInteractive({ useHandCursor: true }).on('pointerup', () => this.take(r, c));
-    if (big) c.add(addBody(this, 0, h / 2 + 40, 'Tocca per prenderlo', 24, '#e9dcff'));
+    if (big) c.add(addBody(this, 0, h / 2 + 40, 'Tocca per prenderlo', 24, '#fbe9c8'));
   }
 
   private take(r: Reward, c: Phaser.GameObjects.Container): void {

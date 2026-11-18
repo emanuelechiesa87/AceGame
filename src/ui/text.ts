@@ -4,9 +4,9 @@ import { COLORS, FONT_BODY, FONT_TITLE, RENDER_SCALE } from '../app/config';
 export function addTitle(scene: Phaser.Scene, x: number, y: number, text: string, size = 72) {
   return scene.add
     .text(x, y, text, {
-      fontFamily: FONT_TITLE, fontSize: `${size}px`, color: COLORS.text, align: 'center',
+      fontFamily: FONT_TITLE, fontSize: `${size}px`, fontStyle: '700', color: COLORS.text, align: 'center',
       stroke: COLORS.inkHex, strokeThickness: Math.round(size / 7),
-      shadow: { offsetX: 0, offsetY: Math.round(size / 14), color: COLORS.inkHex, fill: true, stroke: true },
+      shadow: { offsetX: Math.round(size / 18), offsetY: Math.round(size / 12), color: COLORS.inkHex, blur: 0, fill: true, stroke: true },
     })
     .setPadding(12)
     .setResolution(RENDER_SCALE)
@@ -15,7 +15,7 @@ export function addTitle(scene: Phaser.Scene, x: number, y: number, text: string
 
 export function addBody(scene: Phaser.Scene, x: number, y: number, text: string, size = 30, color: string = COLORS.textMuted) {
   return scene.add
-    .text(x, y, text, { fontFamily: FONT_BODY, fontSize: `${size}px`, fontStyle: '800', color, align: 'center', wordWrap: { width: 640 } })
+    .text(x, y, text, { fontFamily: FONT_BODY, fontSize: `${size}px`, fontStyle: '700', color, align: 'center', wordWrap: { width: 640 } })
     .setResolution(RENDER_SCALE)
     .setOrigin(0.5);
 }

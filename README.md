@@ -27,7 +27,7 @@ Ogni push su `main` esegue test e build e pubblica su GitHub Pages
 ```
 src/
   app/      avvio Phaser e configurazione
-  art/      grafica vettoriale originale generata in codice (eroi, bioma, effetti)
+  pixel/    pixel art originale generata in codice (eroi a blocchi, creature, icone, sfondi)
   scenes/   scene: Menu, CharacterSelect, FruitReveal, Exploration, Battle,
             Reward, Event, Summary, Collection, Records
   systems/  regole senza grafica: combat/Battle (turni), RunController (mappa,
@@ -48,7 +48,8 @@ tests/      test unitari (Vitest)
 ## Stato
 
 - **M0 – fondazioni** ✅ build, scene navigabili, layout portrait, camminata automatica di prova, pausa.
-- **Estetica v1** ✅ eroi Kai e Nova animati a parti, bioma "Pianure del Tramonto", interfaccia in stile anime, schermo intero.
+- **Estetica v1** ✅ (superata) grafica vettoriale anime.
+- **Estetica v2 – pixel piratesco** ✅ eroi LUI/LEI a blocchi con rig animato ed espressioni, nemici del mare (medusa, gabbiano, granchi, boss pesce palla), compagni a tema, 13 frutti e icone in pixel, porto e ponte della nave con parallasse, UI in legno/pergamena con font Pixelify Sans.
 - **M1 – vertical slice** ✅ run completa: frutto iniziale casuale, mappa a bivi (7 passi),
   battaglie a turni con energia, poteri dei frutti (max 3, sostituzione), compagni automatici
   con speciali manuali (max 3), intenzioni dei nemici visibili, élite e boss con fase di rabbia,

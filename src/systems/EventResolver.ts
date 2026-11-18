@@ -26,10 +26,10 @@ export function resolveEvent(ctl: RunController, outcome: string): EventOutcome 
       run.baseStats.maxHp = Math.max(30, run.baseStats.maxHp - 12);
       run.baseStats.atk += 3;
       run.currentHp = Math.min(run.currentHp, effectiveStats(run).maxHp);
-      return { text: 'L\'altare si illumina. Ti senti più forte, ma un po\' più fragile.' };
+      return { text: 'L\'idolo si illumina. Ti senti più forte, ma un po\' più fragile.' };
     case 'cat_bush': {
       const art = ctl.randomNewArtifact();
-      return art && ctl.rng.next() < 0.6 ? { text: 'Nel cespuglio c\'è qualcosa che brilla!', artifactOffer: art } : { text: 'Solo foglie. Il gatto sembra deluso da te.' };
+      return art && ctl.rng.next() < 0.6 ? { text: 'Nel barile c\'è qualcosa che brilla!', artifactOffer: art } : { text: 'Solo stracci bagnati. Il gatto sembra deluso da te.' };
     }
     case 'cat_pet':
       run.potions++;

@@ -9,22 +9,23 @@ export const GAME_HEIGHT = 1280;
  */
 export const RENDER_SCALE = 1.5;
 
-/** Le texture vettoriali vengono rasterizzate a questa scala. */
+/** Icone e creature sono generate già ingrandite di questo fattore (pixel netti). */
 export const TEXTURE_SCALE = 2;
 
 export const COLORS = {
-  background: 0x15122e,
+  background: 0x14233f,
   ink: 0x1f1633,
-  panel: 0x2a2352,
+  panel: 0x5f3520,
   accent: 0xffcf3a,
   accentDark: 0xe09a12,
-  hot: 0xff5f6d,
+  hot: 0xe4342f,
   text: '#fff7e6',
-  textMuted: '#c2b8e8',
+  textMuted: '#f1d7a8',
   inkHex: '#1f1633',
 } as const;
 
-export const FONT_TITLE = 'Bangers, "Arial Black", sans-serif';
-export const FONT_BODY = '"M PLUS Rounded 1c", system-ui, sans-serif';
+/** Pixelify Sans (OFL, vedi ASSET_LICENSES.md) per tutto il gioco. */
+export const FONT_TITLE = '"Pixelify Sans", monospace';
+export const FONT_BODY = '"Pixelify Sans", monospace';
 
 export const BUILD_VERSION = __APP_VERSION__;

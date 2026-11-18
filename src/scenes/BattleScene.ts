@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { COLORS, GAME_WIDTH } from '../app/config';
-import { iconKey } from '../art/registry';
+import { iconKey } from '../pixel/keys';
 import type { NodeType } from '../data/areas';
 import { ARTIFACT_BY_ID } from '../data/artifacts';
 import { COMPANION_BY_ID } from '../data/companions';
@@ -16,7 +16,7 @@ import { Button } from '../ui/Button';
 import { UnitView } from '../ui/battle/UnitView';
 import { modal } from '../ui/Offers';
 import { addBody, addTitle } from '../ui/text';
-import { banner, floatText, icon, panel, wait } from '../ui/widgets';
+import { banner, floatText, icon, panel, steppedRect, wait } from '../ui/widgets';
 import { BaseScene } from './BaseScene';
 
 const ALLY_SLOTS = [{ x: 220, y: 760 }, { x: 80, y: 680 }, { x: 330, y: 610 }, { x: 110, y: 540 }];
@@ -54,8 +54,8 @@ export class BattleScene extends BaseScene {
     this.busy = true; this.speed = GameSession.save.data.settings.fastAnimations ? 2 : 1; this.targetUid = undefined;
     this.node = data.node;
 
-    new BiomeBackdrop(this, { groundTop: 560 });
-    this.fullRect(0x15122e, 0.15);
+    new BiomeBackdrop(this, { groundTop: 560, deck: true });
+    this.fullRect(0x14233f, 0.15);
 
     // --- setup motore -----------------------------------------------------------
     const stats = effectiveStats(run);
@@ -95,7 +95,7 @@ export class BattleScene extends BaseScene {
     this.buildActionPanel();
     this.input.on('pointerdown', () => { if (this.busy) this.speed = Math.max(this.speed, 3); });
 
-    void banner(this, 420, title, this.node === 'battle' ? 0x5b4bd6 : COLORS.hot, 72, 500).then(async () => {
+    void banner(this, 420, title, this.node === 'battle' ? 0x1f6fb2 : COLORS.hot, 72, 500).then(async () => {
       await this.play(this.battle.start());
       this.afterResolve();
     });
@@ -117,7 +117,8 @@ export class BattleScene extends BaseScene {
   // --- pannello azioni ------------------------------------------------------------------
   private buildActionPanel(): void {
     const top = 900;
-    this.add.rectangle(-400, top - 20, 1520, 1200, 0x15122e, 0.92).setOrigin(0).setDepth(250);
+    this.add.rectangle(-400, top - 20, 1520, 1200, 0x3a2414, 0.97).setOrigin(0).setDepth(250);
+    this.add.rectangle(-400, top - 28, 1520, 12, 0xa9693c, 1).setOrigin(0).setDepth(250).setStrokeStyle(4, COLORS.ink);
     this.actionPanel = this.add.container(0, 0).setDepth(260);
     this.energyPips = this.add.container(0, 0).setDepth(261);
     addBody(this, 40, top + 14, 'ENERGIA', 20, '#ffcf3a').setOrigin(0, 0.5).setDepth(261);
@@ -149,10 +150,11 @@ export class BattleScene extends BaseScene {
     c.removeAll(true);
     const ready = this.battle.canSpecial(u);
     const g = this.add.graphics();
-    g.fillStyle(COLORS.ink, 1).fillCircle(0, 0, 32);
-    g.fillStyle(ready ? COLORS.accent : 0x3a3366, 1).fillCircle(0, 0, 27);
-    g.lineStyle(5, ready ? 0xffffff : 0x8f86b8, 1).beginPath().arc(0, 0, 30, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * u.charge) / u.chargeMax).strokePath();
-    c.add([g, addBody(this, 0, 0, u.hp > 0 ? u.name.slice(0, 4).toUpperCase() : 'KO', 15, ready ? '#1f1633' : '#c2b8e8')]);
+    steppedRect(g, -34, -32, 68, 64, COLORS.ink, 6);
+    steppedRect(g, -30, -28, 60, 56, ready ? COLORS.accent : 0x6b3a1e, 4);
+    // carica: tacche a blocchi sotto il nome
+    for (let i = 0; i < u.chargeMax; i++) g.fillStyle(i < u.charge ? 0xffffff : 0x3a2414, 1).fillRect(-24 + i * (48 / u.chargeMax) + 2, 16, 48 / u.chargeMax - 4, 8);
+    c.add([g, addBody(this, 0, 0, u.hp > 0 ? u.name.slice(0, 4).toUpperCase() : 'KO', 15, ready ? '#1f1633' : '#f1d7a8').setY(-6)]);
     if (ready) { c.add(addTitle(this, 22, -24, '!', 30).setColor('#ff5f6d')); this.tweens.add({ targets: c, scale: 1.1, duration: 300, yoyo: true, repeat: 1 }); }
   }
 
@@ -161,9 +163,9 @@ export class BattleScene extends BaseScene {
     for (let i = 0; i < 5; i++) {
       const g = this.add.graphics();
       const on = i < this.battle.energy;
-      g.fillStyle(COLORS.ink, 1).fillCircle(150 + i * 44, 914, 17);
-      g.fillStyle(on ? 0xffcf3a : 0x3a3366, 1).fillCircle(150 + i * 44, 914, 13);
-      if (on) g.fillStyle(0xffffff, 0.6).fillCircle(146 + i * 44, 909, 4);
+      g.fillStyle(COLORS.ink, 1).fillRect(133 + i * 44, 897, 34, 34);
+      g.fillStyle(on ? 0xffcf3a : 0x4a2a14, 1).fillRect(137 + i * 44, 901, 26, 26);
+      if (on) g.fillStyle(0xffffff, 0.7).fillRect(141 + i * 44, 905, 8, 8);
       this.energyPips.add(g);
     }
     const potion = this.actionPanel.getByName('potion') as Button | null;
@@ -209,11 +211,11 @@ export class BattleScene extends BaseScene {
     this.battle.powers.forEach((a: Ability, i) => {
       const fruit = [...FRUIT_BY_ID.values()].find((f) => f.ability.id === a.id)!;
       const y = 520 + i * 170, ok = this.battle.canUsePower(a);
-      m.add(panel(this, 50, y - 70, 620, 150, ok ? 0x3d3380 : 0x2a2352));
+      m.add(panel(this, 50, y - 70, 620, 150, ok ? 0x3d3380 : 0x3a2414));
       m.add(icon(this, 120, y + 5, iconKey('fruit', fruit.id), 96).setAlpha(ok ? 1 : 0.5));
       m.add(addTitle(this, 190, y - 30, a.name, 36).setOrigin(0, 0.5).setAlpha(ok ? 1 : 0.6));
-      m.add(addBody(this, 190, y + 22, a.description, 21, '#e9dcff').setOrigin(0, 0.5).setWordWrapWidth(380).setAlign('left'));
-      m.add(addTitle(this, 640, y - 30, `${a.cost}⚡`, 36).setOrigin(1, 0.5).setColor(ok ? '#ffcf3a' : '#8f86b8'));
+      m.add(addBody(this, 190, y + 22, a.description, 21, '#fbe9c8').setOrigin(0, 0.5).setWordWrapWidth(380).setAlign('left'));
+      m.add(addTitle(this, 640, y - 30, `${a.cost}⚡`, 36).setOrigin(1, 0.5).setColor(ok ? '#ffcf3a' : '#a89580'));
       if (ok) {
         const z = this.add.zone(360, y + 5, 620, 150).setInteractive({ useHandCursor: true });
         z.on('pointerup', () => { m.destroy(); this.submit({ type: 'power', abilityId: a.id, targetUid: this.currentTarget() }); });
@@ -272,7 +274,7 @@ export class BattleScene extends BaseScene {
           this.log.setText(`${who.name}: ${e.name}`);
           if (e.isPower || e.isSpecial) {
             this.cameras.main.shake(160 / s, 0.006);
-            await banner(this, 420, e.name.toUpperCase() + '!', e.isPower ? COLORS.hot : 0x5b4bd6, 56, 380 / s);
+            await banner(this, 420, e.name.toUpperCase() + '!', e.isPower ? COLORS.hot : 0x1f6fb2, 56, 380 / s);
           }
           if (v && e.ability !== 'guard' && e.ability !== 'potion') {
             const foe = who.side === 'ally' ? 600 : 150;
@@ -299,7 +301,7 @@ export class BattleScene extends BaseScene {
         case 'dodge': { const v = this.views.get(e.target); if (v) { floatText(this, v.x, v.centerY, 'SCHIVATO!', '#e8f0fb', 38, s); await wait(this, 220 / s); } break; }
         case 'steal': { const a = this.views.get(e.source), t = this.views.get(e.target); t?.refresh(); a?.refresh(); if (t) floatText(this, t.x, t.topY, `-${e.amount} scudo rubato!`, '#9cc8ff', 30, s); await wait(this, 200 / s); break; }
         case 'extraAction': await banner(this, 420, 'ANCORA UN TURNO!', 0xffcf3a, 52, 380 / s); break;
-        case 'resist': { const v = this.views.get(e.target); if (v) floatText(this, v.x, v.topY, 'Resiste!', '#c2b8e8', 30, s); break; }
+        case 'resist': { const v = this.views.get(e.target); if (v) floatText(this, v.x, v.topY, 'Resiste!', '#f1d7a8', 30, s); break; }
         case 'cleanse': { const v = this.views.get(e.target); if (v) v.refresh(); break; }
         case 'stunned': { const v = this.views.get(e.uid); if (v) { v.refresh(); floatText(this, v.x, v.topY, 'CONGELATO!', '#bff4ff', 38, s); await wait(this, 400 / s); } break; }
         case 'ko': { const v = this.views.get(e.uid); if (v) { floatText(this, v.x, v.topY, 'KO!', '#ff5f6d', 56, s); await v.ko(s); } this.placeReticle(); break; }
@@ -341,7 +343,7 @@ export class BattleScene extends BaseScene {
 
   private async onDefeat(): Promise<void> {
     this.log.setText('');
-    await banner(this, 420, 'SCONFITTA...', 0x3a3366, 80, 1100);
+    await banner(this, 420, 'SCONFITTA...', 0x4a3a33, 80, 1100);
     GameSession.run!.currentHp = 0;
     GameSession.run!.potions = this.battle.potions;
     this.goTo('Summary', { result: 'defeat' });

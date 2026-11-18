@@ -1,6 +1,6 @@
 import { COLORS, GAME_WIDTH, TEXTURE_SCALE } from '../app/config';
-import { CREATURE_SCALE } from '../art/creatures';
-import { creatureKey, iconKey } from '../art/registry';
+import { CREATURE_SCALE } from '../pixel/creatures';
+import { creatureKey, iconKey } from '../pixel/keys';
 import type { NodeType } from '../data/areas';
 import { BALANCE } from '../data/balance';
 import { COMPANION_BY_ID } from '../data/companions';

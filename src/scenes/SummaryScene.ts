@@ -1,5 +1,6 @@
-import { COLORS, GAME_WIDTH, TEXTURE_SCALE } from '../app/config';
-import { iconKey } from '../art/registry';
+import { FX_SCALE } from '../pixel/backgrounds';
+import { COLORS, GAME_WIDTH } from '../app/config';
+import { iconKey } from '../pixel/keys';
 import { GameSession } from '../state/GameSession';
 import { BiomeBackdrop } from '../ui/BiomeBackdrop';
 import { Button } from '../ui/Button';
@@ -25,7 +26,7 @@ export class SummaryScene extends BaseScene {
     new BiomeBackdrop(this, { groundTop: 980 });
     this.fullRect(COLORS.background, win ? 0.45 : 0.75);
     if (win) {
-      const lines = this.add.image(GAME_WIDTH / 2, 330, 'fx-speedlines').setScale(1 / TEXTURE_SCALE);
+      const lines = this.add.image(GAME_WIDTH / 2, 330, 'fx-speedlines').setScale(FX_SCALE);
       this.tweens.add({ targets: lines, angle: 360, duration: 30000, repeat: -1 });
     }
     addTitle(this, GAME_WIDTH / 2, 150, win ? `${snapshot.heroName.toUpperCase()} HA VINTO!` : `${snapshot.heroName.toUpperCase()} È K.O.`, 60).setAngle(-3).setColor(win ? '#ffe14a' : '#ff9ab0');
@@ -47,13 +48,13 @@ export class SummaryScene extends BaseScene {
       ['Durata', dur],
     ];
     rows.forEach(([k, v], i) => {
-      addBody(this, 110, 710 + i * 44, k, 26, '#e9dcff').setOrigin(0, 0.5);
+      addBody(this, 110, 710 + i * 44, k, 26, '#fbe9c8').setOrigin(0, 0.5);
       addBody(this, 610, 710 + i * 44, v, 26, '#ffffff').setOrigin(1, 0.5);
     });
-    addBody(this, 110, 905, 'Frutti usati:', 24, '#e9dcff').setOrigin(0, 0.5);
+    addBody(this, 110, 905, 'Frutti usati:', 24, '#fbe9c8').setOrigin(0, 0.5);
     snapshot.usedFruitIds.forEach((id, i) => icon(this, 300 + i * 56, 905, iconKey('fruit', id), 50));
 
-    addBody(this, GAME_WIDTH / 2, 990, 'Collezione e record restano salvati su questo dispositivo.', 22, '#c2b8e8');
+    addBody(this, GAME_WIDTH / 2, 990, 'Collezione e record restano salvati su questo dispositivo.', 22, '#f1d7a8');
     new Button(this, GAME_WIDTH / 2, 1080, 'NUOVA RUN', () => this.goTo('CharacterSelect'), { width: 460, height: 110, fontSize: 56 });
     new Button(this, GAME_WIDTH / 2, 1200, 'MENU', () => this.goTo('Menu'), { variant: 'secondary', width: 300, height: 84, fontSize: 40 });
   }

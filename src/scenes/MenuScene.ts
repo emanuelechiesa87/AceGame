@@ -1,5 +1,6 @@
+import { FX_SCALE } from '../pixel/backgrounds';
 import Phaser from 'phaser';
-import { BUILD_VERSION, COLORS, GAME_HEIGHT, GAME_WIDTH, TEXTURE_SCALE } from '../app/config';
+import { BUILD_VERSION, COLORS, GAME_HEIGHT, GAME_WIDTH } from '../app/config';
 import { BiomeBackdrop } from '../ui/BiomeBackdrop';
 import { Button } from '../ui/Button';
 import { HeroRig } from '../ui/HeroRig';
@@ -20,7 +21,7 @@ export class MenuScene extends BaseScene {
     // velo scuro in alto per far leggere il logo
     this.add.rectangle(-400, -800, GAME_WIDTH + 800, 1320, COLORS.background, 0.35).setOrigin(0);
 
-    const lines = this.add.image(cx, 300, 'fx-speedlines').setScale(1 / TEXTURE_SCALE).setAlpha(0.9);
+    const lines = this.add.image(cx, 300, 'fx-speedlines').setScale(FX_SCALE).setAlpha(0.9);
     this.tweens.add({ targets: lines, angle: 360, duration: 60000, repeat: -1 });
 
     const logo = addTitle(this, cx, 250, 'ACEGAME', 150).setAngle(-6);
@@ -34,7 +35,6 @@ export class MenuScene extends BaseScene {
     heroM.setInteractive(new Phaser.Geom.Rectangle(-90, -330, 180, 330), Phaser.Geom.Rectangle.Contains).on('pointerup', () => heroM.cheer());
     heroF.setInteractive(new Phaser.Geom.Rectangle(-90, -330, 180, 330), Phaser.Geom.Rectangle.Contains).on('pointerup', () => heroF.cheer('fierce', 'shout'));
 
-    new Button(this, 610, 60, 'PIXEL?', () => this.goTo('PixelPreview'), { width: 170, height: 70, fontSize: 30, variant: 'danger' });
     const canResume = GameSession.hasSavedRun();
     if (canResume) {
       new Button(this, cx, 930, 'CONTINUA', () => { if (GameSession.resumeRun()) this.goTo('Exploration'); else this.scene.restart(); }, { width: 540, height: 112, fontSize: 60 });
@@ -51,13 +51,13 @@ export class MenuScene extends BaseScene {
       (speedBtn.list[1] as Phaser.GameObjects.Text).setText(fast() ? 'VELOCE' : 'NORMALE');
     }, small);
 
-    addBody(this, cx, GAME_HEIGHT - 30, `v${BUILD_VERSION} · tocca gli eroi! · animazioni: tasto a destra`, 20, '#e9dcff');
+    addBody(this, cx, GAME_HEIGHT - 30, `v${BUILD_VERSION} · tocca gli eroi! · animazioni: tasto a destra`, 20, '#fbe9c8');
   }
 
   private confirmNew(): void {
     const m = modal(this);
     m.add(addTitle(this, 360, 480, 'ABBANDONARE LA RUN?', 54));
-    m.add(addBody(this, 360, 560, 'La run in corso andrà persa. Collezione e record restano.', 26, '#e9dcff'));
+    m.add(addBody(this, 360, 560, 'La run in corso andrà persa. Collezione e record restano.', 26, '#fbe9c8'));
     m.add(new Button(this, 360, 700, 'SÌ, NUOVA RUN', () => { GameSession.abandonRun(); this.goTo('CharacterSelect'); }, { variant: 'danger', width: 460 }));
     m.add(new Button(this, 360, 840, 'NO', () => m.destroy(), { variant: 'secondary', width: 300 }));
   }

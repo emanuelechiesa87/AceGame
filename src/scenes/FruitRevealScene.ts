@@ -1,5 +1,6 @@
-import { COLORS, GAME_WIDTH, TEXTURE_SCALE } from '../app/config';
-import { iconKey } from '../art/registry';
+import { FX_SCALE } from '../pixel/backgrounds';
+import { COLORS, GAME_WIDTH } from '../app/config';
+import { iconKey } from '../pixel/keys';
 import { GameSession } from '../state/GameSession';
 import { BiomeBackdrop } from '../ui/BiomeBackdrop';
 import { Button } from '../ui/Button';
@@ -22,7 +23,7 @@ export class FruitRevealScene extends BaseScene {
     const fruitId = run.activeFruitIds[0];
     new BiomeBackdrop(this, { groundTop: 980 });
     this.fullRect(COLORS.background, 0.7);
-    const lines = this.add.image(GAME_WIDTH / 2, 470, 'fx-speedlines').setScale(1 / TEXTURE_SCALE);
+    const lines = this.add.image(GAME_WIDTH / 2, 470, 'fx-speedlines').setScale(FX_SCALE);
     this.tweens.add({ targets: lines, angle: 360, duration: 20000, repeat: -1 });
     addTitle(this, GAME_WIDTH / 2, 150, 'IL TUO FRUTTO INIZIALE', 54).setAngle(-3);
 
@@ -45,7 +46,7 @@ export class FruitRevealScene extends BaseScene {
 
     const hero = new HeroRig(this, 170, 1240, run.avatar === 'a' ? 'm' : 'f', 0.75).idle();
     hero.setDepth(11);
-    addBody(this, GAME_WIDTH / 2, 890, 'Si attiva in battaglia dal menu POTERI e consuma energia ⚡', 24, '#e9dcff').setDepth(11);
+    addBody(this, GAME_WIDTH / 2, 890, 'Si attiva in battaglia dal menu POTERI e consuma energia ⚡', 24, '#fbe9c8').setDepth(11);
     new Button(this, 440, 1050, 'MANGIALO!', () => {
       hero.cheer('happy', 'shout');
       this.time.delayedCall(500, () => this.goTo('Exploration'));
