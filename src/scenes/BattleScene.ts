@@ -21,7 +21,7 @@ import { BaseScene } from './BaseScene';
 
 const ALLY_SLOTS = [{ x: 220, y: 760 }, { x: 80, y: 680 }, { x: 330, y: 610 }, { x: 110, y: 540 }];
 const ENEMY_SLOTS = [{ x: 540, y: 760 }, { x: 640, y: 620 }, { x: 430, y: 600 }, { x: 600, y: 500 }];
-const STATUS_NAME: Record<StatusId, string> = { burn: 'Bruciatura!', poison: 'Veleno!', stun: 'Congelato!', shield: 'Scudo', atkUp: 'Furia!', vulnerable: 'Vulnerabile!', guard: 'In guardia' };
+const STATUS_NAME: Record<StatusId, string> = { burn: 'Bruciatura!', poison: 'Veleno!', stun: 'Congelato!', shield: 'Scudo', atkUp: 'Furia!', vulnerable: 'Vulnerabile!', guard: 'In guardia', evade: 'Nebbia!', defUp: 'Corazza!', slow: 'Appiccicato!', reflect: 'Specchio!' };
 
 /**
  * Battaglia a turni. Il motore (Battle) decide tutto; la scena anima gli eventi
@@ -287,7 +287,7 @@ export class BattleScene extends BaseScene {
           if (!v) break;
           v.refresh();
           if (e.absorbed > 0) floatText(this, v.x + 40, v.centerY - 30, `-${e.absorbed}🛡`, '#9cc8ff', 30, s);
-          const col = e.kind === 'burn' ? '#ff8a3d' : e.kind === 'poison' ? '#9be06a' : e.crit ? '#ffe14a' : '#ffffff';
+          const col = e.kind === 'burn' ? '#ff8a3d' : e.kind === 'poison' ? '#9be06a' : e.kind === 'reflect' ? '#9fe8ff' : e.crit ? '#ffe14a' : '#ffffff';
           if (e.amount > 0 || e.absorbed === 0) floatText(this, v.x, v.centerY, `${e.crit ? 'CRIT! ' : ''}${e.amount}`, col, e.crit ? 60 : 50, s);
           if (e.amount > 0) { if (e.crit) this.cameras.main.shake(120 / s, 0.01); await v.hit(s); }
           else await wait(this, 160 / s);
@@ -296,6 +296,9 @@ export class BattleScene extends BaseScene {
         case 'heal': { const v = this.views.get(e.target); if (v) { v.refresh(); floatText(this, v.x, v.centerY, `+${e.amount}`, '#6fe08a', 46, s); await wait(this, 200 / s); } break; }
         case 'shield': { const v = this.views.get(e.target); if (v) { v.refresh(); floatText(this, v.x, v.centerY - 20, `+${e.amount} scudo`, '#9cc8ff', 32, s); await wait(this, 120 / s); } break; }
         case 'status': { const v = this.views.get(e.target); if (v) { v.refresh(); if (e.status !== 'guard') floatText(this, v.x, v.topY, STATUS_NAME[e.status], '#d6a8ff', 32, s); await wait(this, 150 / s); } break; }
+        case 'dodge': { const v = this.views.get(e.target); if (v) { floatText(this, v.x, v.centerY, 'SCHIVATO!', '#e8f0fb', 38, s); await wait(this, 220 / s); } break; }
+        case 'steal': { const a = this.views.get(e.source), t = this.views.get(e.target); t?.refresh(); a?.refresh(); if (t) floatText(this, t.x, t.topY, `-${e.amount} scudo rubato!`, '#9cc8ff', 30, s); await wait(this, 200 / s); break; }
+        case 'extraAction': await banner(this, 420, 'ANCORA UN TURNO!', 0xffcf3a, 52, 380 / s); break;
         case 'resist': { const v = this.views.get(e.target); if (v) floatText(this, v.x, v.topY, 'Resiste!', '#c2b8e8', 30, s); break; }
         case 'cleanse': { const v = this.views.get(e.target); if (v) v.refresh(); break; }
         case 'stunned': { const v = this.views.get(e.uid); if (v) { v.refresh(); floatText(this, v.x, v.topY, 'CONGELATO!', '#bff4ff', 38, s); await wait(this, 400 / s); } break; }

@@ -32,11 +32,11 @@ export class CollectionScene extends BaseScene {
     const fr = FRUITS.filter((f) => s.discoveredFruitIds.includes(f.id));
     section(190, 'FRUTTI', fr.length, FRUITS.length);
     FRUITS.forEach((f, i) => {
-      const x = 130 + (i % 3) * 230, y = 280 + Math.floor(i / 3) * 175;
+      const x = 105 + (i % 4) * 170, y = 260 + Math.floor(i / 4) * 105;
       const known = s.discoveredFruitIds.includes(f.id);
-      const ic = icon(this, x, y, iconKey('fruit', f.id), 100);
+      const ic = icon(this, x, y - 8, iconKey('fruit', f.id), 72);
       if (!known) ic.setTintFill(0x2a2352);
-      addBody(this, x, y + 66, known ? f.name : '???', 21, known ? '#fff7e6' : '#8f86b8');
+      addBody(this, x, y + 38, known ? f.name : '???', 17, known ? '#fff7e6' : '#8f86b8');
     });
 
     const ar = ARTIFACTS.filter((a) => s.discoveredArtifactIds.includes(a.id));

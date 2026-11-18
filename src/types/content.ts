@@ -2,16 +2,20 @@
  *  dopo il rilascio, perché finiscono nei salvataggi. */
 
 export type Rarity = 'common' | 'rare' | 'epic';
-export type StatusId = 'burn' | 'poison' | 'stun' | 'shield' | 'atkUp' | 'vulnerable' | 'guard';
+export type StatusId = 'burn' | 'poison' | 'stun' | 'shield' | 'atkUp' | 'vulnerable' | 'guard' | 'evade' | 'defUp' | 'slow' | 'reflect';
 export type TargetRule = 'enemy' | 'allEnemies' | 'self' | 'allAllies' | 'lowestAlly';
 export type Intent = 'attack' | 'heavy' | 'defend' | 'debuff' | 'special';
 
 export type Effect =
-  | { kind: 'damage'; mult: number; lifesteal?: number }
+  | { kind: 'damage'; mult: number; lifesteal?: number; hits?: number }
   | { kind: 'heal'; pctMaxHp: number }
   | { kind: 'shield'; amount: number }
   | { kind: 'status'; status: StatusId; turns: number; value?: number; chance?: number }
   | { kind: 'cleanse' }
+  /** Toglie lo scudo al bersaglio e lo dà a chi usa l'abilità. */
+  | { kind: 'stealShield' }
+  /** Chi usa l'abilità agisce di nuovo subito (solo protagonista). */
+  | { kind: 'extraAction' }
   | { kind: 'summon'; enemyId: string; maxEnemies: number };
 
 export interface Ability {
@@ -31,7 +35,7 @@ export interface FruitDef {
   id: string;
   name: string;
   rarity: Rarity;
-  element: 'fire' | 'ice' | 'storm' | 'stone' | 'life' | 'shadow';
+  element: 'fire' | 'ice' | 'storm' | 'stone' | 'life' | 'shadow' | 'elastic' | 'mist' | 'beast' | 'glue' | 'mirror' | 'time' | 'magnet';
   color: string;
   description: string;
   passive: StatMods;

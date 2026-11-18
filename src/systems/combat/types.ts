@@ -43,11 +43,14 @@ export type PlayerAction =
 export type BattleEvent =
   | { t: 'turn'; uid: string }
   | { t: 'use'; uid: string; ability: string; name: string; isPower?: boolean; isSpecial?: boolean }
-  | { t: 'damage'; source: string; target: string; amount: number; absorbed: number; crit: boolean; kind: 'hit' | 'burn' | 'poison' }
+  | { t: 'damage'; source: string; target: string; amount: number; absorbed: number; crit: boolean; kind: 'hit' | 'burn' | 'poison' | 'reflect' }
   | { t: 'heal'; target: string; amount: number }
   | { t: 'shield'; target: string; amount: number }
   | { t: 'status'; target: string; status: StatusId; turns: number }
   | { t: 'resist'; target: string; status: StatusId }
+  | { t: 'dodge'; target: string }
+  | { t: 'steal'; source: string; target: string; amount: number }
+  | { t: 'extraAction'; uid: string }
   | { t: 'cleanse'; target: string }
   | { t: 'stunned'; uid: string }
   | { t: 'ko'; uid: string }

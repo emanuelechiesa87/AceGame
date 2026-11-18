@@ -12,7 +12,7 @@ export const ENEMIES: EnemyDef[] = [
     },
   },
   {
-    id: 'en_bat', name: 'Pipistrillo', tier: 'normal', stats: { maxHp: 22, atk: 6, def: 0, spd: 14 },
+    id: 'en_bat', name: 'Pipistrillo', tier: 'normal', stats: { maxHp: 24, atk: 7, def: 0, spd: 14 },
     pattern: ['bite', 'bite', 'drain'],
     moves: {
       bite: atk(1, 'Morsetto'),
@@ -20,7 +20,7 @@ export const ENEMIES: EnemyDef[] = [
     },
   },
   {
-    id: 'en_shroom', name: 'Fungotto', tier: 'normal', stats: { maxHp: 38, atk: 8, def: 3, spd: 8 },
+    id: 'en_shroom', name: 'Fungotto', tier: 'normal', stats: { maxHp: 42, atk: 9, def: 3, spd: 8 },
     pattern: ['slap', 'spores', 'slap'],
     moves: {
       slap: atk(1, 'Cappellata'),
@@ -28,7 +28,7 @@ export const ENEMIES: EnemyDef[] = [
     },
   },
   {
-    id: 'en_shroom_boss', name: 'Fungotto Capo', tier: 'elite', stats: { maxHp: 95, atk: 11, def: 5, spd: 9 },
+    id: 'en_shroom_boss', name: 'Fungotto Capo', tier: 'elite', stats: { maxHp: 100, atk: 12, def: 5, spd: 9 },
     pattern: ['smash', 'cloud', 'slap', 'guard'],
     moves: {
       smash: atk(1.6, 'Cappellone'),
@@ -38,7 +38,7 @@ export const ENEMIES: EnemyDef[] = [
     },
   },
   {
-    id: 'en_pudding_king', name: 'Re Budino', tier: 'boss', stats: { maxHp: 210, atk: 12, def: 4, spd: 7 },
+    id: 'en_pudding_king', name: 'Re Budino', tier: 'boss', stats: { maxHp: 200, atk: 11, def: 4, spd: 7 },
     pattern: ['slam', 'wave', 'harden', 'crush', 'wave'],
     enrage: 'royal_call',
     moves: {

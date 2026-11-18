@@ -44,6 +44,55 @@ export const FRUITS: FruitDef[] = [
     ability: { id: 'pw_shadow', name: 'Taglio d\'Ombra', description: 'Danno 220% e rende vulnerabile per 2 turni.', target: 'enemy', cost: 4,
       effects: [{ kind: 'damage', mult: 2.2 }, { kind: 'status', status: 'vulnerable', turns: 2 }] },
   },
+  {
+    id: 'fruit_spring', name: 'Gelso Molla', rarity: 'common', element: 'elastic', color: '#ff7fb0',
+    description: 'Rimbalza se lo lasci cadere. Anche chi lo mangia.',
+    passive: { spd: 2 }, startsUnlocked: true,
+    ability: { id: 'pw_spring', name: 'Raffica Molleggiata', description: '4 colpi rapidi da 45% ciascuno.', target: 'enemy', cost: 2,
+      effects: [{ kind: 'damage', mult: 0.45, hits: 4 }] },
+  },
+  {
+    id: 'fruit_mist', name: 'Nespola Nebbia', rarity: 'rare', element: 'mist', color: '#c9d6e8',
+    description: 'Si sbuccia da sola e si dissolve in vapore.',
+    passive: { spd: 1, def: 1 }, startsUnlocked: false,
+    ability: { id: 'pw_mist', name: 'Corpo di Nebbia', description: 'Per 2 turni schivi il 60% dei colpi.', target: 'self', cost: 2,
+      effects: [{ kind: 'status', status: 'evade', turns: 2, value: 0.6 }] },
+  },
+  {
+    id: 'fruit_fang', name: 'Cocco Zanna', rarity: 'rare', element: 'beast', color: '#b07b4a',
+    description: 'Ha il pelo. E ringhia, se lo scuoti.',
+    passive: { maxHp: 8 }, startsUnlocked: false,
+    ability: { id: 'pw_fang', name: 'Risveglio Bestiale', description: 'Per 3 turni: +50% ATT e +50% DIF.', target: 'self', cost: 3,
+      effects: [{ kind: 'status', status: 'atkUp', turns: 3, value: 0.5 }, { kind: 'status', status: 'defUp', turns: 3, value: 0.5 }] },
+  },
+  {
+    id: 'fruit_glue', name: 'Kiwi Colla', rarity: 'common', element: 'glue', color: '#a8d84a',
+    description: 'Appiccica tutto. Soprattutto le dita.',
+    passive: { def: 1, maxHp: 4 }, startsUnlocked: false,
+    ability: { id: 'pw_glue', name: 'Rete Appiccicosa', description: 'Tutti i nemici: -50% VEL e vulnerabili per 2 turni.', target: 'allEnemies', cost: 2,
+      effects: [{ kind: 'status', status: 'slow', turns: 2, value: 0.5 }, { kind: 'status', status: 'vulnerable', turns: 2 }] },
+  },
+  {
+    id: 'fruit_mirror', name: 'Prugna Specchio', rarity: 'rare', element: 'mirror', color: '#9fe8ff',
+    description: 'Lucida come vetro. Ci vedi la tua faccia stupita.',
+    passive: { def: 2 }, startsUnlocked: false,
+    ability: { id: 'pw_mirror', name: 'Specchio Riflesso', description: 'Per 2 turni chi ti colpisce subisce il 70% del danno.', target: 'self', cost: 2,
+      effects: [{ kind: 'status', status: 'reflect', turns: 2, value: 0.7 }] },
+  },
+  {
+    id: 'fruit_clock', name: 'Ananas Orologio', rarity: 'epic', element: 'time', color: '#ffcf3a',
+    description: 'Ticchetta. Nessuno ha il coraggio di aprirlo.',
+    passive: { spd: 2 }, startsUnlocked: false,
+    ability: { id: 'pw_clock', name: 'Secondo Rintocco', description: 'Danno 80% e agisci subito di nuovo.', target: 'enemy', cost: 3,
+      effects: [{ kind: 'damage', mult: 0.8 }, { kind: 'extraAction' }] },
+  },
+  {
+    id: 'fruit_magnet', name: 'Melagrana Magnete', rarity: 'common', element: 'magnet', color: '#e4342f',
+    description: 'Le posate le volano addosso. Sempre.',
+    passive: { atk: 1, def: 1 }, startsUnlocked: false,
+    ability: { id: 'pw_magnet', name: 'Strappo Magnetico', description: 'Ruba lo scudo al bersaglio e colpisce al 100%.', target: 'enemy', cost: 2,
+      effects: [{ kind: 'stealShield' }, { kind: 'damage', mult: 1 }] },
+  },
 ];
 
 export const FRUIT_BY_ID = new Map(FRUITS.map((f) => [f.id, f]));

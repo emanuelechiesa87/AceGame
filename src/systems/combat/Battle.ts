@@ -7,7 +7,9 @@ import type { Rng } from '../Rng';
 import type { BattleEvent, BattleMods, Phase, PlayerAction, Side, StatusInstance, Unit } from './types';
 
 const C = BALANCE.combat;
-const NEGATIVE: StatusId[] = ['burn', 'poison', 'stun', 'vulnerable'];
+const NEGATIVE: StatusId[] = ['burn', 'poison', 'stun', 'vulnerable', 'slow'];
+/** Stati che scadono alla fine del turno di chi li porta. */
+const TIMED: StatusId[] = ['atkUp', 'vulnerable', 'shield', 'defUp', 'evade', 'slow', 'reflect'];
 
 export interface BattleSetup {
   hero: Unit;
@@ -86,6 +88,10 @@ export class Battle {
         this.energy -= a.cost ?? 0;
         ev.push({ t: 'energy', value: this.energy });
         this.useAbility(hero, a, action.targetUid, ev, { isPower: true });
+        if (a.effects.some((e) => e.kind === 'extraAction') && !this.checkEnd(ev)) {
+          ev.push({ t: 'extraAction', uid: hero.uid });
+          return ev; // stesso turno: il protagonista agisce ancora
+        }
         break;
       }
       case 'guard':
@@ -141,12 +147,17 @@ export class Battle {
     }
     this.queue = this.alive()
       .slice()
-      .sort((a, b) => b.spd - a.spd || (a.side === b.side ? 0 : a.side === 'ally' ? -1 : 1) || a.order - b.order)
+      .sort((a, b) => this.effSpd(b) - this.effSpd(a) || (a.side === b.side ? 0 : a.side === 'ally' ? -1 : 1) || a.order - b.order)
       .map((u) => u.uid);
   }
 
+  /** Velocità effettiva (rallentamenti inclusi): decide l'ordine del round. */
+  effSpd(u: Unit): number {
+    return u.spd * (1 - this.statusValue(u, 'slow'));
+  }
+
   private endTurn(u: Unit): void {
-    for (const s of u.statuses) if (s.id === 'atkUp' || s.id === 'vulnerable' || s.id === 'shield') s.turns--;
+    for (const s of u.statuses) if (TIMED.includes(s.id)) s.turns--;
     u.statuses = u.statuses.filter((s) => s.turns > 0 || s.id === 'guard' || s.id === 'stun' || s.id === 'burn' || s.id === 'poison');
   }
 
@@ -225,17 +236,23 @@ export class Battle {
   private applyEffect(actor: Unit, target: Unit, eff: Effect, ev: BattleEvent[], isPower: boolean): void {
     switch (eff.kind) {
       case 'damage': {
-        const atkUp = this.statusValue(actor, 'atkUp');
-        let dmg = actor.atk * (1 + atkUp) * eff.mult;
-        if (isPower) dmg *= this.mods.powerDamageMult;
-        dmg *= 100 / (100 + Math.max(0, target.def) * C.defFactor);
-        dmg *= 1 - C.variance + this.rng.next() * C.variance * 2;
-        const crit = this.rng.next() < C.critChance;
-        if (crit) dmg *= C.critMult;
-        if (this.hasStatus(target, 'vulnerable')) dmg *= C.vulnerableMult;
-        if (this.hasStatus(target, 'guard')) dmg *= C.guardMult;
-        const dealt = this.applyDamage(target, Math.max(1, Math.round(dmg)), ev, actor.uid, crit, 'hit');
-        if (eff.lifesteal && dealt > 0) this.heal(actor, Math.round(dealt * eff.lifesteal), ev);
+        for (let h = 0; h < (eff.hits ?? 1) && target.hp > 0 && actor.hp > 0; h++) {
+          if (this.rng.next() < this.statusValue(target, 'evade')) { ev.push({ t: 'dodge', target: target.uid }); continue; }
+          const atkUp = this.statusValue(actor, 'atkUp');
+          let dmg = actor.atk * (1 + atkUp) * eff.mult;
+          if (isPower) dmg *= this.mods.powerDamageMult;
+          const def = Math.max(0, target.def) * (1 + this.statusValue(target, 'defUp'));
+          dmg *= 100 / (100 + def * C.defFactor);
+          dmg *= 1 - C.variance + this.rng.next() * C.variance * 2;
+          const crit = this.rng.next() < C.critChance;
+          if (crit) dmg *= C.critMult;
+          if (this.hasStatus(target, 'vulnerable')) dmg *= C.vulnerableMult;
+          if (this.hasStatus(target, 'guard')) dmg *= C.guardMult;
+          const dealt = this.applyDamage(target, Math.max(1, Math.round(dmg)), ev, actor.uid, crit, 'hit');
+          if (eff.lifesteal && dealt > 0) this.heal(actor, Math.round(dealt * eff.lifesteal), ev);
+          const refl = this.statusValue(target, 'reflect');
+          if (refl > 0 && dealt > 0 && actor.uid !== target.uid) this.applyDamage(actor, Math.max(1, Math.round(dealt * refl)), ev, target.uid, false, 'reflect');
+        }
         break;
       }
       case 'heal': this.heal(target, Math.round(target.maxHp * eff.pctMaxHp), ev); break;
@@ -247,7 +264,9 @@ export class Battle {
       }
       case 'status': {
         if (eff.chance !== undefined && this.rng.next() >= eff.chance) { ev.push({ t: 'resist', target: target.uid, status: eff.status }); break; }
-        this.addStatus(target, { id: eff.status, turns: eff.turns, value: eff.value ?? 0 });
+        // un potenziamento su se stessi non deve "scadere" subito alla fine del turno in corso
+        const extra = target.uid === actor.uid && TIMED.includes(eff.status) ? 1 : 0;
+        this.addStatus(target, { id: eff.status, turns: eff.turns + extra, value: eff.value ?? 0 });
         ev.push({ t: 'status', target: target.uid, status: eff.status, turns: eff.turns });
         break;
       }
@@ -255,6 +274,16 @@ export class Battle {
         target.statuses = target.statuses.filter((s) => !NEGATIVE.includes(s.id));
         ev.push({ t: 'cleanse', target: target.uid });
         break;
+      case 'stealShield': {
+        const sh = this.getStatus(target, 'shield');
+        if (!sh || sh.value <= 0) break;
+        this.removeStatus(target, 'shield');
+        const mine = this.getStatus(actor, 'shield');
+        if (mine) { mine.value += sh.value; mine.turns = 3; } else actor.statuses.push({ id: 'shield', turns: 3, value: sh.value });
+        ev.push({ t: 'steal', source: actor.uid, target: target.uid, amount: sh.value });
+        break;
+      }
+      case 'extraAction': break; // gestita in act()
       case 'summon': {
         if (this.alive(actor.side).length >= eff.maxEnemies) break;
         const u = makeEnemyUnit(eff.enemyId, `e${this.nextUid++}`);
@@ -269,10 +298,10 @@ export class Battle {
   }
 
   /** Applica danno passando prima dallo scudo; ritorna gli HP effettivamente tolti. */
-  private applyDamage(target: Unit, amount: number, ev: BattleEvent[], source: string, crit: boolean, kind: 'hit' | 'burn' | 'poison'): number {
+  private applyDamage(target: Unit, amount: number, ev: BattleEvent[], source: string, crit: boolean, kind: 'hit' | 'burn' | 'poison' | 'reflect'): number {
     let absorbed = 0;
     const shield = this.getStatus(target, 'shield');
-    if (shield && kind === 'hit') {
+    if (shield && (kind === 'hit' || kind === 'reflect')) {
       absorbed = Math.min(shield.value, amount);
       shield.value -= absorbed;
       if (shield.value <= 0) this.removeStatus(target, 'shield');
