@@ -1,5 +1,6 @@
 import '@fontsource/bangers/400.css';
 import '@fontsource/m-plus-rounded-1c/800.css';
+import '@fontsource/pixelify-sans/700.css';
 import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH, RENDER_SCALE } from './config';
 import { BootScene } from '../scenes/BootScene';
@@ -13,11 +14,12 @@ import { EventScene } from '../scenes/EventScene';
 import { SummaryScene } from '../scenes/SummaryScene';
 import { CollectionScene } from '../scenes/CollectionScene';
 import { RecordsScene } from '../scenes/RecordsScene';
+import { PixelPreviewScene } from '../scenes/PixelPreviewScene';
 import { GameSession } from '../state/GameSession';
 
 async function start(): Promise<void> {
   // I testi Phaser vengono disegnati subito: i font devono essere pronti prima.
-  await Promise.allSettled([document.fonts.load('40px Bangers'), document.fonts.load('800 30px "M PLUS Rounded 1c"')]);
+  await Promise.allSettled([document.fonts.load('40px Bangers'), document.fonts.load('800 30px "M PLUS Rounded 1c"'), document.fonts.load('700 30px "Pixelify Sans"')]);
 
   const game = new Phaser.Game({
     type: Phaser.AUTO,
@@ -33,7 +35,7 @@ async function start(): Promise<void> {
     },
     input: { activePointers: 2 },
     render: { antialias: true, pixelArt: false },
-    scene: [BootScene, MenuScene, CharacterSelectScene, FruitRevealScene, ExplorationScene, BattleScene, RewardScene, EventScene, SummaryScene, CollectionScene, RecordsScene],
+    scene: [BootScene, MenuScene, CharacterSelectScene, FruitRevealScene, ExplorationScene, BattleScene, RewardScene, EventScene, SummaryScene, CollectionScene, RecordsScene, PixelPreviewScene],
   });
 
   // Esposto solo per il debug da console (es. chrome://inspect sull'S23).

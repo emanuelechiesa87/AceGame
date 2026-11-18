@@ -34,6 +34,7 @@ export class MenuScene extends BaseScene {
     heroM.setInteractive(new Phaser.Geom.Rectangle(-90, -330, 180, 330), Phaser.Geom.Rectangle.Contains).on('pointerup', () => heroM.cheer());
     heroF.setInteractive(new Phaser.Geom.Rectangle(-90, -330, 180, 330), Phaser.Geom.Rectangle.Contains).on('pointerup', () => heroF.cheer('fierce', 'shout'));
 
+    new Button(this, 610, 60, 'PIXEL?', () => this.goTo('PixelPreview'), { width: 170, height: 70, fontSize: 30, variant: 'danger' });
     const canResume = GameSession.hasSavedRun();
     if (canResume) {
       new Button(this, cx, 930, 'CONTINUA', () => { if (GameSession.resumeRun()) this.goTo('Exploration'); else this.scene.restart(); }, { width: 540, height: 112, fontSize: 60 });
