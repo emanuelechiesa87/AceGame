@@ -39,7 +39,8 @@ export interface FruitDef {
   color: string;
   description: string;
   passive: StatMods;
-  ability: Ability;
+  /** Potere ai livelli di risveglio I, II, III. */
+  abilities: [Ability, Ability, Ability];
   startsUnlocked: boolean;
 }
 

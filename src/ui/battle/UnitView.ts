@@ -99,6 +99,9 @@ export class UnitView {
     await new Promise<void>((r) => this.scene.tweens.add({ targets: this.root, x: this.root.x + dx, duration: 110 / speed, yoyo: true, ease: 'Quad.easeOut', onComplete: () => r() }));
   }
 
+  /** Solo il fendente dell'eroe, senza scatto in avanti (poteri a distanza). */
+  slashOnly(speed: number): void { if (this.sprite instanceof HeroRig) this.sprite.slash(speed); }
+
   cheer(): void { if (this.sprite instanceof HeroRig) this.sprite.cheer('happy', 'shout'); }
   fierce(): void { if (this.sprite instanceof HeroRig) this.sprite.setExpression('fierce', 'shout'); }
 

@@ -19,6 +19,7 @@ export function createRunState(avatar: AvatarVariant, seed: number, now = new Da
     baseStats: { maxHp: p.baseHp, atk: p.baseAtk, def: p.baseDef, spd: p.baseSpd },
     currentHp: p.baseHp,
     activeFruitIds: [],
+    fruitLevel: 1,
     artifactIds: [],
     companions: [],
     potions: p.startingPotions,

@@ -42,18 +42,22 @@ describe('RunController', () => {
     expect(map.at(-2)!.options).toContain('rest');
   });
 
-  it('massimo tre frutti: il quarto chiede sostituzione o rifiuto', () => {
+  it('un solo frutto per run: il Risveglio lo porta fino al livello III', () => {
     const ctl = fresh();
-    const others = FRUITS.map((f) => f.id).filter((id) => !ctl.run.activeFruitIds.includes(id));
-    expect(ctl.gainFruit(others[0])).toBe('added');
-    expect(ctl.gainFruit(others[1])).toBe('added');
-    expect(ctl.gainFruit(others[2])).toBe('needsReplace');
-    expect(ctl.run.activeFruitIds).toHaveLength(3);
-    const old = ctl.run.activeFruitIds[0];
-    expect(ctl.gainFruit(others[2], old)).toBe('added');
-    expect(ctl.run.activeFruitIds).toHaveLength(3);
-    expect(ctl.run.activeFruitIds).not.toContain(old);
-    expect(ctl.run.usedFruitIds).toContain(others[2]);
+    expect(ctl.run.activeFruitIds).toHaveLength(1);
+    expect(ctl.fruitLevel).toBe(1);
+    expect(ctl.awaken()).toBe(true);
+    expect(ctl.awaken()).toBe(true);
+    expect(ctl.fruitLevel).toBe(3);
+    expect(ctl.awaken()).toBe(false);
+    expect(ctl.canAwaken).toBe(false);
+    for (let i = 0; i < 20; i++) expect(ctl.rewardOptions('battle').some((r) => r.kind === 'awaken')).toBe(false);
+  });
+
+  it('le ricompense non offrono mai frutti nuovi e l\'élite offre il risveglio', () => {
+    const ctl = fresh();
+    for (let i = 0; i < 30; i++) for (const r of ctl.rewardOptions('battle')) expect(['awaken', 'artifact', 'potion', 'heal', 'maxHp']).toContain(r.kind);
+    expect(ctl.rewardOptions('elite').some((r) => r.kind === 'awaken')).toBe(true);
   });
 
   it('squadra massima quattro: il quarto compagno richiede sostituzione', () => {

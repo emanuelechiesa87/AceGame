@@ -10,7 +10,7 @@ export const EVENTS: EventDef[] = [
   },
   {
     id: 'ev_hooded_trader', title: 'Mercante del Molo',
-    text: '«Psst! Una pozione per un frutto misterioso? Affare dell\'anno, garantito al 40%!»',
+    text: '«Psst! Una pozione per un\'essenza che risveglia i frutti? Affare dell\'anno, garantito al 50%!»',
     choices: [{ label: 'Scambia 1 pozione', outcome: 'trade_potion_fruit' }, { label: 'Non mi fido', outcome: 'nothing' }],
   },
   {

@@ -3,7 +3,7 @@ import { COLORS } from '../app/config';
 import { iconKey } from '../pixel/keys';
 import { ARTIFACT_BY_ID } from '../data/artifacts';
 import { COMPANION_BY_ID } from '../data/companions';
-import { FRUIT_BY_ID } from '../data/fruits';
+import { FRUIT_BY_ID, fruitAbility } from '../data/fruits';
 import { GameSession } from '../state/GameSession';
 import { Button } from './Button';
 import { addBody, addTitle } from './text';
@@ -29,8 +29,8 @@ export function fruitCard(scene: Phaser.Scene, parent: Phaser.GameObjects.Contai
     g,
     icon(scene, x - w / 2 + 70, y, iconKey('fruit', id), 104),
     addTitle(scene, x - w / 2 + 140, y - h / 2 + 34, f.name, 36).setOrigin(0, 0.5),
-    addBody(scene, x + w / 2 - 24, y - h / 2 + 34, `${RARITY_LABEL[f.rarity]} · ${f.ability.cost}⚡`, 20, '#ffcf3a').setOrigin(1, 0.5),
-    addBody(scene, x - w / 2 + 140, y + 6, `${f.ability.name}: ${f.ability.description}`, 22, '#fff7e6').setOrigin(0, 0.5).setWordWrapWidth(w - 170).setAlign('left'),
+    addBody(scene, x + w / 2 - 24, y - h / 2 + 34, `${RARITY_LABEL[f.rarity]} · ${fruitAbility(f, 1).cost}⚡`, 20, '#ffcf3a').setOrigin(1, 0.5),
+    addBody(scene, x - w / 2 + 140, y + 6, `${fruitAbility(f, 1).name}: ${fruitAbility(f, 1).description}`, 19, '#fff7e6').setOrigin(0, 0.5).setWordWrapWidth(w - 170).setAlign('left'),
     addBody(scene, x - w / 2 + 140, y + h / 2 - 26, `Passiva: ${passiveText(f.passive)}`, 19, '#9be06a').setOrigin(0, 0.5),
   ]);
   return scene.add.zone(x, y, w, h).setInteractive({ useHandCursor: true });
@@ -43,30 +43,6 @@ export function passiveText(m: { maxHp?: number; atk?: number; def?: number; spd
   if (m.def) parts.push(`${m.def > 0 ? '+' : ''}${m.def} DIF`);
   if (m.spd) parts.push(`${m.spd > 0 ? '+' : ''}${m.spd} VEL`);
   return parts.join(', ') || '—';
-}
-
-/**
- * Offre un frutto. Se gli slot sono pieni (3), chiede quale sostituire o se
- * rifiutare. Registra la scoperta nella collezione permanente.
- */
-export function offerFruit(scene: Phaser.Scene, fruitId: string, onDone: (taken: boolean) => void): void {
-  const ctl = GameSession.ctl!;
-  GameSession.discover({ fruits: [fruitId] });
-  const res = ctl.gainFruit(fruitId);
-  if (res !== 'needsReplace') { onDone(res === 'added'); return; }
-
-  const m = modal(scene);
-  m.add(addTitle(scene, 360, 120, 'POTERI AL MASSIMO!', 56).setAngle(-2));
-  m.add(addBody(scene, 360, 186, 'Puoi tenere solo 3 frutti. Quale sostituisci?', 26, '#fbe9c8'));
-  const zNew = fruitCard(scene, m, fruitId, 360, 330, 640, 190);
-  zNew.disableInteractive();
-  m.add(addTitle(scene, 360, 450, 'SOSTITUISCI:', 34).setColor('#ff9ab0'));
-  ctl.run.activeFruitIds.forEach((old, i) => {
-    const z = fruitCard(scene, m, old, 360, 580 + i * 180, 640, 160);
-    m.add(z);
-    z.on('pointerup', () => { ctl.gainFruit(fruitId, old); m.destroy(); onDone(true); });
-  });
-  m.add(new Button(scene, 360, 1180, 'RIFIUTA IL NUOVO', () => { m.destroy(); onDone(false); }, { variant: 'secondary', width: 440, height: 92, fontSize: 40 }));
 }
 
 export function offerArtifact(artifactId: string): void {

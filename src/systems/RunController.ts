@@ -3,7 +3,7 @@ import { ARTIFACTS, ARTIFACT_BY_ID } from '../data/artifacts';
 import { BALANCE } from '../data/balance';
 import { COMPANIONS } from '../data/companions';
 import { ENEMY_BY_ID } from '../data/enemies';
-import { FRUITS, FRUIT_BY_ID } from '../data/fruits';
+import { FRUITS, MAX_FRUIT_LEVEL } from '../data/fruits';
 import { effectiveStats } from '../state/RunState';
 import type { Rarity } from '../types/content';
 import type { MapStep, RunState } from '../types/game';
@@ -13,7 +13,7 @@ const RARITY_WEIGHT: Record<Rarity, number> = { common: 60, rare: 30, epic: 10 }
 const L = BALANCE.limits;
 
 export type Reward =
-  | { kind: 'fruit'; id: string }
+  | { kind: 'awaken' }
   | { kind: 'artifact'; id: string }
   | { kind: 'potion' }
   | { kind: 'heal' }
@@ -23,7 +23,7 @@ export type GainResult = 'added' | 'needsReplace' | 'duplicate';
 
 /**
  * Regole della run, senza grafica: mappa, incontri, ricompense, limiti di
- * frutti e compagni, punteggio. Tutta la casualità passa da un Rng con seed,
+ * risveglio del frutto, compagni, punteggio. Tutta la casualità passa da un Rng con seed,
  * il cui avanzamento è salvato nel RunState (rngCursor).
  */
 export class RunController {
@@ -45,6 +45,7 @@ export class RunController {
     const fruit = this.rng.weightedPick(pool.map((f) => ({ item: f.id, weight: RARITY_WEIGHT[f.rarity] })));
     this.run.activeFruitIds = [fruit];
     this.run.usedFruitIds = [fruit];
+    this.run.fruitLevel = 1;
     this.run.map = this.generateMap();
     return fruit;
   }
@@ -117,31 +118,40 @@ export class RunController {
   }
 
   // --- ricompense ------------------------------------------------------------------
+  /** Livello di risveglio del frutto (le run salvate prima del risveglio valgono 1). */
+  get fruitLevel(): number { return this.run.fruitLevel ?? 1; }
+  get canAwaken(): boolean { return this.fruitLevel < MAX_FRUIT_LEVEL; }
+
+  /**
+   * Ricompense dopo ogni scontro: mai frutti nuovi (se ne mangia uno solo).
+   * Élite e boss garantiscono un artefatto e, se possibile, il Risveglio.
+   */
   rewardOptions(node: NodeType): Reward[] {
     const out: Reward[] = [];
-    const fruit = this.randomNewFruit();
     const artifact = this.randomNewArtifact();
+    const R = BALANCE.rewards.weights;
     if (node === 'elite' || node === 'boss') {
       if (artifact) out.push({ kind: 'artifact', id: artifact });
-      if (fruit) out.push({ kind: 'fruit', id: fruit });
+      if (this.canAwaken) out.push({ kind: 'awaken' });
     }
     const pool: { item: Reward['kind']; weight: number }[] = [
-      { item: 'fruit', weight: fruit ? 22 : 0 }, { item: 'artifact', weight: artifact ? 18 : 0 },
-      { item: 'potion', weight: 25 }, { item: 'heal', weight: 18 }, { item: 'maxHp', weight: 17 },
+      { item: 'awaken', weight: this.canAwaken ? R.awaken : 0 }, { item: 'artifact', weight: artifact ? R.artifact : 0 },
+      { item: 'potion', weight: R.potion }, { item: 'heal', weight: R.heal }, { item: 'maxHp', weight: R.maxHp },
     ];
     for (let guard = 0; out.length < 3 && guard < 50; guard++) {
       const kind = this.rng.weightedPick(pool);
       if (out.some((r) => r.kind === kind)) continue;
-      if (kind === 'fruit') out.push({ kind, id: fruit! });
-      else if (kind === 'artifact') out.push({ kind, id: artifact! });
-      else out.push({ kind });
+      if (kind === 'artifact') out.push({ kind, id: artifact! });
+      else out.push({ kind } as Reward);
     }
     return out;
   }
 
-  randomNewFruit(): string | undefined {
-    const pool = FRUITS.filter((f) => !this.run.activeFruitIds.includes(f.id));
-    return pool.length ? this.rng.weightedPick(pool.map((f) => ({ item: f.id, weight: RARITY_WEIGHT[f.rarity] }))) : undefined;
+  /** Risveglio: il potere del frutto sale di livello (max III). */
+  awaken(): boolean {
+    if (!this.canAwaken) return false;
+    this.run.fruitLevel = this.fruitLevel + 1;
+    return true;
   }
 
   randomNewArtifact(): string | undefined {
@@ -154,8 +164,9 @@ export class RunController {
     return pool.length ? this.rng.pick(pool).id : undefined;
   }
 
-  /** Applica ricompense semplici; frutti e artefatti passano da gainFruit/gainArtifact. */
-  applySimple(kind: 'potion' | 'heal' | 'maxHp'): void {
+  /** Applica ricompense semplici; artefatti e risveglio hanno metodi dedicati. */
+  applySimple(kind: 'potion' | 'heal' | 'maxHp' | 'awaken'): void {
+    if (kind === 'awaken') { this.awaken(); return; }
     const R = BALANCE.rewards;
     if (kind === 'potion') this.run.potions++;
     if (kind === 'heal') this.healPct(R.healRewardPct);
@@ -165,22 +176,6 @@ export class RunController {
   healPct(pct: number): void {
     const max = effectiveStats(this.run).maxHp;
     this.run.currentHp = Math.min(max, this.run.currentHp + Math.round(max * pct));
-  }
-
-  /** Massimo tre poteri da frutto: oltre, serve scegliere chi sostituire o rifiutare. */
-  gainFruit(id: string, replaceId?: string): GainResult {
-    if (!FRUIT_BY_ID.has(id)) throw new Error(`Frutto sconosciuto: ${id}`);
-    const fr = this.run.activeFruitIds;
-    if (fr.includes(id)) return 'duplicate';
-    if (fr.length >= L.maxActivePowers) {
-      if (!replaceId) return 'needsReplace';
-      const idx = fr.indexOf(replaceId);
-      if (idx < 0) throw new Error('Frutto da sostituire non presente');
-      fr[idx] = id;
-    } else fr.push(id);
-    if (!this.run.usedFruitIds.includes(id)) this.run.usedFruitIds.push(id);
-    this.clampHp();
-    return 'added';
   }
 
   gainArtifact(id: string): GainResult {

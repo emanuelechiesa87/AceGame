@@ -21,8 +21,8 @@ export const PARTS: Record<'legB' | 'legF' | 'body' | 'armB' | 'armF' | 'head' |
   armB: { x0: -8, y0: -24, w: 4, h: 11, pivot: { x: -6, y: -23 } },
   armF: { x0: 4, y0: -24, w: 12, h: 13, pivot: { x: 6, y: -23 } },
   // testa: canvas più grande del cubo 12×12 per cappello/capelli
-  head: { x0: -10, y0: -42, w: 20, h: 20, pivot: { x: 0, y: -23 } },
-  tail: { x0: -12, y0: -33, w: 7, h: 14, pivot: { x: -6, y: -32 } },
+  head: { x0: -13, y0: -45, w: 26, h: 23, pivot: { x: 0, y: -23 } },
+  tail: { x0: -12, y0: -33, w: 7, h: 19, pivot: { x: -6, y: -32 } },
 };
 
 interface HeroPal { skin: string; hair: string; top: string; topB: string; trim: string; legs: string; boots: string; belt: string; hat: string; blade: string; hilt: string; eye: string }
@@ -31,7 +31,7 @@ export const HERO_PAL: Record<HeroId, HeroPal> = {
   // LUI: bandana rossa, gilet di cuoio su maglia a righe blu notte, pantaloni prugna
   m: { skin: '#ffcfa6', hair: '#7a3b1e', top: '#fff3dc', topB: '#26386b', trim: '#8a5232', legs: '#4a3a66', boots: '#6b3a1e', belt: '#3a2414', hat: '#e4342f', blade: '#dfe7f2', hilt: '#ffcf3a', eye: '#2a7fd4' },
   // LEI: tricorno marrone con piuma, giacca verde mare, fusciacca rossa, pantaloni crema
-  f: { skin: '#f4c29a', hair: '#3b2147', top: '#fff3dc', topB: '#1f8a7a', trim: '#ffcf3a', legs: '#efe0bf', boots: '#2a1f2e', belt: '#d6334a', hat: '#6b3a1e', blade: '#dfe7f2', hilt: '#b9c3d6', eye: '#3fae5a' },
+  f: { skin: '#f8cfae', hair: '#5a2a4a', top: '#fff3dc', topB: '#1f8a7a', trim: '#ffcf3a', legs: '#efe0bf', boots: '#3a2236', belt: '#e0457b', hat: '#7a3b2e', blade: '#dfe7f2', hilt: '#b9c3d6', eye: '#2fae7a' },
 };
 
 function part(scene: Phaser.Scene, key: string, spec: PartSpec, draw: (px: Px) => void): void {
@@ -47,9 +47,17 @@ export function makeHeroTextures(scene: Phaser.Scene, id: HeroId): void {
     const x = front ? 0 : -5;
     const legs = front ? p.legs : shade(p.legs, -0.15);
     const boots = front ? p.boots : shade(p.boots, -0.15);
-    block(px, x, -12, 5, 8, legs);
-    block(px, x, -5, 5, 5, boots);
-    px(x + 1, -5, shade(boots, 0.35), 3, 1); // risvolto
+    if (id === 'f') {
+      // stivali alti fino al ginocchio, gamba più snella
+      block(px, x, -12, 5, 6, legs);
+      block(px, x, -7, 5, 7, boots);
+      px(x + 1, -7, shade(boots, 0.45), 3, 1);
+      px(x + 3, -1, INK, 2, 1); // tacco
+    } else {
+      block(px, x, -12, 5, 8, legs);
+      block(px, x, -5, 5, 5, boots);
+      px(x + 1, -5, shade(boots, 0.35), 3, 1); // risvolto
+    }
   };
   part(scene, k('legB'), PARTS.legB, leg(false));
   part(scene, k('legF'), PARTS.legF, leg(true));
@@ -63,11 +71,19 @@ export function makeHeroTextures(scene: Phaser.Scene, id: HeroId): void {
       block(px, 2, -24, 3, 11, p.trim, { light: false });
       px(-1, -23, p.skin, 2, 1); // scollo
     } else {
-      block(px, -5, -24, 10, 13, p.topB);
-      px(-2, -23, p.top, 4, 7); // camicia
+      // giacca sciancrata: spalle strette, vita stretta, falde che si allargano sui fianchi
+      px(-5, -24, INK, 10, 9); px(-4, -16, INK, 8, 3); px(-6, -14, INK, 12, 4);
+      px(-4, -23, p.topB, 8, 7); px(-3, -16, p.topB, 6, 2); px(-5, -13, p.topB, 10, 2);
+      px(-4, -23, shade(p.topB, 0.3), 8, 1);
+      px(-2, -23, p.top, 4, 5); // camicetta
+      px(-2, -23, '#ffffff', 1, 1); px(1, -23, '#ffffff', 1, 1); px(-1, -21, '#ffffff', 2, 1); // jabot a balze
       px(-1, -23, p.skin, 2, 1);
-      px(-3, -23, p.trim, 1, 9); px(2, -23, p.trim, 1, 9); // bordi dorati della giacca
-      px(-4, -19, p.trim, 1, 1); px(3, -19, p.trim, 1, 1); px(-4, -16, p.trim, 1, 1); px(3, -16, p.trim, 1, 1);
+      px(-3, -22, p.trim, 1, 6); px(2, -22, p.trim, 1, 6); // bordi dorati
+      px(-5, -12, p.trim, 10, 1); // orlo delle falde
+      // fusciacca rosa con fiocco
+      px(-4, -16, p.belt, 8, 2);
+      px(3, -16, INK, 3, 3); px(4, -15, p.belt, 1, 2);
+      return;
     }
     // cintura con fibbia
     px(-5, -14, INK, 10, 3);
@@ -96,7 +112,7 @@ export function makeHeroTextures(scene: Phaser.Scene, id: HeroId): void {
   part(scene, k('head'), PARTS.head, (px) => {
     block(px, -6, -35, 12, 12, p.skin);
     px(-5, -27, shade(p.skin, -0.12), 1, 2); // orecchio (lato sinistro: guarda a destra)
-    px(4, -28, '#ff9f8a', 1, 1); px(-2, -28, '#ff9f8a', 1, 1); // guance
+    if (id === 'f') { px(3, -27, '#ff9ab0', 2, 1); px(-4, -27, '#ff9ab0', 2, 1); } else { px(4, -28, '#ff9f8a', 1, 1); px(-2, -28, '#ff9f8a', 1, 1); } // guance
     if (id === 'm') {
       // capelli a ciuffi squadrati sopra la bandana
       px(-6, -38, INK, 12, 3);
@@ -110,15 +126,23 @@ export function makeHeroTextures(scene: Phaser.Scene, id: HeroId): void {
       // basette
       px(-6, -32, p.hair, 1, 3);
     } else {
-      // frangia
-      px(-6, -33, p.hair, 12, 2); px(-6, -31, p.hair, 2, 4); px(3, -31, p.hair, 3, 1);
-      // tricorno squadrato con bordo dorato e piuma
-      block(px, -9, -36, 18, 3, p.hat);
-      px(-8, -36, p.trim, 16, 1);
-      block(px, -5, -40, 10, 5, p.hat);
-      px(-4, -37, p.trim, 8, 1);
-      px(-1, -39, '#fff3dc', 2, 2); // stemma inventato: una gemma chiara
-      px(-8, -42, INK, 3, 6); px(-7, -41, '#e4342f', 1, 4); // piuma
+      // capelli lunghi che incorniciano il viso (ciocche ai lati fino alle spalle)
+      px(-7, -34, INK, 3, 12); px(-6, -33, p.hair, 2, 10);
+      px(5, -34, INK, 3, 11); px(5, -33, p.hair, 2, 9);
+      px(-6, -24, INK, 2, 2); px(6, -25, INK, 2, 2);
+      px(-6, -34, p.hair, 12, 2); // frangia
+      px(-5, -32, p.hair, 3, 1); px(2, -32, p.hair, 3, 1); px(4, -31, p.hair, 1, 1);
+      px(-6, -33, shade(p.hair, 0.35), 1, 6); // riflesso
+      // orecchino dorato
+      px(-6, -26, '#ffcf3a', 1, 2);
+      // piuma rosa distesa all'indietro (disegnata prima: sta dietro al cappello)
+      px(-12, -41, INK, 9, 4); px(-11, -40, '#ff6fa8', 7, 2); px(-11, -40, '#ffd6e6', 3, 1); px(-13, -42, INK, 3, 2); px(-12, -42, '#ff6fa8', 1, 1);
+      // cappello piumato a falda larga con nastro rosa
+      block(px, -9, -37, 18, 3, p.hat);
+      px(-8, -37, shade(p.hat, 0.3), 16, 1);
+      block(px, -5, -41, 10, 5, p.hat);
+      px(-4, -38, '#ff6fa8', 8, 1);
+      px(-1, -40, '#fff3dc', 2, 1); // gemma
     }
   });
 
@@ -129,8 +153,11 @@ export function makeHeroTextures(scene: Phaser.Scene, id: HeroId): void {
       px(-12, -30, INK, 4, 5); px(-11, -29, p.hat, 2, 3);
       px(-10, -26, INK, 3, 4); px(-9, -25, shade(p.hat, -0.2), 1, 2);
     } else {
-      block(px, -9, -33, 4, 13, p.hair, { light: false });
-      px(-8, -32, shade(p.hair, 0.3), 1, 9);
+      // coda lunga e ondulata con fiocco rosa
+      block(px, -9, -30, 5, 9, p.hair, { light: false });
+      block(px, -10, -22, 5, 6, p.hair, { light: false });
+      px(-8, -29, shade(p.hair, 0.35), 1, 7); px(-9, -21, shade(p.hair, 0.35), 1, 4);
+      px(-9, -32, INK, 5, 4); px(-8, -31, '#ff6fa8', 3, 2); px(-7, -31, INK, 1, 2); // fiocco
     }
   });
 
@@ -140,22 +167,32 @@ export function makeHeroTextures(scene: Phaser.Scene, id: HeroId): void {
     if (fierce) { px(-3, -31, INK, 2, 1); px(-2, -30, INK, 1, 1); px(2, -31, INK, 2, 1); px(2, -30, INK, 1, 1); }
     else { px(-3, -31, INK, 2, 1); px(2, -31, INK, 2, 1); }
   };
+  // ciglia per lei: un pixel sopra l'angolo esterno di ogni occhio
+  const lashes = (px: Px) => { if (id === 'f') { px(-4, -30, INK, 1, 1); px(4, -30, INK, 1, 1); } };
   const EYE_FN: Record<Eyes, (px: Px) => void> = {
     open: (px) => {
+      if (id === 'f') {
+        lashes(px); px(-3, -30, INK, 2, 1); px(2, -30, INK, 2, 1);
+        for (const x of [-3, 2]) { px(x, -29, '#ffffff', 1, 2); px(x + 1, -29, p.eye, 1, 2); px(x + 1, -29, INK, 1, 1); }
+        return;
+      }
       brow(px, false);
       for (const x of [-3, 2]) { px(x, -29, '#ffffff', 1, 2); px(x + 1, -29, INK, 1, 2); px(x + 1, -28, p.eye, 1, 1); }
     },
-    closed: (px) => { for (const x of [-3, 2]) px(x, -28, INK, 2, 1); },
-    happy: (px) => { for (const x of [-3, 2]) { px(x, -28, INK, 1, 1); px(x + 1, -29, INK, 1, 1); px(x + 2, -28, INK, 1, 1); } },
+    closed: (px) => { lashes(px); for (const x of [-3, 2]) px(x, -28, INK, 2, 1); },
+    happy: (px) => { lashes(px); for (const x of [-3, 2]) { px(x, -28, INK, 1, 1); px(x + 1, -29, INK, 1, 1); px(x + 2, -28, INK, 1, 1); } },
     fierce: (px) => {
+      lashes(px);
       brow(px, true);
       for (const x of [-3, 2]) { px(x, -29, '#ffffff', 2, 2); px(x + 1, -29, INK, 1, 2); }
     },
   };
+  // lei: labbra rosa, bocca più piccola
+  const lip = id === 'f' ? '#d6456e' : INK;
   const MOUTH_FN: Record<Mouth, (px: Px) => void> = {
-    grin: (px) => { px(-2, -26, INK, 5, 2); px(-1, -26, '#ffffff', 3, 1); },
-    shout: (px) => { px(-1, -27, INK, 3, 3); px(0, -26, '#e4342f', 1, 1); },
-    smirk: (px) => { px(-1, -26, INK, 3, 1); px(2, -27, INK, 1, 1); },
+    grin: (px) => { if (id === 'f') { px(-1, -26, lip, 3, 1); px(-2, -27, lip, 1, 1); px(2, -27, lip, 1, 1); return; } px(-2, -26, INK, 5, 2); px(-1, -26, '#ffffff', 3, 1); },
+    shout: (px) => { px(-1, -27, lip, 3, 3); px(0, -26, '#e4342f', 1, 1); },
+    smirk: (px) => { if (id === 'f') { px(-1, -26, lip, 2, 1); px(1, -27, lip, 1, 1); return; } px(-1, -26, INK, 3, 1); px(2, -27, INK, 1, 1); },
     ouch: (px) => { px(-2, -26, INK, 1, 1); px(-1, -27, INK, 1, 1); px(0, -26, INK, 1, 1); px(1, -27, INK, 1, 1); px(2, -26, INK, 1, 1); },
   };
   (Object.keys(EYE_FN) as Eyes[]).forEach((e) => face(`eyes-${e}`, EYE_FN[e]));

@@ -4,12 +4,13 @@ import { iconKey } from '../pixel/keys';
 import type { NodeType } from '../data/areas';
 import { ARTIFACT_BY_ID } from '../data/artifacts';
 import { BALANCE } from '../data/balance';
-import { FRUIT_BY_ID } from '../data/fruits';
+import { FRUIT_BY_ID, fruitAbility } from '../data/fruits';
 import { GameSession } from '../state/GameSession';
 import type { Reward } from '../systems/RunController';
 import { BiomeBackdrop } from '../ui/BiomeBackdrop';
 import { Button } from '../ui/Button';
-import { offerArtifact, offerFruit, RARITY_LABEL } from '../ui/Offers';
+import { offerArtifact, RARITY_LABEL } from '../ui/Offers';
+import { awakenFx, ROMAN } from '../ui/fruitFx';
 import { RunHud } from '../ui/RunHud';
 import { addBody, addTitle } from '../ui/text';
 import { icon, panel } from '../ui/widgets';
@@ -37,9 +38,10 @@ export class RewardScene extends BaseScene {
 
     if (data.mode === 'chest') {
       addTitle(this, GAME_WIDTH / 2, 280, 'FORZIERE!', 76).setAngle(-3);
-      const fruit = ctl.rng.next() < 0.4 ? ctl.randomNewFruit() : undefined;
-      const art = fruit ? undefined : ctl.randomNewArtifact();
-      const reward: Reward = fruit ? { kind: 'fruit', id: fruit } : art ? { kind: 'artifact', id: art } : { kind: 'potion' };
+      // forziere: artefatto, oppure risveglio del frutto, oppure pozione
+      const awaken = ctl.canAwaken && ctl.rng.next() < 0.35;
+      const art = awaken ? undefined : ctl.randomNewArtifact();
+      const reward: Reward = awaken ? { kind: 'awaken' } : art ? { kind: 'artifact', id: art } : { kind: 'potion' };
       addBody(this, GAME_WIDTH / 2, 350, 'Dentro c\'è...', 30, '#fbe9c8');
       this.card(reward, GAME_WIDTH / 2, 620, 560, true);
       return;
@@ -53,7 +55,11 @@ export class RewardScene extends BaseScene {
   private describe(r: Reward): { key: string; title: string; text: string; tag: string } {
     const R = BALANCE.rewards;
     switch (r.kind) {
-      case 'fruit': { const f = FRUIT_BY_ID.get(r.id)!; return { key: iconKey('fruit', f.id), title: f.name, text: `${f.ability.name} (${f.ability.cost}⚡): ${f.ability.description}`, tag: `FRUTTO · ${RARITY_LABEL[f.rarity]}` }; }
+      case 'awaken': {
+        const f = FRUIT_BY_ID.get(GameSession.run!.activeFruitIds[0])!;
+        const next = fruitAbility(f, GameSession.ctl!.fruitLevel + 1);
+        return { key: iconKey('fruit', f.id), title: `Risveglio ${ROMAN[GameSession.ctl!.fruitLevel + 1]}`, text: `${next.name} (${next.cost}⚡): ${next.description}`, tag: 'POTERE DEL FRUTTO' };
+      }
       case 'artifact': { const a = ARTIFACT_BY_ID.get(r.id)!; return { key: iconKey('artifact', a.id), title: a.name, text: a.description, tag: `ARTEFATTO · ${RARITY_LABEL[a.rarity]}` }; }
       case 'potion': return { key: iconKey('misc', 'potion'), title: 'Pozione', text: `Cura il ${Math.round(BALANCE.combat.potionHealPct * 100)}% degli HP in battaglia.`, tag: 'OGGETTO' };
       case 'heal': return { key: iconKey('node', 'rest'), title: 'Spuntino', text: `Recuperi subito il ${Math.round(R.healRewardPct * 100)}% degli HP.`, tag: 'CURA' };
@@ -85,7 +91,11 @@ export class RewardScene extends BaseScene {
     this.tweens.add({ targets: c, scale: 1.08, duration: 100, yoyo: true });
     const ctl = GameSession.ctl!;
     switch (r.kind) {
-      case 'fruit': offerFruit(this, r.id, () => this.finish()); return;
+      case 'awaken': {
+        ctl.awaken();
+        void awakenFx(this, GameSession.run!.activeFruitIds[0], ctl.fruitLevel).then(() => this.finish());
+        return;
+      }
       case 'artifact': offerArtifact(r.id); break;
       default: ctl.applySimple(r.kind);
     }

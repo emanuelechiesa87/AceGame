@@ -1,6 +1,8 @@
 import { FX_SCALE } from '../pixel/backgrounds';
 import { COLORS, GAME_WIDTH } from '../app/config';
 import { iconKey } from '../pixel/keys';
+import { BALANCE } from '../data/balance';
+import { FRUIT_BY_ID } from '../data/fruits';
 import { GameSession } from '../state/GameSession';
 import { BiomeBackdrop } from '../ui/BiomeBackdrop';
 import { Button } from '../ui/Button';
@@ -51,10 +53,24 @@ export class SummaryScene extends BaseScene {
       addBody(this, 110, 710 + i * 44, k, 26, '#fbe9c8').setOrigin(0, 0.5);
       addBody(this, 610, 710 + i * 44, v, 26, '#ffffff').setOrigin(1, 0.5);
     });
-    addBody(this, 110, 905, 'Frutti usati:', 24, '#fbe9c8').setOrigin(0, 0.5);
-    snapshot.usedFruitIds.forEach((id, i) => icon(this, 300 + i * 56, 905, iconKey('fruit', id), 50));
+    const fid = snapshot.activeFruitIds[0];
+    addBody(this, 110, 905, 'Frutto:', 24, '#fbe9c8').setOrigin(0, 0.5);
+    if (fid) {
+      icon(this, 230, 905, iconKey('fruit', fid), 50);
+      addBody(this, 266, 905, `${FRUIT_BY_ID.get(fid)!.name} · Lv ${['', 'I', 'II', 'III'][snapshot.fruitLevel ?? 1]}`, 22, '#ffffff').setOrigin(0, 0.5);
+    }
 
-    addBody(this, GAME_WIDTH / 2, 990, 'Collezione e record restano salvati su questo dispositivo.', 22, '#f1d7a8');
+    // sblocchi tra una run e l'altra: nuovi frutti nel pool iniziale
+    const unlocked = res?.unlocked ?? [];
+    if (unlocked.length) {
+      const names = unlocked.map((u) => FRUIT_BY_ID.get(u)!.name).join(', ');
+      const t = addTitle(this, GAME_WIDTH / 2, 990, `NUOVO FRUTTO SBLOCCATO: ${names}!`, 26).setColor('#6fe08a').setWordWrapWidth(640);
+      this.tweens.add({ targets: t, scale: 1.06, duration: 500, yoyo: true, repeat: -1 });
+    } else {
+      const left = GameSession.lockedFruitIds().length;
+      const pts = GameSession.save.data.unlockPoints;
+      addBody(this, GAME_WIDTH / 2, 990, left ? `Prossimo frutto sbloccato tra ${BALANCE.unlocks.pointsPerFruit - pts} punti (vittoria +2, sconfitta +1)` : 'Hai sbloccato tutti i frutti!', 22, '#f1d7a8');
+    }
     new Button(this, GAME_WIDTH / 2, 1080, 'NUOVA RUN', () => this.goTo('CharacterSelect'), { width: 460, height: 110, fontSize: 56 });
     new Button(this, GAME_WIDTH / 2, 1200, 'MENU', () => this.goTo('Menu'), { variant: 'secondary', width: 300, height: 84, fontSize: 40 });
   }

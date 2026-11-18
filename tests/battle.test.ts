@@ -13,7 +13,7 @@ function battle(opts: { enemies?: string[]; companions?: string[]; seed?: number
       hero: hero(opts.heroHp, opts.heroSpd),
       companions: (opts.companions ?? []).map((c, i) => makeCompanionUnit(c, `c${i}`)),
       enemies: (opts.enemies ?? ['en_jelly']).map((e, i) => makeEnemyUnit(e, `e${i}`)),
-      powers: [FRUIT_BY_ID.get('fruit_ember')!.ability, FRUIT_BY_ID.get('fruit_storm')!.ability],
+      powers: [FRUIT_BY_ID.get('fruit_ember')!.abilities[0], FRUIT_BY_ID.get('fruit_storm')!.abilities[0]],
       potions: 1,
       mods: opts.mods ?? mods,
     },

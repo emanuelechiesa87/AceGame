@@ -31,6 +31,8 @@ export class CollectionScene extends BaseScene {
 
     const fr = FRUITS.filter((f) => s.discoveredFruitIds.includes(f.id));
     section(190, 'FRUTTI', fr.length, FRUITS.length);
+    const inPool = FRUITS.length - GameSession.lockedFruitIds().length;
+    addBody(this, 360, 190, `nel pool: ${inPool}`, 18, '#6fe08a');
     FRUITS.forEach((f, i) => {
       const x = 105 + (i % 4) * 170, y = 260 + Math.floor(i / 4) * 105;
       const known = s.discoveredFruitIds.includes(f.id);

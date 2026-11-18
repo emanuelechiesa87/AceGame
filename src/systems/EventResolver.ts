@@ -2,10 +2,10 @@ import { BALANCE } from '../data/balance';
 import { effectiveStats } from '../state/RunState';
 import type { RunController } from './RunController';
 
-export interface EventOutcome { text: string; fruitOffer?: string; artifactOffer?: string }
+export interface EventOutcome { text: string; artifactOffer?: string; awakened?: boolean }
 
-/** Applica l'esito di un evento narrativo. Le offerte di frutti/artefatti
- *  passano poi dalla stessa logica delle ricompense (limite 3 frutti). */
+/** Applica l'esito di un evento narrativo. Gli artefatti offerti passano poi
+ *  dalla stessa logica delle ricompense; il risveglio è applicato qui. */
 export function resolveEvent(ctl: RunController, outcome: string): EventOutcome {
   const run = ctl.run;
   switch (outcome) {
@@ -16,11 +16,12 @@ export function resolveEvent(ctl: RunController, outcome: string): EventOutcome 
     case 'trade_potion_fruit': {
       if (run.potions <= 0) return { text: '«Niente pozioni? Niente affari!» Il viandante sparisce in una nuvola di fumo.' };
       run.potions--;
-      if (ctl.rng.next() < 0.4) {
-        const fruit = ctl.randomNewFruit();
-        if (fruit) return { text: '«Affare fatto!» Ti porge un frutto luminoso.', fruitOffer: fruit };
+      if (ctl.rng.next() < 0.5) {
+        if (ctl.awaken()) return { text: '«Affare fatto!» Ti spruzza un\'essenza luminosa: il tuo frutto si RISVEGLIA!', awakened: true };
+        run.baseStats.atk += 2;
+        return { text: '«Il tuo frutto è già al massimo? Allora prendi questo tonico!» (+2 ATT)' };
       }
-      return { text: 'Ti porge... una patata. Il viandante è già sparito.' };
+      return { text: 'Ti porge... una patata. Il mercante è già sparito.' };
     }
     case 'altar_strength':
       run.baseStats.maxHp = Math.max(30, run.baseStats.maxHp - 12);

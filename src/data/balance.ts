@@ -3,9 +3,9 @@
  * contenere numeri "magici" di gameplay: vanno aggiunti qui.
  */
 export const BALANCE = {
-  version: 1,
+  version: 2,
   limits: {
-    maxActivePowers: 3,
+    maxActivePowers: 1,
     maxCompanions: 3,
     maxPartySize: 4, // protagonista + 3 compagni
     hallOfFameSize: 3,
@@ -31,10 +31,21 @@ export const BALANCE = {
     potionHealPct: 0.35,
     companionReviveHpPct: 0.3,
   },
+  /** Nemici più robusti: con un solo frutto molto forte il protagonista picchia duro. */
+  enemies: {
+    hpMult: 1.2,
+    atkMult: 1.1,
+  },
   rewards: {
     restHealPct: 0.35,
     maxHpUp: 8,
     healRewardPct: 0.25,
+    weights: { awaken: 26, artifact: 22, potion: 20, heal: 18, maxHp: 16 },
+  },
+  unlocks: {
+    pointsVictory: 2,
+    pointsDefeat: 1,
+    pointsPerFruit: 2, // ogni 2 punti un nuovo frutto entra nel pool iniziale
   },
   score: {
     enemy: 10,

@@ -31,7 +31,7 @@ describe('createRunState', () => {
 
   it('rispetta i limiti di squadra dichiarati', () => {
     expect(BALANCE.limits.maxPartySize).toBe(BALANCE.limits.maxCompanions + 1);
-    expect(BALANCE.limits.maxActivePowers).toBe(3);
+    expect(BALANCE.limits.maxActivePowers).toBe(1); // un solo frutto per run
   });
 });
 

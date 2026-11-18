@@ -248,10 +248,12 @@ export class Battle {
           if (crit) dmg *= C.critMult;
           if (this.hasStatus(target, 'vulnerable')) dmg *= C.vulnerableMult;
           if (this.hasStatus(target, 'guard')) dmg *= C.guardMult;
-          const dealt = this.applyDamage(target, Math.max(1, Math.round(dmg)), ev, actor.uid, crit, 'hit');
+          const incoming = Math.max(1, Math.round(dmg));
+          const dealt = this.applyDamage(target, incoming, ev, actor.uid, crit, 'hit');
           if (eff.lifesteal && dealt > 0) this.heal(actor, Math.round(dealt * eff.lifesteal), ev);
           const refl = this.statusValue(target, 'reflect');
-          if (refl > 0 && dealt > 0 && actor.uid !== target.uid) this.applyDamage(actor, Math.max(1, Math.round(dealt * refl)), ev, target.uid, false, 'reflect');
+          // lo specchio riflette il colpo intero, anche quello parato dallo scudo
+          if (refl > 0 && actor.uid !== target.uid) this.applyDamage(actor, Math.max(1, Math.round(incoming * refl)), ev, target.uid, false, 'reflect');
         }
         break;
       }
@@ -359,7 +361,8 @@ function baseUnit(partial: Partial<Unit> & Pick<Unit, 'uid' | 'defId' | 'name' |
 export function makeEnemyUnit(enemyId: string, uid: string): Unit {
   const d = ENEMY_BY_ID.get(enemyId);
   if (!d) throw new Error(`Nemico sconosciuto: ${enemyId}`);
-  return baseUnit({ uid, defId: d.id, name: d.name, side: 'enemy', kind: 'enemy', maxHp: d.stats.maxHp, atk: d.stats.atk, def: d.stats.def, spd: d.stats.spd });
+  const E = BALANCE.enemies;
+  return baseUnit({ uid, defId: d.id, name: d.name, side: 'enemy', kind: 'enemy', maxHp: Math.round(d.stats.maxHp * E.hpMult), atk: Math.round(d.stats.atk * E.atkMult), def: d.stats.def, spd: d.stats.spd });
 }
 
 export function makeCompanionUnit(companionId: string, uid: string, hp?: number, charge = 0): Unit {

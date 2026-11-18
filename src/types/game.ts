@@ -32,7 +32,9 @@ export interface RunState {
   map: MapStep[];
   baseStats: Stats; // statistiche base + bonus permanenti di run (altari, livelli)
   currentHp: number;
-  activeFruitIds: string[]; // max BALANCE.limits.maxActivePowers
+  activeFruitIds: string[]; // un solo frutto per run
+  /** Livello di risveglio del frutto (1..3). Assente nelle run salvate prima della 0.5. */
+  fruitLevel?: number;
   artifactIds: string[];
   companions: CompanionState[]; // max BALANCE.limits.maxCompanions
   potions: number;
@@ -65,7 +67,12 @@ export interface PersistentGameState {
   selectedAvatar: AvatarVariant;
   /** Ultimo nome usato, proposto alla run successiva. */
   lastHeroName: string;
+  /** Frutti mangiati almeno una volta (collezione). */
   discoveredFruitIds: string[];
+  /** Frutti entrati nel pool iniziale grazie ai punti sblocco. */
+  unlockedFruitIds: string[];
+  /** Punti verso il prossimo sblocco (vittoria +2, sconfitta +1). */
+  unlockPoints: number;
   discoveredArtifactIds: string[];
   metCompanionIds: string[];
   hallOfFame: HallOfFameEntry[];

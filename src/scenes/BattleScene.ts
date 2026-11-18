@@ -1,11 +1,11 @@
 import Phaser from 'phaser';
 import { COLORS, GAME_WIDTH } from '../app/config';
-import { iconKey } from '../pixel/keys';
 import type { NodeType } from '../data/areas';
 import { ARTIFACT_BY_ID } from '../data/artifacts';
 import { COMPANION_BY_ID } from '../data/companions';
 import { ENEMY_BY_ID } from '../data/enemies';
-import { FRUIT_BY_ID } from '../data/fruits';
+import { FRUIT_BY_ID, fruitAbility, fruitOfAbility } from '../data/fruits';
+import { playFruitFx, type FxUnit } from '../ui/fruitFx';
 import { GameSession } from '../state/GameSession';
 import { effectiveStats } from '../state/RunState';
 import { Battle, makeCompanionUnit, makeEnemyUnit, makeHeroUnit } from '../systems/combat/Battle';
@@ -14,9 +14,8 @@ import type { Ability, StatusId } from '../types/content';
 import { BiomeBackdrop } from '../ui/BiomeBackdrop';
 import { Button } from '../ui/Button';
 import { UnitView } from '../ui/battle/UnitView';
-import { modal } from '../ui/Offers';
 import { addBody, addTitle } from '../ui/text';
-import { banner, floatText, icon, panel, steppedRect, wait } from '../ui/widgets';
+import { banner, floatText, steppedRect, wait } from '../ui/widgets';
 import { BaseScene } from './BaseScene';
 
 const ALLY_SLOTS = [{ x: 220, y: 760 }, { x: 80, y: 680 }, { x: 330, y: 610 }, { x: 110, y: 540 }];
@@ -35,6 +34,7 @@ export class BattleScene extends BaseScene {
   private busy = false;
   private speed = 1;
   private targetUid?: string;
+  private powerTarget?: string;
   private reticle!: Phaser.GameObjects.Container;
   private actionPanel!: Phaser.GameObjects.Container;
   private energyPips!: Phaser.GameObjects.Container;
@@ -66,7 +66,7 @@ export class BattleScene extends BaseScene {
         hero: makeHeroUnit(run.heroName, stats, Math.min(run.currentHp, stats.maxHp)),
         companions: run.companions.map((c, i) => makeCompanionUnit(c.id, `c${i}`, c.hp, c.charge)),
         enemies: this.enemyIds.map((id, i) => makeEnemyUnit(id, `e${i}`)),
-        powers: run.activeFruitIds.map((id) => FRUIT_BY_ID.get(id)!.ability),
+        powers: run.activeFruitIds.slice(0, 1).map((id) => fruitAbility(FRUIT_BY_ID.get(id)!, ctl.fruitLevel)),
         potions: run.potions,
         mods: {
           powerDamageMult: arts.reduce((m, a) => m * (a.powerDamageMult ?? 1), 1),
@@ -129,7 +129,9 @@ export class BattleScene extends BaseScene {
       return b;
     };
     mk(185, top + 110, 'ATTACCO', () => this.submit({ type: 'attack', targetUid: this.currentTarget()! }));
-    mk(530, top + 110, 'POTERI', () => this.openPowers(), { variant: 'danger' });
+    const pw = this.battle.powers[0];
+    const powerBtn = mk(530, top + 110, pw ? `POTERE ${pw.cost}⚡` : 'POTERE', () => this.usePower(), { variant: 'danger', fontSize: 42 });
+    powerBtn.setName('power');
     mk(185, top + 236, 'DIFESA', () => this.submit({ type: 'guard' }), { variant: 'secondary' });
     const potion = mk(530, top + 236, `POZIONE ×${this.battle.potions}`, () => this.submit({ type: 'potion' }), { variant: 'secondary', fontSize: 38 });
     potion.setName('potion');
@@ -173,6 +175,9 @@ export class BattleScene extends BaseScene {
       (potion.list[1] as Phaser.GameObjects.Text).setText(`POZIONE ×${this.battle.potions}`);
       potion.setEnabled(this.battle.potions > 0 && this.battle.hero.hp < this.battle.hero.maxHp);
     }
+    const power = this.actionPanel.getByName('power') as Button | null;
+    const pw = this.battle.powers[0];
+    if (power && pw) power.setAlpha(this.battle.energy >= (pw.cost ?? 0) ? 1 : 0.6);
     for (const u of this.battle.units) if (u.kind === 'companion') this.drawSpecial(u);
   }
 
@@ -204,26 +209,29 @@ export class BattleScene extends BaseScene {
     fn();
   }
 
-  private openPowers(): void {
-    const m = modal(this);
-    m.add(addTitle(this, 360, 330, 'POTERI DEI FRUTTI', 54).setAngle(-2));
-    m.add(addBody(this, 360, 392, `Energia: ${this.battle.energy} ⚡ · bersaglio: ${this.battle.unit(this.currentTarget() ?? '')?.name ?? '-'}`, 24, '#ffcf3a'));
-    this.battle.powers.forEach((a: Ability, i) => {
-      const fruit = [...FRUIT_BY_ID.values()].find((f) => f.ability.id === a.id)!;
-      const y = 520 + i * 170, ok = this.battle.canUsePower(a);
-      m.add(panel(this, 50, y - 70, 620, 150, ok ? 0x3d3380 : 0x3a2414));
-      m.add(icon(this, 120, y + 5, iconKey('fruit', fruit.id), 96).setAlpha(ok ? 1 : 0.5));
-      m.add(addTitle(this, 190, y - 30, a.name, 36).setOrigin(0, 0.5).setAlpha(ok ? 1 : 0.6));
-      m.add(addBody(this, 190, y + 22, a.description, 21, '#fbe9c8').setOrigin(0, 0.5).setWordWrapWidth(380).setAlign('left'));
-      m.add(addTitle(this, 640, y - 30, `${a.cost}⚡`, 36).setOrigin(1, 0.5).setColor(ok ? '#ffcf3a' : '#a89580'));
-      if (ok) {
-        const z = this.add.zone(360, y + 5, 620, 150).setInteractive({ useHandCursor: true });
-        z.on('pointerup', () => { m.destroy(); this.submit({ type: 'power', abilityId: a.id, targetUid: this.currentTarget() }); });
-        m.add(z);
-      }
-    });
-    if (this.battle.powers.length === 0) m.add(addBody(this, 360, 560, 'Nessun frutto attivo.', 28));
-    m.add(new Button(this, 360, 1100, 'INDIETRO', () => m.destroy(), { variant: 'secondary', width: 360, height: 92, fontSize: 40 }));
+  /** Un solo frutto per run: il pulsante POTERE lo usa subito sul bersaglio. */
+  private usePower(): void {
+    const a = this.battle.powers[0];
+    if (!a) { this.log.setText('Nessun frutto attivo.'); return; }
+    if (!this.battle.canUsePower(a)) {
+      this.log.setText(`${a.name}: servono ${a.cost}⚡ (ne hai ${this.battle.energy}). DIFESA ricarica +1⚡`);
+      this.tweens.add({ targets: this.energyPips, x: 8, duration: 50, yoyo: true, repeat: 3 });
+      return;
+    }
+    this.powerTarget = this.currentTarget();
+    this.submit({ type: 'power', abilityId: a.id, targetUid: this.powerTarget });
+  }
+
+  /** Bersagli grafici dell'animazione del potere, secondo la regola di mira. */
+  private fxTargets(a: Ability): FxUnit[] {
+    const toFx = (v?: UnitView): FxUnit | undefined => (v ? { x: v.x, y: v.centerY, top: v.topY, root: v.root } : undefined);
+    const alive = (side: 'ally' | 'enemy') => this.battle.alive(side).map((u) => toFx(this.views.get(u.uid))).filter((x): x is FxUnit => !!x);
+    switch (a.target) {
+      case 'allEnemies': return alive('enemy');
+      case 'allAllies': return alive('ally');
+      case 'self': case 'lowestAlly': return [toFx(this.views.get('hero'))!].filter(Boolean);
+      default: return [toFx(this.views.get(this.powerTarget ?? this.currentTarget() ?? '')) ?? alive('enemy')[0]].filter(Boolean);
+    }
   }
 
   private useSpecial(u: Unit): void {
@@ -256,7 +264,7 @@ export class BattleScene extends BaseScene {
     this.updateHud();
     this.setInputEnabled(true);
     this.placeReticle();
-    this.log.setText('Tocca un nemico per mirare · scegli un\'azione');
+    this.log.setText(this.battle.powers[0] ? `Potere: ${this.battle.powers[0].name} (${this.battle.powers[0].cost}⚡)` : 'Tocca un nemico per mirare · scegli un\'azione');
     this.views.get('hero')?.fierce();
   }
 
@@ -276,7 +284,12 @@ export class BattleScene extends BaseScene {
             this.cameras.main.shake(160 / s, 0.006);
             await banner(this, 420, e.name.toUpperCase() + '!', e.isPower ? COLORS.hot : 0x1f6fb2, 56, 380 / s);
           }
-          if (v && e.ability !== 'guard' && e.ability !== 'potion') {
+          const fruit = e.isPower ? fruitOfAbility(e.ability) : undefined;
+          const power = fruit ? this.battle.powers.find((p) => p.id === e.ability) : undefined;
+          if (fruit && power && v) {
+            if (power.target === 'enemy' || power.target === 'allEnemies') v.slashOnly(s);
+            await playFruitFx(fruit.id, { scene: this, caster: { x: v.x, y: v.centerY, top: v.topY, root: v.root }, targets: this.fxTargets(power), level: GameSession.ctl?.fruitLevel ?? 1, speed: s });
+          } else if (v && e.ability !== 'guard' && e.ability !== 'potion') {
             const foe = who.side === 'ally' ? 600 : 150;
             await v.lunge(foe, s);
           }

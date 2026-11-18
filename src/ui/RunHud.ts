@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { COLORS } from '../app/config';
 import { NODE_LABELS } from '../data/areas';
 import { BALANCE } from '../data/balance';
+import { MAX_FRUIT_LEVEL } from '../data/fruits';
 import { creatureKey, iconKey } from '../pixel/keys';
 import { CREATURE_SCALE } from '../pixel/creatures';
 import { effectiveStats } from '../state/RunState';
@@ -21,19 +22,23 @@ export class RunHud {
     addBody(scene, 504, y + 30, `×${run.potions}`, 28, '#ffffff').setOrigin(0, 0.5);
     addBody(scene, 690, y + 30, `${run.score} pt`, 26, '#ffcf3a').setOrigin(1, 0.5);
 
-    // frutti: 3 slot, quelli vuoti tratteggiati
-    addBody(scene, 50, y + 96, 'POTERI', 20, '#f1d7a8').setOrigin(0, 0.5);
-    for (let i = 0; i < BALANCE.limits.maxActivePowers; i++) {
-      const x = 186 + i * 74, cy = y + 112;
+    // il frutto della run con il suo livello di risveglio (I-III)
+    addBody(scene, 50, y + 96, 'FRUTTO', 20, '#f1d7a8').setOrigin(0, 0.5);
+    const id = run.activeFruitIds[0];
+    if (id) {
+      icon(scene, 190, y + 110, iconKey('fruit', id), 72);
+      const lvl = run.fruitLevel ?? 1;
       const g = scene.add.graphics();
-      g.lineStyle(3, 0x8f86b8, 1).strokeCircle(x, cy, 31);
-      const id = run.activeFruitIds[i];
-      if (id) icon(scene, x, cy, iconKey('fruit', id), 64);
+      for (let i = 0; i < MAX_FRUIT_LEVEL; i++) {
+        g.fillStyle(COLORS.ink, 1).fillRect(244 + i * 30, y + 100, 24, 24);
+        g.fillStyle(i < lvl ? 0xffcf3a : 0x4a2a14, 1).fillRect(248 + i * 30, y + 104, 16, 16);
+      }
+      addBody(scene, 290, y + 138, `Lv ${['', 'I', 'II', 'III'][lvl]}`, 18, '#ffcf3a');
     }
     addBody(scene, 430, y + 96, 'SQUADRA', 20, '#f1d7a8').setOrigin(0, 0.5);
     for (let i = 0; i < BALANCE.limits.maxCompanions; i++) {
       const x = 470 + i * 78, cy = y + 116;
-      scene.add.graphics().lineStyle(3, 0x8f86b8, 1).strokeCircle(x, cy, 32);
+      scene.add.graphics().lineStyle(4, 0x8a5232, 1).strokeRect(x - 32, cy - 32, 64, 64);
       const c = run.companions[i];
       if (c) scene.add.image(x, cy + 30, creatureKey(c.id)).setOrigin(0.5, 1).setScale((CREATURE_SCALE[c.id] * 0.48) / TEXTURE_SCALE);
     }

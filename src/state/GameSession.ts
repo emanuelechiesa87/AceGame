@@ -1,3 +1,4 @@
+import { BALANCE } from '../data/balance';
 import { FRUITS } from '../data/fruits';
 import { RunController } from '../systems/RunController';
 import { insertHallOfFame, SaveSystem } from '../systems/SaveSystem';
@@ -20,9 +21,34 @@ class GameSessionStore {
   get selectedAvatar(): AvatarVariant { return this.save.data.selectedAvatar; }
   set selectedAvatar(v: AvatarVariant) { this.save.update((s) => (s.selectedAvatar = v)); }
 
-  /** Frutti scoperti che non partono già sbloccati: entrano nel pool iniziale. */
+  /** Frutti nel pool iniziale oltre a quelli di partenza: sbloccati o già mangiati. */
   unlockedFruitIds(): string[] {
-    return this.save.data.discoveredFruitIds.filter((id) => FRUITS.some((f) => f.id === id));
+    const s = this.save.data;
+    return FRUITS.filter((f) => s.unlockedFruitIds.includes(f.id) || s.discoveredFruitIds.includes(f.id)).map((f) => f.id);
+  }
+
+  /** Frutti non ancora nel pool, nell'ordine in cui si sbloccano: comuni, rari, epici. */
+  lockedFruitIds(): string[] {
+    const open = new Set(this.unlockedFruitIds());
+    const order = { common: 0, rare: 1, epic: 2 } as const;
+    return FRUITS.filter((f) => !f.startsUnlocked && !open.has(f.id)).sort((a, b) => order[a.rarity] - order[b.rarity]).map((f) => f.id);
+  }
+
+  /** Assegna i punti di fine run e sblocca i frutti maturati. Ritorna i frutti sbloccati ora. */
+  private grantUnlocks(result: 'victory' | 'defeat'): string[] {
+    const U = BALANCE.unlocks;
+    const unlocked: string[] = [];
+    this.save.update((s) => {
+      s.unlockPoints += result === 'victory' ? U.pointsVictory : U.pointsDefeat;
+      while (s.unlockPoints >= U.pointsPerFruit) {
+        const next = this.lockedFruitIds()[0];
+        if (!next) { s.unlockPoints = 0; break; }
+        s.unlockPoints -= U.pointsPerFruit;
+        s.unlockedFruitIds.push(next);
+        unlocked.push(next);
+      }
+    });
+    return unlocked;
   }
 
   beginRun(avatar: AvatarVariant, heroName = this.save.data.lastHeroName || 'Eroe'): string {
@@ -64,6 +90,8 @@ class GameSessionStore {
       const run = JSON.parse(raw) as RunState;
       if (!Array.isArray(run.map) || typeof run.runSeed !== 'number') throw new Error('run non valida');
       if (typeof run.heroName !== 'string' || !run.heroName) run.heroName = 'Eroe'; // run salvate prima del nome
+      run.activeFruitIds = run.activeFruitIds.slice(0, 1); // dalla 0.5: un solo frutto per run
+      run.fruitLevel = run.fruitLevel ?? 1;
       this.run = run;
       this.ctl = new RunController(run);
       return true;
@@ -74,7 +102,7 @@ class GameSessionStore {
   }
 
   /** Fine run: aggiorna record e statistiche, cancella SOLO lo stato temporaneo. */
-  endRun(result: 'victory' | 'defeat'): { entry: HallOfFameEntry; rank: number } | null {
+  endRun(result: 'victory' | 'defeat'): { entry: HallOfFameEntry; rank: number; unlocked: string[] } | null {
     const run = this.run;
     if (!run) return null;
     const entry: HallOfFameEntry = {
@@ -96,8 +124,9 @@ class GameSessionStore {
       s.lifetime.enemiesDefeated += entry.enemiesDefeated;
       if (result === 'victory') s.lifetime.victories++;
     });
+    const unlocked = this.grantUnlocks(result);
     this.clearRun();
-    return { entry, rank };
+    return { entry, rank, unlocked };
   }
 
   abandonRun(): void {

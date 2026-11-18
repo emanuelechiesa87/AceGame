@@ -10,7 +10,7 @@ import { resolveEvent } from '../systems/EventResolver';
 import { BiomeBackdrop } from '../ui/BiomeBackdrop';
 import { Button } from '../ui/Button';
 import { HeroRig } from '../ui/HeroRig';
-import { artifactName, offerArtifact, offerCompanion, offerFruit } from '../ui/Offers';
+import { artifactName, offerArtifact, offerCompanion } from '../ui/Offers';
 import { addBody, addTitle } from '../ui/text';
 import { icon, panel } from '../ui/widgets';
 import { BaseScene } from './BaseScene';
@@ -89,7 +89,7 @@ export class EventScene extends BaseScene {
       label: c.label.toUpperCase(),
       act: () => {
         const out = resolveEvent(ctl, c.outcome);
-        if (out.fruitOffer) offerFruit(this, out.fruitOffer, (ok) => this.done(out.text + (ok ? '' : ' Lo lasci andare.'), 'good'));
+        if (out.awakened) this.done(out.text, 'good');
         else if (out.artifactOffer) { offerArtifact(out.artifactOffer); this.done(`${out.text} Trovi: ${artifactName(out.artifactOffer)}!`, 'good'); }
         else this.done(out.text, out.text.includes('-') ? 'bad' : 'neutral');
       },
