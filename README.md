@@ -27,6 +27,7 @@ Ogni push su `main` esegue test e build e pubblica su GitHub Pages
 ```
 src/
   app/      avvio Phaser e configurazione
+  art/      grafica vettoriale originale generata in codice (eroi, bioma, effetti)
   scenes/   scene (Boot, Menu, CharacterSelect, Exploration)
   systems/  logica di gioco indipendente dal rendering (Rng, ...)
   state/    stato della run (temporaneo) e sessione
@@ -45,4 +46,5 @@ tests/      test unitari (Vitest)
 ## Stato
 
 - **M0 – fondazioni** ✅ build, scene navigabili, layout portrait, camminata automatica di prova, pausa.
+- **Estetica v1** ✅ eroi Kai e Nova animati a parti, bioma "Pianure del Tramonto", interfaccia in stile anime, schermo intero.
 - **M1 – vertical slice**: prossimo passo.

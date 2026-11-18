@@ -5,6 +5,8 @@ prima del commit: file, autore/fonte, licenza, link alla licenza, data di acquis
 
 | File | Autore / fonte | Licenza | Link | Data |
 |------|----------------|---------|------|------|
+| Font Bangers (`@fontsource/bangers`) | Vernon Adams | SIL OFL 1.1 | https://fonts.google.com/specimen/Bangers | 2026-11-18 |
+| Font M PLUS Rounded 1c (`@fontsource/m-plus-rounded-1c`) | Coji Morishita, M+ Fonts | SIL OFL 1.1 | https://fonts.google.com/specimen/M+PLUS+Rounded+1c | 2026-11-18 |
 
-Stato attuale (M0): nessun asset esterno. Le grafiche sono forme segnaposto generate dal codice
-in `src/scenes/BootScene.ts`.
+Personaggi, sfondi ed effetti sono illustrazioni vettoriali originali generate dal codice in
+`src/art/` (nessuna immagine esterna). I font sono inclusi nel bundle tramite npm.

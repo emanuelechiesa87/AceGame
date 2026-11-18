@@ -1,24 +1,35 @@
+import '@fontsource/bangers/400.css';
+import '@fontsource/m-plus-rounded-1c/800.css';
 import Phaser from 'phaser';
-import { COLORS, GAME_HEIGHT, GAME_WIDTH } from './config';
+import { GAME_HEIGHT, GAME_WIDTH, RENDER_SCALE } from './config';
 import { BootScene } from '../scenes/BootScene';
 import { MenuScene } from '../scenes/MenuScene';
 import { CharacterSelectScene } from '../scenes/CharacterSelectScene';
 import { ExplorationScene } from '../scenes/ExplorationScene';
 
-const game = new Phaser.Game({
-  type: Phaser.AUTO,
-  parent: 'game',
-  backgroundColor: COLORS.background,
-  scale: {
-    mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
-    width: GAME_WIDTH,
-    height: GAME_HEIGHT,
-  },
-  input: { activePointers: 2 },
-  render: { antialias: true, pixelArt: false },
-  scene: [BootScene, MenuScene, CharacterSelectScene, ExplorationScene],
-});
+async function start(): Promise<void> {
+  // I testi Phaser vengono disegnati subito: i font devono essere pronti prima.
+  await Promise.allSettled([document.fonts.load('40px Bangers'), document.fonts.load('800 30px "M PLUS Rounded 1c"')]);
 
-// Esposto solo per il debug da console (es. chrome://inspect sull'S23).
-(window as unknown as { __game: Phaser.Game }).__game = game;
+  const game = new Phaser.Game({
+    type: Phaser.AUTO,
+    parent: 'game',
+    backgroundColor: '#241f5c', // colore della cima del cielo
+    scale: {
+      // EXPAND: riempie tutto lo schermo anche sui telefoni molto allungati (S23 = 19.5:9);
+      // l'area logica 720×1280 resta centrata, l'extra mostra cielo e terreno.
+      mode: Phaser.Scale.EXPAND,
+      autoCenter: Phaser.Scale.CENTER_BOTH,
+      width: GAME_WIDTH * RENDER_SCALE,
+      height: GAME_HEIGHT * RENDER_SCALE,
+    },
+    input: { activePointers: 2 },
+    render: { antialias: true, pixelArt: false },
+    scene: [BootScene, MenuScene, CharacterSelectScene, ExplorationScene],
+  });
+
+  // Esposto solo per il debug da console (es. chrome://inspect sull'S23).
+  (window as unknown as { __game: Phaser.Game }).__game = game;
+}
+
+void start();
