@@ -1,9 +1,7 @@
 import Phaser from 'phaser';
-import { COLORS, GAME_HEIGHT, GAME_WIDTH } from '../app/config';
+import { COLORS, GAME_WIDTH } from '../app/config';
 import type { HeroId } from '../art/heroes';
 import { GameSession } from '../state/GameSession';
-import { createRunState } from '../state/RunState';
-import { randomSeed } from '../systems/Rng';
 import type { AvatarVariant } from '../types/game';
 import { BiomeBackdrop } from '../ui/BiomeBackdrop';
 import { Button } from '../ui/Button';
@@ -30,7 +28,7 @@ export class CharacterSelectScene extends BaseScene {
     this.rigs.clear();
     const cx = GAME_WIDTH / 2;
     new BiomeBackdrop(this, { groundTop: 980 });
-    this.add.rectangle(-400, -800, GAME_WIDTH + 800, GAME_HEIGHT + 1600, COLORS.background, 0.55).setOrigin(0);
+    this.fullRect(COLORS.background, 0.55);
 
     addTitle(this, cx, 130, 'SCEGLI IL TUO EROE', 70).setAngle(-3);
     addBody(this, cx, 210, 'Cambia solo l\'aspetto: statistiche identiche.', 26, '#e9dcff');
@@ -78,8 +76,8 @@ export class CharacterSelectScene extends BaseScene {
   }
 
   private startRun(): void {
-    GameSession.run = createRunState(GameSession.selectedAvatar, randomSeed());
+    GameSession.beginRun(GameSession.selectedAvatar);
     this.rigs.get(GameSession.selectedAvatar)?.cheer('fierce', 'shout');
-    this.time.delayedCall(450, () => this.goTo('Exploration'));
+    this.time.delayedCall(450, () => this.goTo('FruitReveal'));
   }
 }

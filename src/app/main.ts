@@ -6,6 +6,14 @@ import { BootScene } from '../scenes/BootScene';
 import { MenuScene } from '../scenes/MenuScene';
 import { CharacterSelectScene } from '../scenes/CharacterSelectScene';
 import { ExplorationScene } from '../scenes/ExplorationScene';
+import { FruitRevealScene } from '../scenes/FruitRevealScene';
+import { BattleScene } from '../scenes/BattleScene';
+import { RewardScene } from '../scenes/RewardScene';
+import { EventScene } from '../scenes/EventScene';
+import { SummaryScene } from '../scenes/SummaryScene';
+import { CollectionScene } from '../scenes/CollectionScene';
+import { RecordsScene } from '../scenes/RecordsScene';
+import { GameSession } from '../state/GameSession';
 
 async function start(): Promise<void> {
   // I testi Phaser vengono disegnati subito: i font devono essere pronti prima.
@@ -25,11 +33,12 @@ async function start(): Promise<void> {
     },
     input: { activePointers: 2 },
     render: { antialias: true, pixelArt: false },
-    scene: [BootScene, MenuScene, CharacterSelectScene, ExplorationScene],
+    scene: [BootScene, MenuScene, CharacterSelectScene, FruitRevealScene, ExplorationScene, BattleScene, RewardScene, EventScene, SummaryScene, CollectionScene, RecordsScene],
   });
 
   // Esposto solo per il debug da console (es. chrome://inspect sull'S23).
-  (window as unknown as { __game: Phaser.Game }).__game = game;
+  (window as unknown as { __game: Phaser.Game; __session: typeof GameSession }).__game = game;
+  (window as unknown as { __session: typeof GameSession }).__session = GameSession;
 }
 
 void start();

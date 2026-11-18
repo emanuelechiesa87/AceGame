@@ -18,13 +18,27 @@ export function fitCamera(scene: Phaser.Scene): void {
 }
 
 export abstract class BaseScene extends Phaser.Scene {
+  private transitioning = false;
+
   protected setupCamera(): void {
+    this.transitioning = false;
     fitCamera(this);
   }
 
-  /** Transizione "a lampo" tra scene, tipica delle interfacce anime. */
-  protected goTo(key: string): void {
+  /** Transizione "a lampo" tra scene; ignora richieste doppie da tap ripetuti. */
+  protected goTo(key: string, data?: object): void {
+    if (this.transitioning) return;
+    this.transitioning = true;
+    this.input.enabled = false;
     this.cameras.main.flash(160, 255, 247, 230);
-    this.time.delayedCall(120, () => this.scene.start(key));
+    this.time.delayedCall(140, () => {
+      this.input.enabled = true;
+      this.scene.start(key, data);
+    });
+  }
+
+  /** Copre anche le aree fuori dall'inquadratura logica (schermi allungati). */
+  protected fullRect(color: number, alpha: number): Phaser.GameObjects.Rectangle {
+    return this.add.rectangle(-400, -800, GAME_WIDTH + 800, GAME_HEIGHT + 1600, color, alpha).setOrigin(0);
   }
 }

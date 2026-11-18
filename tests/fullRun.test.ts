@@ -1,0 +1,70 @@
+import { describe, expect, it } from 'vitest';
+import { ARTIFACT_BY_ID } from '../src/data/artifacts';
+import { FRUIT_BY_ID } from '../src/data/fruits';
+import { createRunState, effectiveStats } from '../src/state/RunState';
+import { Battle, makeCompanionUnit, makeEnemyUnit, makeHeroUnit } from '../src/systems/combat/Battle';
+import { resolveEvent } from '../src/systems/EventResolver';
+import { RunController } from '../src/systems/RunController';
+import { EVENTS } from '../src/data/events';
+
+/** Strategia "giocatore medio": poteri quando può, pozione sotto il 35%, speciali appena pronte. */
+function playRun(seed: number) {
+  const ctl = new RunController(createRunState('a', seed));
+  ctl.start([]);
+  const run = ctl.run;
+  while (run.stepIndex < run.map.length) {
+    const node = ctl.currentStep.options[0];
+    ctl.choose(node);
+    if (node === 'battle' || node === 'elite' || node === 'boss') {
+      const stats = effectiveStats(run);
+      const enemies = ctl.enemyGroup(node);
+      const arts = run.artifactIds.map((id) => ARTIFACT_BY_ID.get(id)!);
+      const b = new Battle({
+        hero: makeHeroUnit('Kai', stats, run.currentHp),
+        companions: run.companions.map((c, i) => makeCompanionUnit(c.id, `c${i}`, c.hp, c.charge)),
+        enemies: enemies.map((id, i) => makeEnemyUnit(id, `e${i}`)),
+        powers: run.activeFruitIds.map((id) => FRUIT_BY_ID.get(id)!.ability),
+        potions: run.potions,
+        mods: { powerDamageMult: arts.reduce((m, a) => m * (a.powerDamageMult ?? 1), 1), surviveLethalOnce: arts.some((a) => a.surviveLethalOncePerBattle) },
+      }, ctl.rng);
+      b.start();
+      let turns = 0;
+      while (b.phase === 'awaitingInput' && turns++ < 200) {
+        const ready = b.alive('ally').find((u) => b.canSpecial(u));
+        if (ready) { b.act({ type: 'special', companionUid: ready.uid }); continue; }
+        const target = b.enemies()[0].uid;
+        const power = b.powers.find((p) => b.canUsePower(p));
+        if (b.hero.hp < b.hero.maxHp * 0.35 && b.potions > 0) b.act({ type: 'potion' });
+        else if (power) b.act({ type: 'power', abilityId: power.id, targetUid: target });
+        else b.act({ type: 'attack', targetUid: target });
+      }
+      if (b.phase !== 'victory') return { won: false, step: run.stepIndex, score: run.score, turns };
+      run.potions = b.potions;
+      ctl.onVictory(enemies, b.hero.hp, b.units.filter((u) => u.kind === 'companion').map((u) => ({ id: u.defId, hp: u.hp, charge: u.charge })));
+      if (node === 'boss') ctl.onAreaCleared();
+      const r = ctl.rewardOptions(node)[0];
+      if (r.kind === 'fruit') { if (ctl.gainFruit(r.id) === 'needsReplace') ctl.gainFruit(r.id, run.activeFruitIds[0]); }
+      else if (r.kind === 'artifact') ctl.gainArtifact(r.id);
+      else ctl.applySimple(r.kind);
+    } else if (node === 'rest') ctl.healPct(0.35);
+    else if (node === 'recruit') { const c = ctl.randomNewCompanion(); if (c) ctl.recruit(c); }
+    else if (node === 'chest') { const a = ctl.randomNewArtifact(); if (a) ctl.gainArtifact(a); }
+    else if (node === 'event') { const ev = ctl.rng.pick(EVENTS); const out = resolveEvent(ctl, ev.choices[0].outcome); if (out.fruitOffer) ctl.gainFruit(out.fruitOffer, run.activeFruitIds[0]); if (out.artifactOffer) ctl.gainArtifact(out.artifactOffer); }
+    ctl.advance();
+  }
+  return { won: true, step: run.stepIndex, score: run.score, turns: 0 };
+}
+
+describe('Run completa (simulazione senza grafica)', () => {
+  it('una run si può completare dall\'inizio al boss', () => {
+    const results = Array.from({ length: 300 }, (_, i) => playRun(i + 1));
+    const wins = results.filter((r) => r.won).length;
+    const rate = wins / results.length;
+    const deaths = results.filter((r) => !r.won).reduce<Record<number, number>>((m, r) => ((m[r.step] = (m[r.step] ?? 0) + 1), m), {});
+    console.log(`Vittorie: ${(rate * 100).toFixed(0)}% · morti per passo: ${JSON.stringify(deaths)} · punteggio medio vittorie: ${Math.round(results.filter((r) => r.won).reduce((s, r) => s + r.score, 0) / Math.max(1, wins))}`);
+    expect(wins).toBeGreaterThan(0);
+    // bilanciamento del prototipo: né banale né impossibile per un giocatore medio
+    expect(rate).toBeGreaterThan(0.25);
+    expect(rate).toBeLessThan(0.97);
+  });
+});
