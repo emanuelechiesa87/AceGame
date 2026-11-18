@@ -25,6 +25,8 @@ export interface RunState {
   balanceVersion: number;
   startedAt: string;
   avatar: AvatarVariant;
+  /** Nome scelto dal giocatore. */
+  heroName: string;
   areaIndex: number;
   stepIndex: number;
   map: MapStep[];
@@ -45,6 +47,7 @@ export interface RunState {
 
 export interface HallOfFameEntry {
   score: number;
+  heroName?: string;
   date: string;
   durationSec: number;
   maxArea: number;
@@ -60,6 +63,8 @@ export interface PersistentGameState {
   createdAt: string;
   updatedAt: string;
   selectedAvatar: AvatarVariant;
+  /** Ultimo nome usato, proposto alla run successiva. */
+  lastHeroName: string;
   discoveredFruitIds: string[];
   discoveredArtifactIds: string[];
   metCompanionIds: string[];

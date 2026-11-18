@@ -31,7 +31,7 @@ export class RecordsScene extends BaseScene {
       addTitle(this, 180, y + 50, `${e.score} PT`, 48).setOrigin(0, 0.5).setColor('#ffcf3a');
       addBody(this, 660, y + 50, e.result === 'victory' ? 'VITTORIA' : 'SCONFITTA', 22, e.result === 'victory' ? '#9be06a' : '#ff9ab0').setOrigin(1, 0.5);
       const d = new Date(e.date);
-      addBody(this, 180, y + 100, `${d.toLocaleDateString('it-IT')} · ${Math.floor(e.durationSec / 60)}m · area ${e.maxArea} · ${e.enemiesDefeated} nemici`, 21, '#e9dcff').setOrigin(0, 0.5);
+      addBody(this, 180, y + 100, `${e.heroName ? e.heroName + ' · ' : ''}${d.toLocaleDateString('it-IT')} · ${Math.floor(e.durationSec / 60)}m · area ${e.maxArea} · ${e.enemiesDefeated} nemici`, 21, '#e9dcff').setOrigin(0, 0.5);
       e.fruits.slice(0, 6).forEach((f, k) => icon(this, 200 + k * 50, y + 150, iconKey('fruit', f), 44));
     });
 

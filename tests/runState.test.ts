@@ -34,3 +34,25 @@ describe('createRunState', () => {
     expect(BALANCE.limits.maxActivePowers).toBe(3);
   });
 });
+
+import { isValidHeroName, sanitizeHeroName } from '../src/state/RunState';
+
+describe('nome dell\'eroe', () => {
+  it('accetta nomi normali, anche accentati', () => {
+    expect(isValidHeroName('Ema')).toBe(true);
+    expect(isValidHeroName('Niccolò')).toBe(true);
+    expect(isValidHeroName("D'Artagnan")).toBe(true);
+  });
+  it('rifiuta nomi vuoti o solo spazi', () => {
+    expect(isValidHeroName('')).toBe(false);
+    expect(isValidHeroName('   ')).toBe(false);
+  });
+  it('rimuove caratteri non ammessi e limita la lunghezza', () => {
+    expect(sanitizeHeroName('<b>Ema</b>')).toBe('bEmab');
+    expect(sanitizeHeroName('Capitano   Super Lungo Davvero')).toHaveLength(12);
+    expect(sanitizeHeroName('  Ema')).toBe('Ema');
+  });
+  it('la run porta il nome scelto', () => {
+    expect(createRunState('a', 1, new Date(), 'Ema').heroName).toBe('Ema');
+  });
+});

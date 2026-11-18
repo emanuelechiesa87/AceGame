@@ -28,7 +28,7 @@ export class SummaryScene extends BaseScene {
       const lines = this.add.image(GAME_WIDTH / 2, 330, 'fx-speedlines').setScale(1 / TEXTURE_SCALE);
       this.tweens.add({ targets: lines, angle: 360, duration: 30000, repeat: -1 });
     }
-    addTitle(this, GAME_WIDTH / 2, 150, win ? 'AREA COMPLETATA!' : 'FINE DELLA RUN', 64).setAngle(-3).setColor(win ? '#ffe14a' : '#ff9ab0');
+    addTitle(this, GAME_WIDTH / 2, 150, win ? `${snapshot.heroName.toUpperCase()} HA VINTO!` : `${snapshot.heroName.toUpperCase()} È K.O.`, 60).setAngle(-3).setColor(win ? '#ffe14a' : '#ff9ab0');
     const hero = new HeroRig(this, GAME_WIDTH / 2, 470, snapshot.avatar === 'a' ? 'm' : 'f', 0.85).idle();
     if (win) this.time.addEvent({ delay: 1400, loop: true, callback: () => hero.cheer('happy', 'shout') });
     else hero.setBaseExpression('closed', 'ouch');

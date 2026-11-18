@@ -63,7 +63,7 @@ export class BattleScene extends BaseScene {
     const arts = run.artifactIds.map((id) => ARTIFACT_BY_ID.get(id)!);
     this.battle = new Battle(
       {
-        hero: makeHeroUnit(run.avatar === 'a' ? 'Kai' : 'Nova', stats, Math.min(run.currentHp, stats.maxHp)),
+        hero: makeHeroUnit(run.heroName, stats, Math.min(run.currentHp, stats.maxHp)),
         companions: run.companions.map((c, i) => makeCompanionUnit(c.id, `c${i}`, c.hp, c.charge)),
         enemies: this.enemyIds.map((id, i) => makeEnemyUnit(id, `e${i}`)),
         powers: run.activeFruitIds.map((id) => FRUIT_BY_ID.get(id)!.ability),

@@ -3,7 +3,7 @@ import { FRUIT_BY_ID } from '../data/fruits';
 import { ARTIFACT_BY_ID } from '../data/artifacts';
 import type { AvatarVariant, RunState, Stats } from '../types/game';
 
-export function createRunState(avatar: AvatarVariant, seed: number, now = new Date()): RunState {
+export function createRunState(avatar: AvatarVariant, seed: number, now = new Date(), heroName = 'Eroe'): RunState {
   const p = BALANCE.player;
   return {
     runId: `run-${seed.toString(16)}-${now.getTime().toString(36)}`,
@@ -12,6 +12,7 @@ export function createRunState(avatar: AvatarVariant, seed: number, now = new Da
     balanceVersion: BALANCE.version,
     startedAt: now.toISOString(),
     avatar,
+    heroName,
     areaIndex: 0,
     stepIndex: 0,
     map: [],
@@ -44,4 +45,20 @@ export function effectiveStats(run: RunState): Stats {
   }
   s.spd = Math.max(1, s.spd);
   return s;
+}
+
+export const HERO_NAME_MAX = 12;
+
+/** Pulisce il nome: solo lettere, cifre, spazi, apostrofo, trattino e punto. */
+export function sanitizeHeroName(raw: string): string {
+  return raw
+    .replace(/[^\p{L}\p{N} '\-.]/gu, '')
+    .replace(/\s+/g, ' ')
+    .trimStart()
+    .slice(0, HERO_NAME_MAX);
+}
+
+export function isValidHeroName(name: string): boolean {
+  const n = name.trim();
+  return n.length >= 1 && n.length <= HERO_NAME_MAX && /\p{L}|\p{N}/u.test(n);
 }

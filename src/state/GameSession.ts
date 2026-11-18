@@ -25,8 +25,10 @@ class GameSessionStore {
     return this.save.data.discoveredFruitIds.filter((id) => FRUITS.some((f) => f.id === id));
   }
 
-  beginRun(avatar: AvatarVariant): string {
-    this.run = createRunState(avatar, randomSeed());
+  beginRun(avatar: AvatarVariant, heroName = this.save.data.lastHeroName || 'Eroe'): string {
+    const name = heroName.trim() || 'Eroe';
+    this.save.update((s) => (s.lastHeroName = name));
+    this.run = createRunState(avatar, randomSeed(), new Date(), name);
     this.ctl = new RunController(this.run);
     const fruit = this.ctl.start(this.unlockedFruitIds());
     this.discover({ fruits: [fruit] });
@@ -61,6 +63,7 @@ class GameSessionStore {
       if (!raw) return false;
       const run = JSON.parse(raw) as RunState;
       if (!Array.isArray(run.map) || typeof run.runSeed !== 'number') throw new Error('run non valida');
+      if (typeof run.heroName !== 'string' || !run.heroName) run.heroName = 'Eroe'; // run salvate prima del nome
       this.run = run;
       this.ctl = new RunController(run);
       return true;
@@ -76,6 +79,7 @@ class GameSessionStore {
     if (!run) return null;
     const entry: HallOfFameEntry = {
       score: run.score,
+      heroName: run.heroName,
       date: new Date().toISOString(),
       durationSec: Math.round((Date.now() - new Date(run.startedAt).getTime()) / 1000),
       maxArea: run.areaIndex + 1,
