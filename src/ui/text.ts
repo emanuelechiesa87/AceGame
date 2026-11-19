@@ -27,3 +27,9 @@ export function gradientFill(t: Phaser.GameObjects.Text, top: string, bottom: st
   g.addColorStop(0.85, bottom);
   t.setFill(g);
 }
+
+/** Riduce un testo su una riga finché non sta nella larghezza data (titoli lunghi di eventi e ricompense). */
+export function fitWidth<T extends Phaser.GameObjects.Text>(t: T, maxW: number): T {
+  if (t.width > maxW) t.setScale(maxW / t.width);
+  return t;
+}

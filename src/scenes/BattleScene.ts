@@ -4,10 +4,9 @@ import { runTutorial, type TutorialStep } from '../ui/Tutorial';
 import { COLORS, GAME_HEIGHT, GAME_WIDTH } from '../app/config';
 import { CREATURES, CREATURE_SCALE } from '../pixel/creatures';
 import type { NodeType } from '../data/areas';
-import { ARTIFACT_BY_ID } from '../data/artifacts';
 import { COMPANION_BY_ID } from '../data/companions';
 import { ENEMY_BY_ID } from '../data/enemies';
-import { FRUIT_BY_ID, fruitAbility, fruitOfAbility } from '../data/fruits';
+import { FRUIT_BY_ID, fruitOfAbility } from '../data/fruits';
 import { playFruitFx, type FxUnit } from '../ui/fruitFx';
 import { GameSession } from '../state/GameSession';
 import { effectiveStats } from '../state/RunState';
@@ -81,19 +80,14 @@ export class BattleScene extends BaseScene {
     // --- setup motore -----------------------------------------------------------
     const stats = effectiveStats(run);
     this.enemyIds = ctl.enemyGroup(this.node);
-    const arts = run.artifactIds.map((id) => ARTIFACT_BY_ID.get(id)!);
     this.battle = new Battle(
       {
         hero: makeHeroUnit(run.heroName, stats, Math.min(run.currentHp, stats.maxHp)),
         companions: run.companions.map((c, i) => makeCompanionUnit(c.id, `c${i}`, c.hp, c.charge, ctl.companionScale)),
         enemies: this.enemyIds.map((id, i) => makeEnemyUnit(id, `e${i}`, ctl.enemyScale)),
-        powers: run.activeFruitIds.slice(0, 1).map((id) => fruitAbility(FRUIT_BY_ID.get(id)!, ctl.fruitLevel)),
+        powers: ctl.battlePowers(),
         potions: run.potions,
-        mods: {
-          powerDamageMult: arts.reduce((m, a) => m * (a.powerDamageMult ?? 1), 1),
-          surviveLethalOnce: arts.some((a) => a.surviveLethalOncePerBattle),
-          enemyScale: ctl.enemyScale,
-        },
+        mods: ctl.battleMods(),
       },
       ctl.rng,
     );
@@ -471,7 +465,7 @@ export class BattleScene extends BaseScene {
         case 'cleanse': { const v = this.views.get(e.target); if (v) v.refresh(); break; }
         case 'stunned': { const v = this.views.get(e.uid); if (v) { v.refresh(); floatText(this, v.x, v.topY, 'CONGELATO!', '#bff4ff', 38, s); await wait(this, 400 / s); } break; }
         case 'ko': { Audio.play('ko'); const v = this.views.get(e.uid); if (v) { floatText(this, v.x, v.topY, 'KO!', '#ff5f6d', 56, s); await v.ko(s); } this.placeReticle(); break; }
-        case 'survive': await banner(this, this.bannerY, 'FILO DEL DESTINO!', 0xff5f8a, 50, 500 / s); this.views.get(e.uid)?.refresh(); break;
+        case 'survive': await banner(this, this.bannerY, e.by === 'pearl' ? 'PERLA DEL RITORNO!' : 'FILO DEL DESTINO!', e.by === 'pearl' ? 0x9fe8ff : 0xff5f8a, 50, (e.by === 'pearl' ? 900 : 500) / s); this.views.get(e.uid)?.refresh(); break;
         case 'summon': {
           const v = this.addView(e.unit, this.enemySpot(e.unit));
           this.sortDepth();
@@ -513,6 +507,7 @@ export class BattleScene extends BaseScene {
     const comps = this.battle.units.filter((u) => u.kind === 'companion').map((u) => ({ id: u.defId, hp: u.hp, charge: u.charge }));
     ctl.run.potions = this.battle.potions;
     ctl.run.heroKos += 0;
+    ctl.afterBattle(this.battle.reviveUsed);
     ctl.onVictory(this.enemyIds, this.battle.hero.hp, comps);
     if (this.node === 'boss') ctl.onAreaCleared();
     GameSession.persistRun();

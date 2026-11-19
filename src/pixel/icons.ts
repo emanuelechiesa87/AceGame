@@ -57,6 +57,43 @@ const ARTIFACTS: Record<string, () => Cells> = {
   art_return_bell: () => fromGrid(sym([
     '......D', '.....DD', '....YYY', '...YYYY', '...YWYY', '...YWYY', '..YYYYY', '..YYYYY', '.YYYYYY', 'DDDDDDD', '......B', '.....BB',
   ]), { D: '#8a5232', Y: '#ffcf3a', W: '#fff3b0', B: '#5f3520' }, 1, 1),
+  // --- 0.6.1 ---
+  art_bent_compass: () => fromGrid([
+    '....GGGGGG', '..GGWWWWWWGG', '.GWWWWWWWWWWG', '.GWWWWWWWRRWG', 'GWWWWWWWRRWWWG', 'GWWWWWWRRWWWWG', 'GWWWWWKKWWWWWG', 'GWWWWWKKWWWWWG', 'GWWWWBBWWWWWWG', '.GWWBBWWWWWWG', '.GWWBWWWWWWWG', '..GGWWWWWWGG', '....GGGGGG',
+  ], { G: '#ffcf3a', W: '#fff7e6', R: '#e4342f', B: '#5fa8ff', K: '#3a3550' }, 1, 1),
+  art_coconut_flask: () => fromGrid(sym([
+    '......W', '.....CC', '.....bb', '.....bb', '....bbb', '..bbbbb', '.bbbbbb', '.bbLLLL', 'bbbLWWL', 'bbbLLLL', '.bbbbbb', '.bbbbbb', '..bbbbb',
+  ]), { C: '#d9b07a', b: '#7a4a2a', L: '#d9b07a', W: '#fff7e6' }, 1, 1),
+  art_shell_armor: () => fromGrid(sym([
+    '.....PP', '...PPLP', '..PLPPL', '.PPLPPL', '.PLPPLP', 'PPLPPLP', 'PLPPLPP', 'PLPPLPP', 'PLPPLPP', '.PPPPPP', '...DDDD', '..DDDDD',
+  ]), { P: '#ff9fb4', L: '#ffd6df', D: '#c06a7f' }, 1, 2),
+  art_good_eye: () => fromGrid([
+    '..............', 'SSSSSSSSSSSSSS', '..SKKKKK', '.KKKKKKKK', '.KKGKKKKK', '.KKKKKKKK', '..KKKKKK', '...KKKK', '', '.........WWW', '........WBBBW', '.........WWW',
+  ], { S: '#8a5232', K: '#2a2433', G: '#5a5670', W: '#fff7e6', B: '#3a6ad8' }, 1, 2),
+  art_cork_ring: () => fromGrid(sym([
+    '....RRR', '..RRRWW', '.RRRWWW', '.RWW...', 'RWW....', 'WWW....', 'WWW....', 'RRR....', 'RRW....', '.RWW...', '.RRRWWW', '..RRRWW', '....RRR',
+  ]), { R: '#e4342f', W: '#fff7e6' }, 1, 1),
+  art_rusty_hook: () => fromGrid([
+    '.......OO', '......O..O', '......O..O', '.......OO', '........O', '........O', '........O', '........O', '..O.....O', '.OO.....O', '.O.O...OO', '..O.OOOO', '...OOO',
+  ], { O: '#c06a2a' }, 2, 1),
+  art_bosun_whistle: () => fromGrid([
+    'C', '.C', '..C', '...C', '....SSSSSSSS', '...SSLLLLLSSS', '..SSLSSSSSSKS', '..SSSSSSSSSKS', '..SSSSSSSSSS', '...SSSSSSS', '....SSSSS',
+  ], { C: '#ffcf3a', S: '#b8c4d6', L: '#eef3fa', K: '#3a3550' }, 1, 2),
+  art_urchin_spines: () => fromGrid(sym([
+    '......S', '.S....S', '..S..PP', '...PPPP', '..PPPPP', 'SSPPPLP', '..PPPPP', '..PPPPP', 'SSPPPPP', '..PPPPP', '...PPPP', '..S..PP', '.S....S',
+  ]), { S: '#e9d9ff', P: '#7b4ab8', L: '#b07bff' }, 1, 1),
+  art_sunken_lantern: () => fromGrid(sym([
+    '.....TT', '......T', '....TTT', '...TTTT', '...TYYY', '...TYWW', '...TYWW', '...TYYY', '...TYYY', '...TTTT', '....TTT', '...TTTT',
+  ]).concat(['..BB......BB', '.B..........B']), { T: '#2a8a8a', Y: '#ffcf3a', W: '#fff3b0', B: '#5fd0e8' }, 1, 1),
+  art_torn_map: () => fromGrid([
+    'PPPPPPPPPPP', 'PPPPPPPPPPPP', 'PPDPPPPPPPP', 'PPPDPPPPPPPP', 'PPPPDDPPRPRP', 'PPPPPPDPPRPP', 'PPPPPPPDRPRP', 'PPPPPPPPPPPP', 'PPPPPPPPPPP', 'PPPPPPPPPP', 'PPPPPPPPPPP', 'PPPPPPPPP',
+  ], { P: '#f1d7a8', D: '#8a5232', R: '#e4342f' }, 1, 2),
+  art_return_pearl: () => fromGrid(sym([
+    '.....BB', '...BBWW', '..BWWWW', '..BWWLW', '..BWWWW', '...BWWW', '.....BB', 'SSS....', 'SLSS...', '.SSSSSS', '..SSSSS', '...SSSS',
+  ]), { B: '#9fe8ff', W: '#ffffff', L: '#dff6ff', S: '#ff9fb4' }, 1, 1),
+  art_black_coral_crown: () => fromGrid([
+    'R.....RR.....R', 'RR..R.RR.R..RR', '.R..R.RR.R..R', '.RR.RRRRRR.RR', '..RRRRRRRRRR', '..KKKKKKKKKK', '.KKKKKGGKKKKK', '.KKKKGGGGKKKK', '.KKKKKGGKKKKK', '.KKKKKKKKKKKK',
+  ], { R: '#c0283a', K: '#2a2433', G: '#ffcf3a' }, 1, 3),
 };
 
 // --- Nodi della mappa ----------------------------------------------------------------------

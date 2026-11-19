@@ -39,7 +39,7 @@ export const BALANCE = {
   },
   /** Nemici più robusti: con un solo frutto molto forte il protagonista picchia duro. */
   enemies: {
-    hpMult: 1.2,
+    hpMult: 1.22,
     atkMult: 1.1,
     /** Ritocchi per grado: scontri normali che logorano, boss meno "muro" (fase 6). */
     tier: {

@@ -32,6 +32,20 @@ export interface BattleMods {
   surviveLethalOnce: boolean;
   /** Rinforzo dei nemici dell'area (anche quelli evocati). */
   enemyScale?: { hp: number; atk: number };
+  /** Artefatti (0.6.1): tutti facoltativi, assenti = nessun effetto. */
+  energyBonus?: number;
+  potionHealPct?: number;
+  openingShield?: number;
+  critBonus?: number;
+  basicPoison?: { chance: number; value: number; turns: number };
+  companionDmgMult?: number;
+  companionStartCharge?: number;
+  thornsPct?: number;
+  guardEnergyBonus?: number;
+  /** Perla del Ritorno: a 0 HP l'eroe torna a questa frazione di HP (una volta). */
+  reviveOncePct?: number;
+  /** Cannone Abbandonato: i nemici iniziano con questa frazione di HP. */
+  enemyStartHpPct?: number;
 }
 
 export type PlayerAction =
@@ -56,7 +70,7 @@ export type BattleEvent =
   | { t: 'cleanse'; target: string }
   | { t: 'stunned'; uid: string }
   | { t: 'ko'; uid: string }
-  | { t: 'survive'; uid: string }
+  | { t: 'survive'; uid: string; by?: 'pearl' }
   | { t: 'summon'; unit: Unit }
   | { t: 'enrage'; uid: string }
   | { t: 'intent'; uid: string; intent: Intent; move: string }

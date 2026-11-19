@@ -3,9 +3,11 @@ import { ARTIFACTS, ARTIFACT_BY_ID } from '../data/artifacts';
 import { BALANCE } from '../data/balance';
 import { COMPANIONS, companionMaxHp, companionScale } from '../data/companions';
 import { ENEMY_BY_ID } from '../data/enemies';
-import { FRUITS, MAX_FRUIT_LEVEL } from '../data/fruits';
+import { EVENTS, type EventDef } from '../data/events';
+import { FRUITS, FRUIT_BY_ID, MAX_FRUIT_LEVEL, fruitAbility } from '../data/fruits';
 import { effectiveStats } from '../state/RunState';
-import type { Rarity } from '../types/content';
+import type { Ability, ArtifactDef, Rarity } from '../types/content';
+import type { BattleMods } from './combat/types';
 import type { MapStep, RunState } from '../types/game';
 import { Rng } from './Rng';
 
@@ -84,6 +86,48 @@ export class RunController {
       return { ...c, hp: Math.min(max, c.hp + Math.round(max * pct)) };
     });
     return true;
+  }
+
+  // --- battaglia: effetti di artefatti ed eventi --------------------------------------
+  private get arts(): ArtifactDef[] { return this.run.artifactIds.map((id) => ARTIFACT_BY_ID.get(id)).filter((a): a is ArtifactDef => !!a); }
+
+  /** Modificatori della battaglia dati da artefatti ed eventi (unico punto, usato da scena e simulazione). */
+  battleMods(): BattleMods {
+    const a = this.arts;
+    const sum = (f: (x: ArtifactDef) => number | undefined) => a.reduce((m, x) => m + (f(x) ?? 0), 0);
+    const pick = <T>(f: (x: ArtifactDef) => T | undefined) => a.map(f).find((v) => v !== undefined);
+    const pearl = this.run.pearlUsed ? undefined : pick((x) => x.reviveOncePerRunPct);
+    return {
+      powerDamageMult: a.reduce((m, x) => m * (x.powerDamageMult ?? 1), 1),
+      surviveLethalOnce: a.some((x) => x.surviveLethalOncePerBattle),
+      enemyScale: this.enemyScale,
+      energyBonus: sum((x) => x.energyBonus),
+      potionHealPct: pick((x) => x.potionHealPct),
+      openingShield: sum((x) => x.openingShield),
+      critBonus: sum((x) => x.critBonus),
+      basicPoison: pick((x) => x.basicPoison),
+      companionDmgMult: a.reduce((m, x) => m * (x.companionDmgMult ?? 1), 1),
+      companionStartCharge: sum((x) => x.companionStartCharge),
+      thornsPct: sum((x) => x.thornsPct),
+      guardEnergyBonus: sum((x) => x.guardEnergyBonus),
+      reviveOncePct: pearl,
+      enemyStartHpPct: this.run.nextBattleEnemyHpPct,
+    };
+  }
+
+  /** Poteri del frutto per la battaglia (la Corona di Corallo Nero abbassa il costo, minimo 1). */
+  battlePowers(): Ability[] {
+    const down = this.arts.reduce((m, x) => m + (x.powerCostDown ?? 0), 0);
+    return this.run.activeFruitIds.slice(0, 1).map((id) => {
+      const ab = fruitAbility(FRUIT_BY_ID.get(id)!, this.fruitLevel);
+      return down ? { ...ab, cost: Math.max(1, (ab.cost ?? 0) - down) } : ab;
+    });
+  }
+
+  /** Dopo una battaglia vinta: consuma il cannone e segna la perla usata. */
+  afterBattle(reviveUsed: boolean): void {
+    this.run.nextBattleEnemyHpPct = undefined;
+    if (reviveUsed) this.run.pearlUsed = true;
   }
 
   // --- avvio -------------------------------------------------------------------
@@ -198,7 +242,8 @@ export class RunController {
       { item: 'awaken', weight: this.canAwaken ? R.awaken : 0 }, { item: 'artifact', weight: artifact ? R.artifact : 0 },
       { item: 'potion', weight: R.potion }, { item: 'heal', weight: R.heal }, { item: 'maxHp', weight: R.maxHp },
     ];
-    for (let guard = 0; out.length < 3 && guard < 50; guard++) {
+    const n = 3 + this.arts.reduce((m, x) => m + (x.extraRewardChoice ?? 0), 0);
+    for (let guard = 0; out.length < n && guard < 50; guard++) {
       const kind = this.rng.weightedPick(pool);
       if (out.some((r) => r.kind === kind)) continue;
       if (kind === 'artifact') out.push({ kind, id: artifact! });
@@ -214,9 +259,22 @@ export class RunController {
     return true;
   }
 
-  randomNewArtifact(): string | undefined {
-    const pool = ARTIFACTS.filter((a) => !this.run.artifactIds.includes(a.id));
+  randomNewArtifact(minRarity?: Rarity): string | undefined {
+    const order: Rarity[] = ['common', 'rare', 'epic'];
+    const pool = ARTIFACTS.filter((a) => !this.run.artifactIds.includes(a.id) && (!minRarity || order.indexOf(a.rarity) >= order.indexOf(minRarity)));
     return pool.length ? this.rng.weightedPick(pool.map((a) => ({ item: a.id, weight: RARITY_WEIGHT[a.rarity] }))) : undefined;
+  }
+
+  /** Evento misterioso: solo quelli del mare corrente o generici, mai uno già visto nella run (se possibile). */
+  pickEvent(): EventDef {
+    const seen = (this.run.seenEventIds ??= []);
+    const here = EVENTS.filter((e) => !e.areas || e.areas.includes(this.run.areaIndex));
+    const fresh = here.filter((e) => !seen.includes(e.id));
+    const pool = fresh.length ? fresh : here;
+    // gli eventi del proprio mare escono un po' più spesso di quelli generici
+    const ev = this.rng.weightedPick(pool.map((e) => ({ item: e, weight: e.areas ? 1.5 : 1 })));
+    if (!seen.includes(ev.id)) seen.push(ev.id);
+    return ev;
   }
 
   randomNewCompanion(): string | undefined {

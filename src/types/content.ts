@@ -66,6 +66,19 @@ export interface ArtifactDef {
   powerDamageMult?: number;
   surviveLethalOncePerBattle?: boolean;
   healAfterVictoryPct?: number;
+  /** Effetti in battaglia e nella run (0.6.1). */
+  energyBonus?: number;
+  potionHealPct?: number;
+  openingShield?: number;
+  critBonus?: number;
+  basicPoison?: { chance: number; value: number; turns: number };
+  companionDmgMult?: number;
+  companionStartCharge?: number;
+  thornsPct?: number;
+  guardEnergyBonus?: number;
+  reviveOncePerRunPct?: number;
+  powerCostDown?: number;
+  extraRewardChoice?: number;
 }
 
 export interface CompanionDef {

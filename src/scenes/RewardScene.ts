@@ -13,7 +13,7 @@ import { Button } from '../ui/Button';
 import { offerArtifact, RARITY_LABEL } from '../ui/Offers';
 import { awakenFx, ROMAN } from '../ui/fruitFx';
 import { RunHud } from '../ui/RunHud';
-import { addBody, addTitle } from '../ui/text';
+import { addBody, addTitle, fitWidth } from '../ui/text';
 import { icon, panel } from '../ui/widgets';
 import { BaseScene } from './BaseScene';
 import { finishNode } from './flow';
@@ -49,7 +49,10 @@ export class RewardScene extends BaseScene {
     }
     addTitle(this, GAME_WIDTH / 2, 280, data.node === 'boss' ? 'BOTTINO DEL BOSS!' : 'SCEGLI UNA RICOMPENSA', 56).setAngle(-3);
     addBody(this, GAME_WIDTH / 2, 346, 'Una sola: scegli bene!', 26, '#fbe9c8');
-    ctl.rewardOptions(data.node).forEach((r, i) => this.card(r, GAME_WIDTH / 2, 500 + i * 230, 640, false));
+    const opts = ctl.rewardOptions(data.node);
+    // con la Mappa Strappata le scelte sono 4: carte un po' più basse
+    const four = opts.length > 3;
+    opts.forEach((r, i) => this.card(r, GAME_WIDTH / 2, four ? 466 + i * 188 : 500 + i * 230, 640, false, four ? 176 : 200));
     new Button(this, GAME_WIDTH / 2, 1200, 'SALTA', () => this.finish(), { variant: 'secondary', width: 260, height: 80, fontSize: 36 });
     void this.revealIfWave(data);
   }
@@ -69,9 +72,9 @@ export class RewardScene extends BaseScene {
     }
   }
 
-  private card(r: Reward, x: number, y: number, w: number, big: boolean): void {
+  private card(r: Reward, x: number, y: number, w: number, big: boolean, hSmall = 200): void {
     const d = this.describe(r);
-    const h = big ? 360 : 200;
+    const h = big ? 360 : hSmall;
     const c = this.add.container(x, y);
     const g = panel(this, -w / 2, -h / 2, w, h, 0x3d3380);
     const iconSize = big ? 170 : 120;
@@ -79,7 +82,7 @@ export class RewardScene extends BaseScene {
     const tx = big ? 0 : -w / 2 + 170;
     c.add([g, icon(this, ix, iy, d.key, iconSize)]);
     c.add(addBody(this, big ? 0 : w / 2 - 24, big ? -h / 2 + 30 : -h / 2 + 28, d.tag, 18, '#ffcf3a').setOrigin(big ? 0.5 : 1, 0.5));
-    c.add(addTitle(this, tx, big ? 60 : -40, d.title, big ? 48 : 38).setOrigin(big ? 0.5 : 0, 0.5));
+    c.add(fitWidth(addTitle(this, tx, big ? 60 : -40, d.title, big ? 48 : 38).setOrigin(big ? 0.5 : 0, 0.5), big ? w - 40 : w - 190));
     c.add(addBody(this, tx, big ? 120 : 30, d.text, 22, '#fff7e6').setOrigin(big ? 0.5 : 0, 0.5).setWordWrapWidth(big ? w - 60 : w - 200).setAlign(big ? 'center' : 'left'));
     c.setScale(0.5);
     this.tweens.add({ targets: c, scale: 1, duration: 260, ease: 'Back.easeOut' });

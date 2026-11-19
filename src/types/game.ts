@@ -45,6 +45,12 @@ export interface RunState {
   bossesDefeated: number;
   eventsCompleted: number;
   heroKos: number;
+  /** Perla del Ritorno già usata in questa run. */
+  pearlUsed?: boolean;
+  /** Cannone Abbandonato: i nemici del prossimo scontro partono con questa frazione di HP. */
+  nextBattleEnemyHpPct?: number;
+  /** Eventi già incontrati in questa run (non si ripetono). */
+  seenEventIds?: string[];
 }
 
 export interface HallOfFameEntry {

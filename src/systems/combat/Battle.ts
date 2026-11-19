@@ -39,6 +39,8 @@ export class Battle {
   private queue: string[] = [];
   private nextUid = 100;
   private lethalSaved = false;
+  /** La Perla del Ritorno è stata usata in questa battaglia (la scena lo segna nella run). */
+  reviveUsed = false;
   /** Ultimo nemico scelto dal giocatore: i compagni attaccano lui (fuoco concentrato). */
   private focusUid?: string;
   koCount = 0;
@@ -50,7 +52,10 @@ export class Battle {
     this.units.forEach((u, i) => (u.order = i));
     this.powers = setup.powers;
     this.potions = setup.potions;
-    this.energy = C.energyStart;
+    this.energy = Math.min(C.energyMax, C.energyStart + (this.mods.energyBonus ?? 0));
+    for (const c of this.units) if (c.kind === 'companion' && this.mods.companionStartCharge) c.charge = Math.min(c.chargeMax, c.charge + this.mods.companionStartCharge);
+    const hpPct = this.mods.enemyStartHpPct;
+    if (hpPct !== undefined && hpPct < 1) for (const e of this.enemies()) e.hp = Math.max(1, Math.round(e.maxHp * hpPct));
     for (const e of this.enemies()) this.planNext(e, []);
   }
 
@@ -66,6 +71,7 @@ export class Battle {
   start(): BattleEvent[] {
     const ev: BattleEvent[] = [];
     for (const e of this.enemies()) ev.push({ t: 'intent', uid: e.uid, intent: this.moveOf(e).intent ?? 'attack', move: e.nextMove! });
+    if (this.mods.openingShield) this.applyEffect(this.hero, this.hero, { kind: 'shield', amount: this.mods.openingShield }, ev, false);
     this.advance(ev);
     return ev;
   }
@@ -89,6 +95,7 @@ export class Battle {
         this.focusUid = action.targetUid;
         this.useAbility(hero, BASIC_ATTACK, action.targetUid, ev);
         this.twinStrike(BASIC_ATTACK, action.targetUid, ev);
+        this.hookPoison(action.targetUid, ev);
         break;
       case 'power': {
         const a = this.powers.find((p) => p.id === action.abilityId);
@@ -106,14 +113,14 @@ export class Battle {
       }
       case 'guard':
         this.useAbility(hero, GUARD, hero.uid, ev);
-        this.energy = Math.min(C.energyMax, this.energy + C.guardEnergy);
+        this.energy = Math.min(C.energyMax, this.energy + C.guardEnergy + (this.mods.guardEnergyBonus ?? 0));
         ev.push({ t: 'energy', value: this.energy });
         break;
       case 'potion': {
         if (this.potions <= 0) throw new Error('Nessuna pozione');
         this.potions--;
         ev.push({ t: 'use', uid: hero.uid, ability: 'potion', name: 'Pozione' });
-        this.heal(hero, Math.round(hero.maxHp * C.potionHealPct), ev);
+        this.heal(hero, Math.round(hero.maxHp * (this.mods.potionHealPct ?? C.potionHealPct)), ev);
         break;
       }
     }
@@ -121,6 +128,14 @@ export class Battle {
     this.endTurn(hero);
     if (!this.checkEnd(ev)) this.advance(ev);
     return ev;
+  }
+
+  /** Amo Arrugginito: l'attacco base può avvelenare il bersaglio. */
+  private hookPoison(targetUid: string, ev: BattleEvent[]): void {
+    const P = this.mods.basicPoison;
+    const t = this.unit(targetUid);
+    if (!P || !t || t.hp <= 0 || this.rng.next() >= P.chance) return;
+    this.applyEffect(this.hero, t, { kind: 'status', status: 'poison', turns: P.turns, value: P.value }, ev, false);
   }
 
   /** La gemella ripete il colpo dell'eroe (solo la parte di danno), con il suo rapporto. */
@@ -325,9 +340,10 @@ export class Battle {
           const atkUp = this.statusValue(actor, 'atkUp');
           let dmg = actor.atk * (1 + atkUp) * (1 - this.statusValue(actor, 'weak')) * eff.mult;
           if (isPower) dmg *= this.mods.powerDamageMult;
+          if (actor.kind === 'companion') dmg *= this.mods.companionDmgMult ?? 1;
           dmg *= 100 / (100 + this.effDef(target) * C.defFactor);
           dmg *= 1 - C.variance + this.rng.next() * C.variance * 2;
-          const crit = this.rng.next() < C.critChance;
+          const crit = this.rng.next() < C.critChance + (actor.kind === 'hero' ? this.mods.critBonus ?? 0 : 0);
           if (crit) dmg *= C.critMult;
           if (this.hasStatus(target, 'vulnerable')) dmg *= C.vulnerableMult;
           if (this.hasStatus(target, 'guard')) dmg *= C.guardMult;
@@ -337,6 +353,9 @@ export class Battle {
           const refl = this.statusValue(target, 'reflect');
           // lo specchio riflette il colpo intero, anche quello parato dallo scudo
           if (refl > 0 && actor.uid !== target.uid) this.applyDamage(actor, Math.max(1, Math.round(incoming * refl)), ev, target.uid, false, 'reflect');
+          // Aculei di Riccio: chi colpisce l'eroe si punge
+          const thorns = this.mods.thornsPct ?? 0;
+          if (thorns > 0 && target.kind === 'hero' && actor.side === 'enemy' && actor.hp > 0) this.applyDamage(actor, Math.max(1, Math.round(incoming * thorns)), ev, target.uid, false, 'reflect');
         }
         break;
       }
@@ -420,6 +439,16 @@ export class Battle {
       ev.push({ t: 'damage', source, target: target.uid, amount: dealt, absorbed, crit, kind });
       ev.push({ t: 'survive', uid: target.uid });
       return dealt;
+    }
+    if (dealt >= target.hp && target.kind === 'hero' && this.mods.reviveOncePct && !this.reviveUsed) {
+      // Perla del Ritorno: una volta per run l'eroe torna in piedi
+      this.reviveUsed = true;
+      const before = target.hp;
+      target.hp = Math.max(1, Math.round(target.maxHp * this.mods.reviveOncePct));
+      ev.push({ t: 'damage', source, target: target.uid, amount: before, absorbed, crit, kind });
+      ev.push({ t: 'survive', uid: target.uid, by: 'pearl' });
+      ev.push({ t: 'heal', target: target.uid, amount: target.hp });
+      return before;
     }
     dealt = Math.min(dealt, target.hp);
     target.hp -= dealt;

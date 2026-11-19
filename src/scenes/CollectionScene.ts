@@ -9,6 +9,7 @@ import { BiomeBackdrop } from '../ui/BiomeBackdrop';
 import { Button } from '../ui/Button';
 import { addBody, addTitle } from '../ui/text';
 import { icon } from '../ui/widgets';
+import { RARITY_LABEL } from '../ui/Offers';
 import { BaseScene } from './BaseScene';
 
 /** Collezione permanente: frutti, artefatti e compagni incontrati. */
@@ -44,18 +45,24 @@ export class CollectionScene extends BaseScene {
 
     const ar = ARTIFACTS.filter((a) => s.discoveredArtifactIds.includes(a.id));
     section(660, 'ARTEFATTI', ar.length, ARTIFACTS.length);
+    // 17 artefatti: due file di icone; tocca un'icona per leggerne nome ed effetto
+    const info = addBody(this, GAME_WIDTH / 2, 856, 'Tocca un artefatto per leggerlo', 19, '#a89580').setWordWrapWidth(640).setAlign('center');
     ARTIFACTS.forEach((a, i) => {
-      const x = 80 + i * 140, y = 760;
+      const perRow = 9, row = Math.floor(i / perRow), col = i % perRow;
+      const inRow = Math.min(perRow, ARTIFACTS.length - row * perRow);
+      const x = GAME_WIDTH / 2 + (col - (inRow - 1) / 2) * 76, y = 722 + row * 78;
       const known = s.discoveredArtifactIds.includes(a.id);
-      const ic = icon(this, x, y, iconKey('artifact', a.id), 84);
+      const ic = icon(this, x, y, iconKey('artifact', a.id), 62);
       if (!known) ic.setTintFill(0x3a2414);
-      addBody(this, x, y + 64, known ? a.name : '???', 17, known ? '#fff7e6' : '#a89580').setWordWrapWidth(130);
+      ic.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
+        info.setText(known ? `${a.name} · ${RARITY_LABEL[a.rarity]}\n${a.description}` : '??? · ancora da scoprire').setColor(known ? '#fff7e6' : '#a89580');
+      });
     });
 
     const cm = COMPANIONS.filter((c) => s.metCompanionIds.includes(c.id));
-    section(880, 'COMPAGNI', cm.length, COMPANIONS.length);
+    section(912, 'COMPAGNI', cm.length, COMPANIONS.length);
     COMPANIONS.forEach((c, i) => {
-      const x = 140 + i * 220, y = 1060;
+      const x = 140 + i * 220, y = 1078;
       const known = s.metCompanionIds.includes(c.id);
       const img = this.add.image(x, y, creatureKey(c.id)).setOrigin(0.5, 1).setScale((CREATURE_SCALE[c.id] * 0.9) / TEXTURE_SCALE);
       if (!known) img.setTintFill(0x3a2414);

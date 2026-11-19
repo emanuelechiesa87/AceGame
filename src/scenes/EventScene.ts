@@ -5,14 +5,13 @@ import { creatureKey, iconKey } from '../pixel/keys';
 import type { NodeType } from '../data/areas';
 import { BALANCE } from '../data/balance';
 import { COMPANION_BY_ID } from '../data/companions';
-import { EVENTS } from '../data/events';
 import { GameSession } from '../state/GameSession';
 import { resolveEvent } from '../systems/EventResolver';
 import { BiomeBackdrop } from '../ui/BiomeBackdrop';
 import { Button } from '../ui/Button';
 import { HeroRig } from '../ui/HeroRig';
 import { artifactName, offerArtifact, offerCompanion } from '../ui/Offers';
-import { addBody, addTitle } from '../ui/text';
+import { addBody, addTitle, fitWidth } from '../ui/text';
 import { icon, panel } from '../ui/widgets';
 import { BaseScene } from './BaseScene';
 import { finishNode } from './flow';
@@ -32,7 +31,7 @@ export class EventScene extends BaseScene {
     const run = GameSession.run;
     if (!run) { this.scene.start('Menu'); return; }
     this.buttons = [];
-    new BiomeBackdrop(this, { groundTop: 700 });
+    new BiomeBackdrop(this, { groundTop: 700, tint: GameSession.ctl?.area.tint, theme: GameSession.ctl?.area.backdrop });
     this.hero = new HeroRig(this, 200, 756, run.avatar === 'a' ? 'm' : 'f', 0.8, runLook(run)).idle();
     panel(this, 30, 800, 660, 450, COLORS.panel, 0.96);
 
@@ -43,7 +42,7 @@ export class EventScene extends BaseScene {
 
   private header(title: string, iconId: string, text: string): void {
     icon(this, 90, 860, iconKey('node', iconId), 80);
-    addTitle(this, 150, 860, title.toUpperCase(), 46).setOrigin(0, 0.5);
+    fitWidth(addTitle(this, 150, 860, title.toUpperCase(), 46).setOrigin(0, 0.5), 520);
     this.body = addBody(this, GAME_WIDTH / 2, 960, text, 27, '#fff7e6').setWordWrapWidth(600);
   }
 
@@ -84,7 +83,7 @@ export class EventScene extends BaseScene {
 
   private mystery(): void {
     const ctl = GameSession.ctl!;
-    const ev = ctl.rng.pick(EVENTS);
+    const ev = ctl.pickEvent();
     this.header(ev.title, 'event', ev.text);
     this.choices(ev.choices.map((c) => ({
       label: c.label.toUpperCase(),
@@ -92,7 +91,8 @@ export class EventScene extends BaseScene {
         const out = resolveEvent(ctl, c.outcome);
         if (out.awakened) { this.hero.setLook(runLook(GameSession.run), true); this.done(out.text, 'good'); }
         else if (out.artifactOffer) { offerArtifact(out.artifactOffer); this.done(`${out.text} Trovi: ${artifactName(out.artifactOffer)}!`, 'good'); }
-        else this.done(out.text, out.text.includes('-') ? 'bad' : 'neutral');
+        else if (out.mood === undefined && /\(-\d/.test(out.text)) this.done(out.text, 'bad');
+        else this.done(out.text, out.mood ?? 'neutral');
       },
     })));
   }
