@@ -9,7 +9,7 @@ import { cheeks, mouth, stroke, suckers, tentacle } from './seaCreatures';
  */
 
 /** Poligono pieno con contorno: riempie in INK, poi l'interno rimpicciolito verso il centro. */
-function poly(px: Px, pts: [number, number][], fill: string, inset = 1.5): void {
+export function poly(px: Px, pts: [number, number][], fill: string, inset = 1.5): void {
   const cx = pts.reduce((s, p) => s + p[0], 0) / pts.length, cy = pts.reduce((s, p) => s + p[1], 0) / pts.length;
   const inside = (q: [number, number][], x: number, y: number) => {
     let c = false;

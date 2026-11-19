@@ -66,7 +66,7 @@ export class Battle {
     const hpPct = this.mods.enemyStartHpPct;
     if (hpPct !== undefined && hpPct < 1) for (const e of this.enemies()) e.hp = Math.max(1, Math.round(e.maxHp * hpPct));
     for (const e of this.enemies()) this.planNext(e, []);
-    if (this.mods.eliteAffixes) for (const e of this.enemies()) if (ENEMY_BY_ID.get(e.defId)!.tier === 'elite') this.giveAffixes(e, this.mods.eliteAffixes);
+    if (this.mods.eliteAffixes) for (const e of this.enemies()) { const d = ENEMY_BY_ID.get(e.defId)!; if (d.tier === 'elite' && !d.miniBoss) this.giveAffixes(e, this.mods.eliteAffixes); }
   }
 
   /** Affissi delle élite (F1): estratti senza ripetizioni; gli effetti fissi si applicano subito. */
@@ -489,6 +489,10 @@ export class Battle {
         this.applyEffect(actor, target, eff, ev, flags.isPower ?? false);
       }
     });
+    // F4: onda d'urto dei frutti "di potenziamento": colpisce tutti i nemici dopo il resto
+    for (const eff of a.effects) if (eff.kind === 'shockwave') {
+      for (const f of this.alive(actor.side === 'ally' ? 'enemy' : 'ally')) this.applyEffect(actor, f, { kind: 'damage', mult: eff.mult }, ev, flags.isPower ?? false);
+    }
   }
 
   private applyEffect(actor: Unit, target: Unit, eff: Effect, ev: BattleEvent[], isPower: boolean, kind: DamageKind = 'hit'): void {
@@ -552,7 +556,7 @@ export class Battle {
         ev.push({ t: 'steal', source: actor.uid, target: target.uid, amount: sh.value });
         break;
       }
-      case 'extraAction': case 'swarm': case 'twin': case 'drainEnergy': break; // gestite in act() / useAbility()
+      case 'extraAction': case 'swarm': case 'twin': case 'drainEnergy': case 'shockwave': break; // gestite in act() / useAbility()
       case 'meltShield': {
         const sh = this.getStatus(target, 'shield');
         if (!sh || sh.value <= 0) break;

@@ -387,6 +387,51 @@ export const ENEMIES: EnemyDef[] = [
       wrath: mv('wrath', 'Collera senza Testa', 'self', 'special', [st('atkUp', 99, 0.4), { kind: 'shield', amount: 25 }]),
     },
   },
+  // ===== F4 (0.9.0) · Capibanda: un mini-boss a metà di ogni mare (niente affissi) =====
+  {
+    id: 'en_walrus', name: 'Gabelliere Tricheco', tier: 'elite', miniBoss: true, stats: { maxHp: 120, atk: 11, def: 4, spd: 7 },
+    pattern: ['tusk', 'tax', 'tusk', 'stamp'],
+    enrage: 'overtime',
+    moves: {
+      tusk: atk(1, 'Zannata'),
+      tax: mv('wal_tax', 'Riscossione', 'enemy', 'debuff', [{ kind: 'damage', mult: 0.6 }, { kind: 'drainEnergy', amount: 1 }]),
+      stamp: { ...mv('wal_stamp', 'Timbro di Piombo', 'enemy', 'heavy', [{ kind: 'damage', mult: 1.9 }]), windup: 2 },
+      overtime: mv('wal_overtime', 'Straordinario', 'self', 'special', [st('atkUp', 99, 0.3), { kind: 'shield', amount: 20 }]),
+    },
+  },
+  {
+    id: 'en_barracuda', name: 'Barracuda Corsaro', tier: 'elite', miniBoss: true, stats: { maxHp: 145, atk: 12, def: 3, spd: 15 },
+    pattern: ['bite', 'board', 'bite', 'gash'],
+    enrage: 'frenzy',
+    moves: {
+      bite: atk(1, 'Morso'),
+      board: mv('bar_board', 'Arrembaggio', 'enemy', 'attack', [{ kind: 'damage', mult: 0.5, hits: 3 }]),
+      gash: { ...mv('bar_gash', 'Squarcio', 'allEnemies', 'heavy', [{ kind: 'damage', mult: 1.1 }]), windup: 2 },
+      frenzy: mv('bar_frenzy', 'Odore di Sangue', 'self', 'special', [st('atkUp', 99, 0.35)]),
+    },
+  },
+  {
+    id: 'en_nautilus', name: 'Nautilo Corazzato', tier: 'elite', miniBoss: true, stats: { maxHp: 165, atk: 10, def: 5, spd: 6 },
+    pattern: ['shell', 'ram', 'ram', 'pulse'],
+    enrage: 'seal',
+    moves: {
+      shell: mv('nau_shell', 'Guscio a Strati', 'self', 'defend', [{ kind: 'shield', amount: 22 }]),
+      ram: atk(1.1, 'Speronata'),
+      pulse: { ...mv('nau_pulse', 'Onda di Pressione', 'allEnemies', 'heavy', [{ kind: 'damage', mult: 1.2 }, st('weak', 2, 0.2)]), windup: 2 },
+      seal: mv('nau_seal', 'Chiusura Ermetica', 'self', 'special', [{ kind: 'shield', amount: 30 }, st('atkUp', 99, 0.2)]),
+    },
+  },
+  {
+    id: 'en_ghost_cook', name: 'Cuoco Maledetto', tier: 'elite', miniBoss: true, stats: { maxHp: 165, atk: 12, def: 5, spd: 9 },
+    pattern: ['ladle', 'stew', 'ladle', 'cleaver'],
+    enrage: 'service',
+    moves: {
+      ladle: atk(1, 'Mestolata'),
+      stew: mv('cook_stew', 'Zuppa Stregata', 'allEnemies', 'debuff', [st('poison', 3, 5)]),
+      cleaver: { ...mv('cook_cleaver', 'Mannaia', 'enemy', 'heavy', [{ kind: 'damage', mult: 2.0 }]), windup: 2 },
+      service: mv('cook_service', 'Servizio Completo', 'self', 'special', [{ kind: 'summon', enemyId: 'en_plague_rat', maxEnemies: 3 }, st('atkUp', 99, 0.2)]),
+    },
+  },
 ];
 
 export const ENEMY_BY_ID = new Map(ENEMIES.map((e) => [e.id, e]));

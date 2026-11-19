@@ -64,13 +64,13 @@ export const FRUITS: FruitDef[] = [
   {
     id: 'fruit_life', name: 'Lampone Linfa', rarity: 'rare', element: 'life', color: '#6fe08a',
     description: 'Profuma di bosco dopo la pioggia.',
-    passive: { def: 1 }, startsUnlocked: false,
+    passive: { def: 1 }, startsUnlocked: false, // F4: cure +6 punti per livello
     abilities: [
-      lv('pw_life', 'Rugiada Viva', 'Cura il 14% a tutta la squadra e +30% ATT per 2 turni.', 3, 'allAllies', [{ kind: 'heal', pctMaxHp: 0.14 }, { kind: 'status', status: 'atkUp', turns: 2, value: 0.3 }]),
-      lv('pw_life_2', 'Rugiada Viva II', 'Cura il 16%, scudo 8 e furia (+35% ATT) per 2 turni a tutti.', 3, 'allAllies', [{ kind: 'heal', pctMaxHp: 0.16 }, { kind: 'shield', amount: 8 }, { kind: 'status', status: 'atkUp', turns: 2, value: 0.35 }]),
-      lv('pw_life_3', 'Fioritura', 'Cura il 18%, scudo 9, furia (+50% ATT) e rimuove i malus a tutti.', 3, 'allAllies', [{ kind: 'cleanse' }, { kind: 'heal', pctMaxHp: 0.18 }, { kind: 'shield', amount: 9 }, { kind: 'status', status: 'atkUp', turns: 3, value: 0.5 }]),
-      lv('pw_life_4', 'Fioritura II', 'Cura il 20%, scudo 13, furia (+50% ATT) e rimuove i malus a tutti.', 3, 'allAllies', [{ kind: 'cleanse' }, { kind: 'heal', pctMaxHp: 0.2 }, { kind: 'shield', amount: 13 }, { kind: 'status', status: 'atkUp', turns: 3, value: 0.5 }]),
-      lv('pw_life_5', 'Primavera Eterna', 'Cura il 22%, scudo 18, furia (+60% ATT) e rimuove i malus a tutti.', 3, 'allAllies', [{ kind: 'cleanse' }, { kind: 'heal', pctMaxHp: 0.22 }, { kind: 'shield', amount: 18 }, { kind: 'status', status: 'atkUp', turns: 3, value: 0.6 }]),
+      lv('pw_life', 'Rugiada Viva', 'Cura il 20% a tutta la squadra e +30% ATT per 2 turni.', 3, 'allAllies', [{ kind: 'heal', pctMaxHp: 0.2 }, { kind: 'status', status: 'atkUp', turns: 2, value: 0.3 }]),
+      lv('pw_life_2', 'Rugiada Viva II', 'Cura il 22%, scudo 8 e furia (+35% ATT) per 2 turni a tutti.', 3, 'allAllies', [{ kind: 'heal', pctMaxHp: 0.22 }, { kind: 'shield', amount: 8 }, { kind: 'status', status: 'atkUp', turns: 2, value: 0.35 }]),
+      lv('pw_life_3', 'Fioritura', 'Cura il 24%, scudo 9, furia (+50% ATT) e rimuove i malus a tutti.', 3, 'allAllies', [{ kind: 'cleanse' }, { kind: 'heal', pctMaxHp: 0.24 }, { kind: 'shield', amount: 9 }, { kind: 'status', status: 'atkUp', turns: 3, value: 0.5 }]),
+      lv('pw_life_4', 'Fioritura II', 'Cura il 26%, scudo 13, furia (+50% ATT) e rimuove i malus a tutti.', 3, 'allAllies', [{ kind: 'cleanse' }, { kind: 'heal', pctMaxHp: 0.26 }, { kind: 'shield', amount: 13 }, { kind: 'status', status: 'atkUp', turns: 3, value: 0.5 }]),
+      lv('pw_life_5', 'Primavera Eterna', 'Cura il 28%, scudo 18, furia (+60% ATT) e rimuove i malus a tutti.', 3, 'allAllies', [{ kind: 'cleanse' }, { kind: 'heal', pctMaxHp: 0.28 }, { kind: 'shield', amount: 18 }, { kind: 'status', status: 'atkUp', turns: 3, value: 0.6 }]),
     ],
   },
   {
@@ -102,11 +102,11 @@ export const FRUITS: FruitDef[] = [
     description: 'Si sbuccia da sola e si dissolve in vapore.',
     passive: { spd: 1, def: 2, atk: 2, maxHp: 6 }, startsUnlocked: false,
     abilities: [
-      lv('pw_mist', 'Corpo di Nebbia', 'Per 2 turni schivi il 60% dei colpi e +40% ATT.', 2, 'self', [{ kind: 'status', status: 'evade', turns: 2, value: 0.6 }, { kind: 'status', status: 'atkUp', turns: 2, value: 0.4 }]),
-      lv('pw_mist_2', 'Corpo di Nebbia II', 'Per 3 turni schivi il 65% dei colpi e +60% ATT.', 2, 'self', [{ kind: 'status', status: 'evade', turns: 3, value: 0.65 }, { kind: 'status', status: 'atkUp', turns: 3, value: 0.6 }]),
-      lv('pw_mist_3', 'Spettro del Porto', 'Per 3 turni schivi il 75% dei colpi e +100% ATT.', 2, 'self', [{ kind: 'status', status: 'evade', turns: 3, value: 0.75 }, { kind: 'status', status: 'atkUp', turns: 3, value: 1 }]),
-      lv('pw_mist_4', 'Spettro del Porto II', 'Per 4 turni schivi il 78% dei colpi e +135% ATT.', 2, 'self', [{ kind: 'status', status: 'evade', turns: 4, value: 0.78 }, { kind: 'status', status: 'atkUp', turns: 4, value: 1.35 }]),
-      lv('pw_mist_5', 'Fantasma dell\'Abisso', 'Per 4 turni schivi l\'80% dei colpi e +170% ATT.', 2, 'self', [{ kind: 'status', status: 'evade', turns: 4, value: 0.8 }, { kind: 'status', status: 'atkUp', turns: 4, value: 1.7 }]),
+      lv('pw_mist', 'Corpo di Nebbia', 'Per 2 turni schivi il 60% dei colpi e +40% ATT. Nebbia Tagliente: danno 40% a tutti i nemici.', 2, 'self', [{ kind: 'status', status: 'evade', turns: 2, value: 0.6 }, { kind: 'status', status: 'atkUp', turns: 2, value: 0.4 }, { kind: 'shockwave', mult: 0.4 }]),
+      lv('pw_mist_2', 'Corpo di Nebbia II', 'Per 3 turni schivi il 65% dei colpi e +60% ATT. Nebbia Tagliente: danno 45% a tutti i nemici.', 2, 'self', [{ kind: 'status', status: 'evade', turns: 3, value: 0.65 }, { kind: 'status', status: 'atkUp', turns: 3, value: 0.6 }, { kind: 'shockwave', mult: 0.45 }]),
+      lv('pw_mist_3', 'Spettro del Porto', 'Per 3 turni schivi il 75% dei colpi e +100% ATT. Nebbia Tagliente: danno 50% a tutti i nemici.', 2, 'self', [{ kind: 'status', status: 'evade', turns: 3, value: 0.75 }, { kind: 'status', status: 'atkUp', turns: 3, value: 1 }, { kind: 'shockwave', mult: 0.5 }]),
+      lv('pw_mist_4', 'Spettro del Porto II', 'Per 4 turni schivi il 78% dei colpi e +135% ATT. Nebbia Tagliente: danno 55% a tutti i nemici.', 2, 'self', [{ kind: 'status', status: 'evade', turns: 4, value: 0.78 }, { kind: 'status', status: 'atkUp', turns: 4, value: 1.35 }, { kind: 'shockwave', mult: 0.55 }]),
+      lv('pw_mist_5', 'Fantasma dell\'Abisso', 'Per 4 turni schivi l\'80% dei colpi e +170% ATT. Nebbia Tagliente: danno 65% a tutti i nemici.', 2, 'self', [{ kind: 'status', status: 'evade', turns: 4, value: 0.8 }, { kind: 'status', status: 'atkUp', turns: 4, value: 1.7 }, { kind: 'shockwave', mult: 0.65 }]),
     ],
   },
   {
@@ -114,11 +114,11 @@ export const FRUITS: FruitDef[] = [
     description: 'Ha il pelo. E ringhia, se lo scuoti.',
     passive: { maxHp: 15, def: 2 }, startsUnlocked: false,
     abilities: [
-      lv('pw_fang', 'Risveglio Bestiale', 'Per 3 turni: +120% ATT e +60% DIF.', 2, 'self', [{ kind: 'status', status: 'atkUp', turns: 3, value: 1.2 }, { kind: 'status', status: 'defUp', turns: 3, value: 0.6 }]),
-      lv('pw_fang_2', 'Risveglio Bestiale II', 'Per 3 turni: +150% ATT e +70% DIF.', 2, 'self', [{ kind: 'status', status: 'atkUp', turns: 3, value: 1.5 }, { kind: 'status', status: 'defUp', turns: 3, value: 0.7 }]),
-      lv('pw_fang_3', 'Re della Giungla', 'Per 4 turni: +180% ATT e +90% DIF.', 2, 'self', [{ kind: 'status', status: 'atkUp', turns: 4, value: 1.8 }, { kind: 'status', status: 'defUp', turns: 4, value: 0.9 }]),
-      lv('pw_fang_4', 'Re della Giungla II', 'Per 4 turni: +220% ATT e +110% DIF.', 2, 'self', [{ kind: 'status', status: 'atkUp', turns: 4, value: 2.2 }, { kind: 'status', status: 'defUp', turns: 4, value: 1.1 }]),
-      lv('pw_fang_5', 'Bestia Primordiale', 'Scudo 30 e per 4 turni: +260% ATT e +130% DIF.', 2, 'self', [{ kind: 'shield', amount: 30 }, { kind: 'status', status: 'atkUp', turns: 4, value: 2.6 }, { kind: 'status', status: 'defUp', turns: 4, value: 1.3 }]),
+      lv('pw_fang', 'Risveglio Bestiale', 'Per 3 turni: +120% ATT e +60% DIF. Ruggito: danno 35% a tutti i nemici.', 2, 'self', [{ kind: 'status', status: 'atkUp', turns: 3, value: 1.2 }, { kind: 'status', status: 'defUp', turns: 3, value: 0.6 }, { kind: 'shockwave', mult: 0.35 }]),
+      lv('pw_fang_2', 'Risveglio Bestiale II', 'Per 3 turni: +150% ATT e +70% DIF. Ruggito: danno 40% a tutti i nemici.', 2, 'self', [{ kind: 'status', status: 'atkUp', turns: 3, value: 1.5 }, { kind: 'status', status: 'defUp', turns: 3, value: 0.7 }, { kind: 'shockwave', mult: 0.4 }]),
+      lv('pw_fang_3', 'Re della Giungla', 'Per 4 turni: +180% ATT e +90% DIF. Ruggito: danno 45% a tutti i nemici.', 2, 'self', [{ kind: 'status', status: 'atkUp', turns: 4, value: 1.8 }, { kind: 'status', status: 'defUp', turns: 4, value: 0.9 }, { kind: 'shockwave', mult: 0.45 }]),
+      lv('pw_fang_4', 'Re della Giungla II', 'Per 4 turni: +220% ATT e +110% DIF. Ruggito: danno 50% a tutti i nemici.', 2, 'self', [{ kind: 'status', status: 'atkUp', turns: 4, value: 2.2 }, { kind: 'status', status: 'defUp', turns: 4, value: 1.1 }, { kind: 'shockwave', mult: 0.5 }]),
+      lv('pw_fang_5', 'Bestia Primordiale', 'Scudo 30 e per 4 turni: +260% ATT e +130% DIF. Ruggito: danno 60% a tutti i nemici.', 2, 'self', [{ kind: 'shield', amount: 30 }, { kind: 'status', status: 'atkUp', turns: 4, value: 2.6 }, { kind: 'status', status: 'defUp', turns: 4, value: 1.3 }, { kind: 'shockwave', mult: 0.6 }]),
     ],
   },
   {
@@ -138,11 +138,11 @@ export const FRUITS: FruitDef[] = [
     description: 'Lucida come vetro. Ci vedi la tua faccia stupita.',
     passive: { def: 3, maxHp: 8 }, startsUnlocked: false,
     abilities: [
-      lv('pw_mirror', 'Specchio Riflesso', 'Scudo 15 e per 2 turni chi ti colpisce subisce il 60% del colpo.', 2, 'self', [{ kind: 'shield', amount: 15 }, { kind: 'status', status: 'reflect', turns: 2, value: 0.6 }]),
-      lv('pw_mirror_2', 'Specchio Riflesso II', 'Scudo 22 e per 3 turni riflette l\'80% del colpo.', 2, 'self', [{ kind: 'shield', amount: 22 }, { kind: 'status', status: 'reflect', turns: 3, value: 0.8 }]),
-      lv('pw_mirror_3', 'Sala degli Specchi', 'Scudo 30, riflette il 100% e +40% ATT per 3 turni.', 2, 'self', [{ kind: 'shield', amount: 30 }, { kind: 'status', status: 'reflect', turns: 3, value: 1 }, { kind: 'status', status: 'atkUp', turns: 3, value: 0.4 }]),
-      lv('pw_mirror_4', 'Sala degli Specchi II', 'Scudo 40, riflette il 120% e +60% ATT per 3 turni.', 2, 'self', [{ kind: 'shield', amount: 40 }, { kind: 'status', status: 'reflect', turns: 3, value: 1.2 }, { kind: 'status', status: 'atkUp', turns: 3, value: 0.6 }]),
-      lv('pw_mirror_5', 'Labirinto di Cristallo', 'Scudo 55, riflette il 150% e +80% ATT per 4 turni.', 2, 'self', [{ kind: 'shield', amount: 55 }, { kind: 'status', status: 'reflect', turns: 4, value: 1.5 }, { kind: 'status', status: 'atkUp', turns: 4, value: 0.8 }]),
+      lv('pw_mirror', 'Specchio Riflesso', 'Scudo 15 e per 2 turni chi ti colpisce subisce il 60% del colpo. Schegge: danno 30% a tutti i nemici.', 2, 'self', [{ kind: 'shield', amount: 15 }, { kind: 'status', status: 'reflect', turns: 2, value: 0.6 }, { kind: 'shockwave', mult: 0.3 }]),
+      lv('pw_mirror_2', 'Specchio Riflesso II', 'Scudo 22 e per 3 turni riflette l\'80% del colpo. Schegge: danno 35% a tutti i nemici.', 2, 'self', [{ kind: 'shield', amount: 22 }, { kind: 'status', status: 'reflect', turns: 3, value: 0.8 }, { kind: 'shockwave', mult: 0.35 }]),
+      lv('pw_mirror_3', 'Sala degli Specchi', 'Scudo 30, riflette il 100% e +40% ATT per 3 turni. Schegge: danno 35% a tutti i nemici.', 2, 'self', [{ kind: 'shield', amount: 30 }, { kind: 'status', status: 'reflect', turns: 3, value: 1 }, { kind: 'status', status: 'atkUp', turns: 3, value: 0.4 }, { kind: 'shockwave', mult: 0.35 }]),
+      lv('pw_mirror_4', 'Sala degli Specchi II', 'Scudo 40, riflette il 120% e +60% ATT per 3 turni. Schegge: danno 40% a tutti i nemici.', 2, 'self', [{ kind: 'shield', amount: 40 }, { kind: 'status', status: 'reflect', turns: 3, value: 1.2 }, { kind: 'status', status: 'atkUp', turns: 3, value: 0.6 }, { kind: 'shockwave', mult: 0.4 }]),
+      lv('pw_mirror_5', 'Labirinto di Cristallo', 'Scudo 55, riflette il 150% e +80% ATT per 4 turni. Schegge: danno 45% a tutti i nemici.', 2, 'self', [{ kind: 'shield', amount: 55 }, { kind: 'status', status: 'reflect', turns: 4, value: 1.5 }, { kind: 'status', status: 'atkUp', turns: 4, value: 0.8 }, { kind: 'shockwave', mult: 0.45 }]),
     ],
   },
   {

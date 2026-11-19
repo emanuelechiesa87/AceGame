@@ -33,7 +33,9 @@ export type Effect =
   /** Gemella: per `turns` turni ripete gli attacchi e i poteri dell'eroe con il `ratio` del danno. */
   | { kind: 'twin'; turns: number; ratio: number }
   /** (F1) Toglie energia all'eroe (una volta per uso, anche se colpisce più bersagli). */
-  | { kind: 'drainEnergy'; amount: number };
+  | { kind: 'drainEnergy'; amount: number }
+  /** (F4) Onda d'urto: danno `mult` × ATT a TUTTI i nemici, dopo gli altri effetti (anche se il potere è su di sé o sugli alleati). */
+  | { kind: 'shockwave'; mult: number };
 
 export interface Ability {
   id: string;
@@ -120,6 +122,8 @@ export interface EnemyDef {
   reviveOnce?: number;
   /** (F1) Si cura di questa frazione di HP all'inizio di ogni suo turno. */
   regen?: number;
+  /** (F4) Capobanda: mini-boss a metà mare, élite senza affissi. */
+  miniBoss?: boolean;
   /** (F1) Un turno sì e uno no è immune ai poteri del frutto. */
   phaseShift?: boolean;
 }

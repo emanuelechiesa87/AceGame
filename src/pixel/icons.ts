@@ -121,6 +121,10 @@ const NODES: Record<string, () => Cells> = {
   shop: () => fromGrid(sym([
     '.....RR', '....RRR', '.....SS', '....SSS', '..SSSSS', '.SSSSSS', 'SSSSSYY', 'SSSSYYY', 'SSSSYKY', 'SSSSYYY', '.SSSSSY', '..SSSSS',
   ]), { R: '#e4342f', S: '#c98a4a', Y: '#ffcf3a', K: '#e09a12' }, 1, 2),
+  // F4 · Capobanda: gagliardetto rosso con stella d'oro
+  miniboss: () => fromGrid([
+    'P', 'PRRRRRR', 'PRRRYRRRR', 'PRRYYYRRRRR', 'PRRRYRRRR', 'PRRRRRR', 'PRRR', 'P', 'P', 'P', 'P', 'P', 'BBB',
+  ], { P: '#c8a26b', R: '#e4342f', Y: '#ffcf3a', B: '#8a5232' }, 3, 1),
   boss: () => fromGrid(sym([
     'Y..Y..Y', 'YY.YY.Y', 'YYYYYYY', 'YYYYYYY', 'YYRYYGY', 'YYYYYYY', 'BBBBBBB',
   ]).concat(['..CCC....CCC', '..CCC....CCC']), { Y: '#ffcf3a', R: '#e4342f', G: '#6fe08a', B: '#e09a12', C: '#ffcf3a' }, 1, 3),

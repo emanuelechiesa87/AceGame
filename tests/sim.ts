@@ -40,7 +40,7 @@ export function playRun(seed: number, forceFruit?: string, strategy: Strategy = 
     if (run.stepIndex >= run.map.length) { if (!ctl.nextArea()) break; }
     const node = smart && SMART.nodes ? pickNode(ctl, ctl.currentStep.options, hpPct()) : ctl.currentStep.options[0];
     ctl.choose(node);
-    if (node === 'battle' || node === 'elite' || node === 'boss') {
+    if (node === 'battle' || node === 'elite' || node === 'miniboss' || node === 'boss') {
       const stats = effectiveStats(run);
       if (node === 'boss') hpAtBoss[run.areaIndex] = run.currentHp / stats.maxHp;
       battles++;
@@ -99,9 +99,15 @@ function naiveTurn(b: Battle): void {
 
 /** Non rilancia un potenziamento ancora attivo e cura solo se serve. */
 function powerUseful(b: Battle, p: Ability): boolean {
-  const has = (id: string) => b.hero.statuses.some((st) => st.id === id);
-  if (p.target === 'self') return !p.effects.some((e) => e.kind === 'status' && has(e.status));
-  if (p.target === 'allAllies') return p.effects.some((e) => e.kind === 'heal') ? b.alive('ally').some((u) => u.hp < u.maxHp * 0.6) : !has('shield');
+  // F4: l'onda d'urto fa danno a tutti: utile anche col potenziamento ancora attivo
+  if (p.effects.some((e) => e.kind === 'shockwave') && b.enemies().length >= 2) return true;
+  const st = (id: string) => b.hero.statuses.find((x) => x.id === id);
+  // F4: si rilancia quando lo scudo è quasi finito o il potenziamento sta per scadere (prima: solo se assente)
+  const shieldAmt = p.effects.reduce((m, e) => (e.kind === 'shield' ? Math.max(m, e.amount) : m), 0);
+  const shieldLow = (st('shield')?.value ?? 0) < shieldAmt * 0.4;
+  const expiring = (id: string) => (st(id)?.turns ?? 0) <= 1;
+  if (p.target === 'self') return p.effects.some((e) => (e.kind === 'status' && expiring(e.status)) || (e.kind === 'shield' && shieldLow));
+  if (p.target === 'allAllies') return p.effects.some((e) => e.kind === 'heal') ? b.alive('ally').some((u) => u.hp < u.maxHp * 0.7) : shieldLow;
   return true;
 }
 
@@ -149,7 +155,7 @@ function smartTurn(b: Battle): void {
   const incoming = foes.reduce((s, e) => s + expectedHit(b, e), 0);
   const heavy = foes.some((e) => b.moveOf(e).intent === 'heavy');
   const usable = b.powers.filter((p) => b.canUsePower(p) && powerUseful(b, p));
-  const aoe = usable.find((p) => p.target === 'allEnemies');
+  const aoe = usable.find((p) => p.target === 'allEnemies' || p.effects.some((e) => e.kind === 'shockwave'));
   const protective = usable.find((p) => p.target === 'self' || p.target === 'allAllies');
   const single = usable.find((p) => p.target === 'enemy');
 

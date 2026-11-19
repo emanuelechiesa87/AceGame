@@ -31,7 +31,7 @@ export interface TideDef { n: number; name: string; desc: string; apply: (e: Tid
 export const TIDES: TideDef[] = [
   { n: 1, name: 'Stive vuote', desc: 'Si parte senza pozione', apply: (e) => { e.startingPotions = 0; } },
   { n: 2, name: 'Borse leggere', desc: 'Monete −20%', apply: (e) => { e.coinMult = 0.8; } },
-  { n: 3, name: 'Bottino magro', desc: 'Ricompense negli scontri normali: 30%', apply: (e) => { e.normalRewardChance = 0.3; } },
+  { n: 3, name: 'Bottino magro', desc: 'Ricompense negli scontri normali −25%', apply: (e) => { e.normalRewardChance *= 0.75; } },
   { n: 4, name: 'Legna umida', desc: 'Fuoco: cura 20%, rianima 30%', apply: (e) => { e.restHealPct = 0.2; e.restRevivePct = 0.3; } },
   { n: 5, name: 'Élite feroci', desc: 'Élite con 2 affissi in ogni mare', apply: (e) => { e.eliteAffixMin = 2; } },
   { n: 6, name: 'Scaglie dure', desc: 'Tutti i nemici +5% HP', apply: (e) => { e.enemyHp = 1.05; } },

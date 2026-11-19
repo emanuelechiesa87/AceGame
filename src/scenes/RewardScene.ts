@@ -60,7 +60,7 @@ export class RewardScene extends BaseScene {
       void this.revealIfWave(data);
       return;
     }
-    addTitle(this, GAME_WIDTH / 2, 280, data.node === 'boss' ? 'BOTTINO DEL BOSS!' : 'SCEGLI UNA RICOMPENSA', 56).setAngle(-3);
+    addTitle(this, GAME_WIDTH / 2, 280, data.node === 'boss' ? 'BOTTINO DEL BOSS!' : data.node === 'miniboss' ? 'TESORO DEL CAPOBANDA!' : 'SCEGLI UNA RICOMPENSA', 56).setAngle(-3);
     addBody(this, GAME_WIDTH / 2, 346, `${coinText}Una sola: scegli bene!`, 26, '#fbe9c8');
     const opts = ctl.rewardOptions(data.node);
     // con la Mappa Strappata le scelte sono 4: carte un po' più basse

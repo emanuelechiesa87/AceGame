@@ -211,16 +211,21 @@ export class RunController {
     const last = a.steps - 1;
     const middle: number[] = [];
     for (let i = 1; i < last; i++) middle.push(i);
+    // F4: tappe fisse a metà mare (Capobanda, poi Fuoco o Mercante), solo se il mare è abbastanza lungo
+    const mb = last > M.campStep + 1 ? M.miniBossStep : -1, camp = mb >= 0 ? M.campStep : -1;
     // la prima tappa di mezzo è sempre libera (incontro coi compagni); le altre libere a caso
-    const nFree = Math.min(middle.length, M.freeSteps + (full ? 0 : 1));
-    const free = new Set<number>(middle.length ? [middle[0]] : []);
-    const rest = middle.slice(1);
+    const open = middle.filter((i) => i !== mb && i !== camp);
+    const nFree = Math.min(open.length, M.freeSteps + (full ? 0 : 1));
+    const free = new Set<number>(open.length ? [open[0]] : []);
+    const rest = open.slice(1);
     while (free.size < nFree && rest.length) free.add(rest.splice(this.rng.int(0, rest.length - 1), 1)[0]);
     const calm = Object.entries(a.nodeWeights)
       .filter(([t]) => t !== 'battle' && t !== 'elite' && !(t === 'recruit' && full)) as [NodeType, number][];
     const pickCalm = (): NodeType => this.rng.weightedPick(calm.map(([item, weight]) => ({ item, weight })));
     for (let i = 1; i < last; i++) {
-      if (free.has(i)) {
+      if (i === mb) steps.push({ options: ['miniboss'] });
+      else if (i === camp) steps.push({ options: ['rest', 'shop'] });
+      else if (free.has(i)) {
         let other = pickCalm();
         // garanzia: un incontro con un compagno nei primi passi (se c'è ancora qualcuno da incontrare)
         if (i === 1 && !full) other = 'recruit';
@@ -257,7 +262,8 @@ export class RunController {
     const g = this.area.groups;
     if (node === 'boss') return [...g.boss];
     if (node === 'elite') return [...this.rng.pick(g.elite)];
-    return [...this.rng.pick(this.run.stepIndex <= 1 ? g.early : g.late)];
+    if (node === 'miniboss') return [...g.miniboss];
+    return [...this.rng.pick(this.run.stepIndex <= BALANCE.map.earlySteps ? g.early : g.late)];
   }
 
   /** Registra la vittoria: punteggio, contatori, cure post-battaglia, compagni KO rianimati. */
@@ -383,6 +389,15 @@ export class RunController {
     const out: Reward[] = [];
     const artifact = this.randomNewArtifact();
     const R = BALANCE.rewards.weights;
+    const n = 3 + this.arts.reduce((m, x) => m + (x.extraRewardChoice ?? 0), 0);
+    // F4: il Capobanda lascia sempre una scelta tra artefatti (poi, se finiti, il resto)
+    if (node === 'miniboss') {
+      for (let guard = 0; out.length < n && guard < 30; guard++) {
+        const a = this.randomNewArtifact();
+        if (!a) break;
+        if (!out.some((r) => r.kind === 'artifact' && r.id === a)) out.push({ kind: 'artifact', id: a });
+      }
+    }
     if (node === 'elite' || node === 'boss') {
       if (artifact) out.push({ kind: 'artifact', id: artifact });
       if (this.canAwaken) out.push({ kind: 'awaken' });
@@ -391,7 +406,6 @@ export class RunController {
       { item: 'awaken', weight: this.canAwaken ? R.awaken : 0 }, { item: 'artifact', weight: artifact ? R.artifact : 0 },
       { item: 'potion', weight: R.potion }, { item: 'heal', weight: R.heal }, { item: 'maxHp', weight: R.maxHp },
     ];
-    const n = 3 + this.arts.reduce((m, x) => m + (x.extraRewardChoice ?? 0), 0);
     for (let guard = 0; out.length < n && guard < 50; guard++) {
       const kind = this.rng.weightedPick(pool);
       if (out.some((r) => r.kind === kind)) continue;

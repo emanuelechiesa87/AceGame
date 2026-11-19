@@ -71,11 +71,11 @@ export function mapProgress(scene: Phaser.Scene, run: RunState, y: number): void
   run.map.forEach((step, i) => {
     const x = x0 + ((x1 - x0) * i) / (n - 1);
     const done = i < run.stepIndex, cur = i === run.stepIndex;
-    const r = cur ? 24 : 18;
+    const big = n <= 8, r = cur ? (big ? 24 : 21) : (big ? 18 : 14);
     g.fillStyle(COLORS.ink, 1).fillRect(x - r, y - r, r * 2, r * 2);
     g.fillStyle(done ? 0xffcf3a : cur ? 0xe4342f : 0x6b3a1e, 1).fillRect(x - r + 4, y - r + 4, r * 2 - 8, r * 2 - 8);
     const shown = step.chosen ?? (step.options.length === 1 ? step.options[0] : undefined);
-    if (shown && (done || cur || shown === 'boss')) icon(scene, x, y, iconKey('node', shown), cur ? 34 : 26);
+    if (shown && (done || cur || shown === 'boss' || shown === 'miniboss')) icon(scene, x, y, iconKey('node', shown), cur ? (big ? 34 : 30) : (big ? 26 : 22));
   });
   void NODE_LABELS;
 }

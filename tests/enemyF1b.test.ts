@@ -24,8 +24,8 @@ describe('F1b · contenuti', () => {
     for (const e of ENEMIES) { expect(CREATURES[e.id], e.id).toBeDefined(); expect(CREATURE_SCALE[e.id], e.id).toBeDefined(); }
     for (const e of ENEMIES) for (const m of Object.values(e.moves)) for (const f of m.effects) if (f.kind === 'summon') expect(ENEMY_BY_ID.has(f.enemyId)).toBe(true);
     for (const e of ENEMIES) for (const id of [...e.pattern, ...(e.phase2?.pattern ?? [])]) expect(e.moves[id], `${e.id}.${id}`).toBeDefined();
-    for (const a of AREAS) for (const g of [...a.groups.early, ...a.groups.late, ...a.groups.elite, a.groups.boss].flat()) expect(ENEMY_BY_ID.has(g), g).toBe(true);
-    expect(ENEMIES.length).toBe(23 + 17);
+    for (const a of AREAS) for (const g of [...a.groups.early, ...a.groups.late, ...a.groups.elite, a.groups.boss, a.groups.miniboss].flat()) expect(ENEMY_BY_ID.has(g), g).toBe(true);
+    expect(ENEMIES.length).toBe(23 + 17 + 4); // + 4 capibanda (F4)
   });
   it('ogni mare ha 2 élite e i 4 boss hanno la seconda fase', () => {
     for (const a of AREAS) { expect(a.groups.elite.length).toBe(2); expect(ENEMY_BY_ID.get(a.groups.boss[0])!.phase2).toBeDefined(); }

@@ -86,7 +86,7 @@ export class ExplorationScene extends BaseScene {
 
   private nodeCard(node: NodeType, x: number, y: number, w: number): void {
     const L = NODE_LABELS[node];
-    const danger = node === 'boss' || node === 'elite';
+    const danger = node === 'boss' || node === 'elite' || node === 'miniboss';
     const c = this.add.container(x, y);
     const g = this.add.graphics();
     steppedRect(g, -w / 2 + 6, -120 + 10, w, 240, COLORS.ink, 10);

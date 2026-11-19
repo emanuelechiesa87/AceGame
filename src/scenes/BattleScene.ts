@@ -74,7 +74,7 @@ export class BattleScene extends BaseScene {
     this.views.clear(); this.specialButtons.clear();
     this.busy = true; this.speed = GameSession.save.data.settings.fastAnimations ? 2 : 1; this.targetUid = undefined;
     this.node = data.node;
-    Audio.music(this.node === 'boss' ? 'boss' : 'battle');
+    Audio.music(this.node === 'boss' || this.node === 'miniboss' ? 'boss' : 'battle');
 
     new BiomeBackdrop(this, { groundTop: this.frame.groundTop, deck: true, tint: ctl.area.tint, theme: ctl.area.backdrop });
     this.fullRect(0x14233f, 0.15);
@@ -108,7 +108,7 @@ export class BattleScene extends BaseScene {
       this.log = addBody(this, GAME_WIDTH / 2, this.frame.logY, '', 26, '#fff7e6').setStroke('#1f1633', 6).setDepth(300);
       this.buildActionPanel();
     });
-    const title = this.node === 'boss' ? 'BOSS!' : this.node === 'elite' ? 'ÉLITE!' : 'BATTAGLIA!';
+    const title = this.node === 'boss' ? 'BOSS!' : this.node === 'miniboss' ? 'CAPOBANDA!' : this.node === 'elite' ? 'ÉLITE!' : 'BATTAGLIA!';
     this.input.on('pointerdown', () => { if (this.busy) this.speed = Math.max(this.speed, 3); });
     // scelta del bersaglio: un solo gestore per tutto il campo (vedi pickTapTarget)
     this.input.on('pointerup', (p: Phaser.Input.Pointer, over: Phaser.GameObjects.GameObject[]) => {

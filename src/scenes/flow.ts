@@ -9,7 +9,7 @@ export function enterNode(go: Go, node: NodeType): void {
   GameSession.ctl!.choose(node);
   GameSession.persistRun();
   switch (node) {
-    case 'battle': case 'elite': case 'boss': go('Battle', { node }, 'wave'); break;
+    case 'battle': case 'elite': case 'miniboss': case 'boss': go('Battle', { node }, 'wave'); break;
     case 'chest': go('Reward', { node, mode: 'chest' }); break;
     default: go('Event', { node });
   }

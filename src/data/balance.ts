@@ -47,8 +47,8 @@ export const BALANCE = {
   },
   /** Nemici più robusti: con un solo frutto molto forte il protagonista picchia duro. */
   enemies: {
-    hpMult: 1.22,
-    atkMult: 1.1,
+    hpMult: 1.55, // F4: era 1.22 (run più lunga, più ricompense raccolte)
+    atkMult: 1.23, // F4: era 1.1
     /** Ritocchi per grado: scontri normali che logorano, boss meno "muro" (fase 6). */
     tier: {
       normal: { hp: 1.1, atk: 1.4 },
@@ -78,7 +78,12 @@ export const BALANCE = {
    * Mappa (19/11): tappe "libere" per mare in cui si può evitare lo scontro.
    * Le altre tappe di mezzo offrono solo scontro o élite.
    */
-  map: { freeSteps: 1, eliteFromStep: 2 },
+  /**
+   * F4 (0.9.0): mari da 11 tappe. Tappa `miniBossStep` = Capobanda obbligatorio,
+   * `campStep` = Fuoco o Mercante, penultima = riposo, ultima = boss.
+   * `earlySteps` = tappe con i gruppi di nemici più leggeri.
+   */
+  map: { freeSteps: 2, eliteFromStep: 2, miniBossStep: 4, campStep: 5, earlySteps: 2 },
   rewards: {
     restHealPct: 0.35,
     maxHpUp: 8,
@@ -86,7 +91,7 @@ export const BALANCE = {
     /** Cura (su HP max) di eroe e compagni quando si salpa verso un nuovo mare (F2: era 0.5). */
     areaHealPct: 0.3,
     /** F2: negli scontri normali la scelta 1 su 3 esce solo con questa probabilità (élite e boss: sempre). */
-    normalRewardChance: 0.4,
+    normalRewardChance: 0.25, // F4: era 0.4 (mari più lunghi)
     weights: { awaken: 26, artifact: 22, potion: 20, heal: 18, maxHp: 16 },
   },
   /**
@@ -99,7 +104,7 @@ export const BALANCE = {
    * Prezzi alti: il negozio sostituisce in parte le ricompense tolte, non le aggiunge.
    */
   economy: {
-    coins: { battle: [8, 12], elite: [22, 28], boss: [35, 45], chest: [10, 15] } as Record<string, [number, number]>,
+    coins: { battle: [8, 12], elite: [22, 28], miniboss: [28, 34], boss: [35, 45], chest: [10, 15] } as Record<string, [number, number]>,
     prices: { potion: 25, heal: 35, revive: 30, awaken: 100, artifact: { common: 60, rare: 80, epic: 100 } },
     /** Cura comprata al negozio (su HP max dell'eroe). */
     shopHealPct: 0.3,
