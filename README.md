@@ -50,7 +50,7 @@ tests/      test unitari (Vitest)
 - **M0 – fondazioni** ✅ build, scene navigabili, layout portrait, camminata automatica di prova, pausa.
 - **Estetica v1** ✅ (superata) grafica vettoriale anime.
 - **v0.5 – un frutto per run** ✅ un solo frutto casuale molto forte, Risveglio I→III come ricompensa, 13 animazioni dedicate ai poteri, sblocco dei frutti tra una run e l'altra, nemici più robusti, LEI più femminile.
-- **Estetica v2 – pixel piratesco** ✅ eroi LUI/LEI a blocchi con rig animato ed espressioni, nemici del mare (medusa, gabbiano, granchi, boss pesce palla), compagni a tema, 13 frutti e icone in pixel, porto e ponte della nave con parallasse, UI in legno/pergamena con font Pixelify Sans.
+- **Estetica v2 – pixel piratesco** ✅ eroi LUI/LEI a blocchi con rig animato ed espressioni, nemici del mare (medusa, gabbiano, granchi, boss pesce palla), compagni a tema, 13 frutti e icone in pixel, porto e ponte della nave con parallasse, UI in legno/pergamena con font Jersey 10.
 - **M1 – vertical slice** ✅ run completa: frutto iniziale casuale, mappa a bivi (7 passi),
   battaglie a turni con energia, poteri dei frutti (max 3, sostituzione), compagni automatici
   con speciali manuali (max 3), intenzioni dei nemici visibili, élite e boss con fase di rabbia,

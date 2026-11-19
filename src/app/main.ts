@@ -1,4 +1,4 @@
-import '@fontsource/pixelify-sans/700.css';
+import '@fontsource/jersey-10/400.css';
 import { Audio } from '../systems/Audio';
 import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH, RENDER_SCALE } from './config';
@@ -21,7 +21,7 @@ import { registerPwa } from './pwa';
 
 async function start(): Promise<void> {
   // I testi Phaser vengono disegnati subito: i font devono essere pronti prima.
-  await Promise.allSettled([document.fonts.load('700 30px "Pixelify Sans"')]);
+  await Promise.allSettled([document.fonts.load('400 30px "Jersey 10"')]);
 
   const game = new Phaser.Game({
     type: Phaser.AUTO,

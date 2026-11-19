@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { FONT_BODY } from '../app/config';
+import { FONT_BODY, FONT_WEIGHT } from '../app/config';
 import { HERO_NAME_MAX, sanitizeHeroName } from '../state/RunState';
 
 /**
@@ -23,7 +23,7 @@ export class NameInput {
     el.setAttribute('aria-label', 'Nome del tuo eroe');
     Object.assign(el.style, {
       position: 'fixed', zIndex: '10', boxSizing: 'border-box', textAlign: 'center',
-      fontFamily: FONT_BODY, fontWeight: '700', color: '#4a2a14', background: '#f1d7a8',
+      fontFamily: FONT_BODY, fontWeight: FONT_WEIGHT, color: '#4a2a14', background: '#f1d7a8',
       border: '6px solid #1f1633', borderRadius: '0', outline: 'none',
       boxShadow: '6px 8px 0 #1f1633', padding: '0 12px', caretColor: '#e4342f',
     } satisfies Partial<CSSStyleDeclaration>);

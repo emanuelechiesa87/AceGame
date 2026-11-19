@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { Audio } from '../systems/Audio';
-import { COLORS, FONT_TITLE, RENDER_SCALE } from '../app/config';
+import { COLORS, FONT_TITLE, FONT_WEIGHT, RENDER_SCALE, fontPx } from '../app/config';
 import { steppedRect } from './widgets';
 
 export interface ButtonOptions {
@@ -43,7 +43,7 @@ export class Button extends Phaser.GameObjects.Container {
     this.bg = scene.add.graphics();
     this.label = scene.add
       .text(0, -3, text, {
-        fontFamily: FONT_TITLE, fontSize: `${size}px`, fontStyle: '700', color: COLORS.text,
+        fontFamily: FONT_TITLE, fontSize: fontPx(size), fontStyle: FONT_WEIGHT, color: COLORS.text,
         stroke: COLORS.inkHex, strokeThickness: Math.max(4, Math.round(size / 6)),
       })
       .setPadding(8)

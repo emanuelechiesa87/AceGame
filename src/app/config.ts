@@ -24,8 +24,16 @@ export const COLORS = {
   inkHex: '#1f1633',
 } as const;
 
-/** Pixelify Sans (OFL, vedi ASSET_LICENSES.md) per tutto il gioco. */
-export const FONT_TITLE = '"Pixelify Sans", monospace';
-export const FONT_BODY = '"Pixelify Sans", monospace';
+/**
+ * Jersey 10 (OFL, vedi ASSET_LICENSES.md) per tutto il gioco (0.6.8: Pixelify Sans
+ * era poco leggibile, il 5 sembrava una S e la C una O). Ha un solo peso e lettere
+ * più piccole e strette: le dimensioni scritte nel codice si moltiplicano per FONT_SIZE_MULT.
+ */
+export const FONT_TITLE = '"Jersey 10", monospace';
+export const FONT_BODY = '"Jersey 10", monospace';
+export const FONT_WEIGHT = '400';
+export const FONT_SIZE_MULT = 1.2;
+/** Dimensione effettiva del testo a partire da quella "di progetto". */
+export const fontPx = (size: number): string => `${Math.round(size * FONT_SIZE_MULT)}px`;
 
 export const BUILD_VERSION = __APP_VERSION__;
