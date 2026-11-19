@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { COLORS, TEXTURE_SCALE } from '../app/config';
+import { COLORS } from '../app/config';
 import { addBody, addTitle } from './text';
 
 /** Rettangolo con angoli "a gradino" (niente curve: è pixel art). */
@@ -42,9 +42,11 @@ export function panel(scene: Phaser.Scene, x: number, y: number, w: number, h: n
 
 export const PARCHMENT = 0xf1d7a8;
 
-/** Icona 120×120 (rasterizzata a TEXTURE_SCALE) mostrata a `size` px logici. */
+/** Icona (16×16, 32×32 o 64×64) mostrata a `size` px logici. */
 export function icon(scene: Phaser.Scene, x: number, y: number, key: string, size: number): Phaser.GameObjects.Image {
-  return scene.add.image(x, y, key).setScale(size / (120 * TEXTURE_SCALE) * 1);
+  // la scala dipende dalla texture: icone 16×16, frutti 32×32 e 64×64 hanno tele diverse
+  const img = scene.add.image(x, y, key);
+  return img.setScale(size / Math.max(img.width, 1));
 }
 
 /** Barra HP con eventuale scudo sovrapposto. */

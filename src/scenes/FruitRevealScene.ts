@@ -29,12 +29,12 @@ export class FruitRevealScene extends BaseScene {
 
     const glow = this.add.circle(GAME_WIDTH / 2, 470, 150, 0xfff4c9, 0.25);
     this.tweens.add({ targets: glow, scale: 1.2, alpha: 0.1, duration: 900, yoyo: true, repeat: -1 });
-    const fr = icon(this, GAME_WIDTH / 2, 470, iconKey('fruit', fruitId), 250).setScale(0);
+    const fr = icon(this, GAME_WIDTH / 2, 470, iconKey('fruitbig', fruitId), 250).setScale(0);
     this.tweens.chain({
       targets: fr,
       tweens: [
-        { scale: (250 / 240) * 1.25, angle: 360, duration: 600, ease: 'Back.easeOut' },
-        { scale: 250 / 240, duration: 200 },
+        { scale: (250 / 256) * 1.25, angle: 360, duration: 600, ease: 'Back.easeOut' },
+        { scale: 250 / 256, duration: 200 },
       ],
     });
     this.tweens.add({ targets: fr, y: 450, duration: 1200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut', delay: 800 });

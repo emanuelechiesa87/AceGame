@@ -5,4 +5,4 @@ export type Mouth = 'grin' | 'shout' | 'smirk' | 'ouch';
 
 export const heroKey = (id: HeroId, part: string) => `hero-${id}-${part}`;
 export const creatureKey = (id: string, hit = false) => `cr-${id}${hit ? '-hit' : ''}`;
-export const iconKey = (group: 'fruit' | 'artifact' | 'node' | 'intent' | 'status' | 'misc', id: string) => `ic-${group}-${id}`;
+export const iconKey = (group: 'fruit' | 'fruitbig' | 'artifact' | 'node' | 'intent' | 'status' | 'misc', id: string) => `ic-${group}-${id}`;

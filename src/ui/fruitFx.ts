@@ -391,15 +391,15 @@ export async function awakenFx(scene: Phaser.Scene, fruitId: string, level: numb
   const col = hex(f.color);
   const cx = GAME_WIDTH / 2, cy = 560;
   const shade = scene.add.rectangle(-400, -800, GAME_WIDTH + 800, 2880, COLORS.background, 0.85).setOrigin(0).setDepth(700).setInteractive();
-  const ic = icon(scene, cx, cy, iconKey('fruit', fruitId), 220).setDepth(702).setScale(0);
-  await tw(scene, { targets: ic, scale: 220 / 240, duration: 300, ease: 'Back.easeOut' });
+  const ic = icon(scene, cx, cy, iconKey('fruitbig', fruitId), 220).setDepth(702).setScale(0);
+  await tw(scene, { targets: ic, scale: 220 / 256, duration: 300, ease: 'Back.easeOut' });
   for (let i = 0; i < 3; i++) {
     for (let k = 0; k < 14; k++) {
       const a = Math.random() * Math.PI * 2, d = 220;
       const p = scene.add.rectangle(cx + Math.cos(a) * d, cy + Math.sin(a) * d, 12, 12, k % 2 ? col : 0xffffff).setDepth(701);
       scene.tweens.add({ targets: p, x: cx, y: cy, duration: 400, ease: 'Quad.easeIn', onComplete: () => p.destroy() });
     }
-    void tw(scene, { targets: ic, scale: (220 / 240) * 1.12, duration: 120, yoyo: true, delay: 300 });
+    void tw(scene, { targets: ic, scale: (220 / 256) * 1.12, duration: 120, yoyo: true, delay: 300 });
     await wait(scene, 420);
   }
   const fl = scene.add.rectangle(-400, -800, GAME_WIDTH + 800, 2880, 0xffffff, 0.8).setOrigin(0).setDepth(703);

@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH } from '../app/config';
-import { PX, SKY_H, SKY_TOP } from '../pixel/backgrounds';
+import { CLOUDS_H, FRONT_H, GROUND_H, ISLAND_H, PX, RAIL_H, SEA_H, SKY_H, SKY_TOP } from '../pixel/backgrounds';
 
 const EXTRA = 400;
 
@@ -33,23 +33,23 @@ export class BiomeBackdrop {
     };
     tile('px-sky', horizon - SKY_H * PX, SKY_H, 0);
     scene.add.image(560, horizon - 300, 'px-sun').setScale(PX);
-    tile('px-clouds', horizon - 640, 50, 0.05);
-    tile('px-island', horizon - 50 * PX + 4, 50, 0.15);
-    tile('px-sea', horizon, 60, 0.35, groundTop - horizon + 8);
+    tile('px-clouds', horizon - 640, CLOUDS_H, 0.05);
+    tile('px-island', horizon - ISLAND_H * PX + 4, ISLAND_H, 0.15);
+    tile('px-sea', horizon, SEA_H, 0.35, groundTop - horizon + 8);
     if (opts.deck) {
-      tile('px-rail', groundTop - 22 * PX, 24, 1);
-      tile('px-deck', groundTop, 120, 1);
-      scene.add.rectangle(-EXTRA, groundTop + 120 * PX, full, 2000, 0x6b3a1e).setOrigin(0);
+      tile('px-rail', groundTop - 44 * PX, RAIL_H, 1);
+      tile('px-deck', groundTop, GROUND_H, 1);
+      scene.add.rectangle(-EXTRA, groundTop + GROUND_H * PX, full, 2000, 0x6b3a1e).setOrigin(0);
     } else {
-      tile('px-dock', groundTop, 120, 1);
-      scene.add.rectangle(-EXTRA, groundTop + 120 * PX, full, 2000, 0x5f3520).setOrigin(0);
+      tile('px-dock', groundTop, GROUND_H, 1);
+      scene.add.rectangle(-EXTRA, groundTop + GROUND_H * PX, full, 2000, 0x5f3520).setOrigin(0);
     }
   }
 
   /** Da chiamare dopo aver aggiunto i personaggi: pali, botti e casse in primo piano. */
   addForeground(): void {
     if (!this.withForeground) return;
-    const s = this.scene.add.tileSprite(-EXTRA, this.foregroundY, GAME_WIDTH + EXTRA * 2, 36 * PX, 'px-front').setOrigin(0).setTileScale(PX);
+    const s = this.scene.add.tileSprite(-EXTRA, this.foregroundY, GAME_WIDTH + EXTRA * 2, FRONT_H * PX, 'px-front').setOrigin(0).setTileScale(PX);
     this.layers.push({ sprite: s, factor: 1.4 });
   }
 
