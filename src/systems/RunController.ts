@@ -1,7 +1,7 @@
 import { AREAS, LAST_AREA_INDEX, type NodeType } from '../data/areas';
 import { ARTIFACTS, ARTIFACT_BY_ID } from '../data/artifacts';
 import { BALANCE } from '../data/balance';
-import { COMPANIONS } from '../data/companions';
+import { COMPANIONS, companionMaxHp, companionScale } from '../data/companions';
 import { ENEMY_BY_ID } from '../data/enemies';
 import { FRUITS, MAX_FRUIT_LEVEL } from '../data/fruits';
 import { effectiveStats } from '../state/RunState';
@@ -42,6 +42,8 @@ export class RunController {
   get hasNextArea(): boolean { return this.run.areaIndex < LAST_AREA_INDEX; }
   /** Rinforzo dei nemici dell'area corrente (da passare alla battaglia). */
   get enemyScale(): { hp: number; atk: number } { return { ...this.area.scale }; }
+  /** Crescita dei compagni nel mare corrente. */
+  get companionScale(): { hp: number; atk: number } { return companionScale(this.run.areaIndex); }
 
   /**
    * Dopo il boss di un'area si salpa verso la successiva con lo stesso eroe:
@@ -55,17 +57,26 @@ export class RunController {
     const pct = BALANCE.rewards.areaHealPct;
     this.healPct(pct);
     this.run.companions = this.run.companions.map((c) => {
-      const max = COMPANIONS.find((d) => d.id === c.id)!.stats.maxHp;
+      const max = companionMaxHp(c.id, this.run.areaIndex);
       return { ...c, hp: Math.min(max, c.hp + Math.round(max * pct)) };
     });
     return true;
   }
 
   // --- avvio -------------------------------------------------------------------
-  /** Frutto iniziale casuale dal pool sbloccato, pesato per rarità. */
-  start(unlockedFruitIds: string[]): string {
+  /**
+   * Frutto iniziale casuale dal pool sbloccato, pesato per rarità. I frutti
+   * delle ultime run (`recentFruitIds`, il più recente per primo) pesano molto
+   * meno: si evita di ripartire sempre con lo stesso frutto.
+   */
+  start(unlockedFruitIds: string[], recentFruitIds: string[] = []): string {
+    const D = BALANCE.fruitDraw;
     const pool = FRUITS.filter((f) => f.startsUnlocked || unlockedFruitIds.includes(f.id));
-    const fruit = this.rng.weightedPick(pool.map((f) => ({ item: f.id, weight: RARITY_WEIGHT[f.rarity] })));
+    const weight = (id: string, rarity: Rarity) => {
+      const i = recentFruitIds.indexOf(id);
+      return D.rarityWeight[rarity] * (i >= 0 && i < D.recentPenalty.length ? D.recentPenalty[i] : 1);
+    };
+    const fruit = this.rng.weightedPick(pool.map((f) => ({ item: f.id, weight: weight(f.id, f.rarity) })));
     this.run.activeFruitIds = [fruit];
     this.run.usedFruitIds = [fruit];
     this.run.fruitLevel = 1;
@@ -130,7 +141,7 @@ export class RunController {
     }
     this.run.currentHp = Math.min(stats.maxHp, Math.max(1, hp));
     this.run.companions = companions.map((c) => {
-      const max = COMPANIONS.find((d) => d.id === c.id)!.stats.maxHp;
+      const max = companionMaxHp(c.id, this.run.areaIndex);
       return { id: c.id, charge: c.charge, hp: c.hp > 0 ? c.hp : Math.round(max * BALANCE.combat.companionReviveHpPct) };
     });
   }
@@ -219,7 +230,7 @@ export class RunController {
     if (!def) throw new Error(`Compagno sconosciuto: ${id}`);
     const cs = this.run.companions;
     if (cs.some((c) => c.id === id)) return 'duplicate';
-    const fresh = { id, hp: def.stats.maxHp, charge: 0 };
+    const fresh = { id, hp: companionMaxHp(id, this.run.areaIndex), charge: 0 };
     if (cs.length >= L.maxCompanions) {
       if (!replaceId) return 'needsReplace';
       const idx = cs.findIndex((c) => c.id === replaceId);

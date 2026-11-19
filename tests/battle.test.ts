@@ -29,6 +29,22 @@ function autoplay(b: Battle): BattleEvent[] {
 }
 
 describe('Battle', () => {
+  it('i compagni attaccano e colpiscono il nemico scelto dal giocatore', () => {
+    const b = battle({ enemies: ['en_jelly', 'en_shroom_boss'], companions: ['comp_bobo', 'comp_zip'] });
+    b.start();
+    const ev = [...b.act({ type: 'attack', targetUid: 'e1' }), ...b.act({ type: 'attack', targetUid: 'e1' })];
+    const allyHits = ev.filter((e) => e.t === 'damage' && (e.source === 'c0' || e.source === 'c1') && e.kind === 'hit');
+    expect(allyHits.length).toBeGreaterThanOrEqual(2);
+    for (const h of allyHits) expect((h as { target: string }).target).toBe('e1');
+  });
+
+  it('i compagni crescono con i mari', () => {
+    const base = makeCompanionUnit('comp_zip', 'c0');
+    const later = makeCompanionUnit('comp_zip', 'c0', undefined, 0, { hp: 1.6, atk: 1.7 });
+    expect(later.atk).toBeGreaterThan(base.atk);
+    expect(later.maxHp).toBeGreaterThan(base.maxHp);
+  });
+
   it('si ferma in attesa del protagonista', () => {
     const b = battle();
     b.start();

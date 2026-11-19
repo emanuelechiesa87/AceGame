@@ -37,6 +37,8 @@ export class Battle {
   private queue: string[] = [];
   private nextUid = 100;
   private lethalSaved = false;
+  /** Ultimo nemico scelto dal giocatore: i compagni attaccano lui (fuoco concentrato). */
+  private focusUid?: string;
   koCount = 0;
 
   constructor(setup: BattleSetup, private readonly rng: Rng, private readonly mods: BattleMods = setup.mods) {
@@ -80,6 +82,7 @@ export class Battle {
         return ev; // azione gratuita: il turno del protagonista continua
       }
       case 'attack':
+        this.focusUid = action.targetUid;
         this.useAbility(hero, BASIC_ATTACK, action.targetUid, ev);
         break;
       case 'power': {
@@ -87,6 +90,7 @@ export class Battle {
         if (!a || !this.canUsePower(a)) throw new Error('Potere non disponibile');
         this.energy -= a.cost ?? 0;
         ev.push({ t: 'energy', value: this.energy });
+        if (a.target === 'enemy') this.focusUid = action.targetUid;
         this.useAbility(hero, a, action.targetUid, ev, { isPower: true });
         if (a.effects.some((e) => e.kind === 'extraAction') && !this.checkEnd(ev)) {
           ev.push({ t: 'extraAction', uid: hero.uid });
@@ -174,7 +178,7 @@ export class Battle {
     const allies = this.alive('ally');
     const useAuto = def.auto.when === 'always' || allies.some((a) => a.hp < a.maxHp / 2);
     const ability = useAuto ? def.auto : BASIC_ATTACK;
-    this.useAbility(u, ability, undefined, ev);
+    this.useAbility(u, ability, this.focusUid, ev);
     if (u.charge < u.chargeMax) {
       u.charge++;
       ev.push({ t: 'charge', uid: u.uid, value: u.charge });
@@ -366,10 +370,12 @@ export function makeEnemyUnit(enemyId: string, uid: string, scale: { hp: number;
   return baseUnit({ uid, defId: d.id, name: d.name, side: 'enemy', kind: 'enemy', maxHp: Math.round(d.stats.maxHp * E.hpMult * scale.hp), atk: Math.round(d.stats.atk * E.atkMult * scale.atk), def: d.stats.def, spd: d.stats.spd });
 }
 
-export function makeCompanionUnit(companionId: string, uid: string, hp?: number, charge = 0): Unit {
+/** `scale` = crescita del compagno nel mare corrente (vedi `companionScale`). */
+export function makeCompanionUnit(companionId: string, uid: string, hp?: number, charge = 0, scale: { hp: number; atk: number } = { hp: 1, atk: 1 }): Unit {
   const d = COMPANION_BY_ID.get(companionId);
   if (!d) throw new Error(`Compagno sconosciuto: ${companionId}`);
-  return baseUnit({ uid, defId: d.id, name: d.name, side: 'ally', kind: 'companion', maxHp: d.stats.maxHp, hp: hp ?? d.stats.maxHp, atk: d.stats.atk, def: d.stats.def, spd: d.stats.spd, charge, chargeMax: d.chargeMax });
+  const maxHp = Math.round(d.stats.maxHp * scale.hp);
+  return baseUnit({ uid, defId: d.id, name: d.name, side: 'ally', kind: 'companion', maxHp, hp: Math.min(maxHp, hp ?? maxHp), atk: Math.round(d.stats.atk * scale.atk), def: d.stats.def, spd: d.stats.spd, charge, chargeMax: d.chargeMax });
 }
 
 export function makeHeroUnit(name: string, stats: { maxHp: number; atk: number; def: number; spd: number }, hp: number): Unit {

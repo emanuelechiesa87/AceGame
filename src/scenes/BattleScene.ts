@@ -64,7 +64,7 @@ export class BattleScene extends BaseScene {
     this.battle = new Battle(
       {
         hero: makeHeroUnit(run.heroName, stats, Math.min(run.currentHp, stats.maxHp)),
-        companions: run.companions.map((c, i) => makeCompanionUnit(c.id, `c${i}`, c.hp, c.charge)),
+        companions: run.companions.map((c, i) => makeCompanionUnit(c.id, `c${i}`, c.hp, c.charge, ctl.companionScale)),
         enemies: this.enemyIds.map((id, i) => makeEnemyUnit(id, `e${i}`, ctl.enemyScale)),
         powers: run.activeFruitIds.slice(0, 1).map((id) => fruitAbility(FRUIT_BY_ID.get(id)!, ctl.fruitLevel)),
         potions: run.potions,

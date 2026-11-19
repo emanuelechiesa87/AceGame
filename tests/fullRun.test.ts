@@ -23,7 +23,7 @@ function playRun(seed: number, forceFruit?: string) {
       const arts = run.artifactIds.map((id) => ARTIFACT_BY_ID.get(id)!);
       const b = new Battle({
         hero: makeHeroUnit('Kai', stats, run.currentHp),
-        companions: run.companions.map((c, i) => makeCompanionUnit(c.id, `c${i}`, c.hp, c.charge)),
+        companions: run.companions.map((c, i) => makeCompanionUnit(c.id, `c${i}`, c.hp, c.charge, ctl.companionScale)),
         enemies: enemies.map((id, i) => makeEnemyUnit(id, `e${i}`, ctl.enemyScale)),
         powers: run.activeFruitIds.map((id) => fruitAbility(FRUIT_BY_ID.get(id)!, ctl.fruitLevel)),
         potions: run.potions,

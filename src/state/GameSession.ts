@@ -56,8 +56,9 @@ class GameSessionStore {
     this.save.update((s) => (s.lastHeroName = name));
     this.run = createRunState(avatar, randomSeed(), new Date(), name);
     this.ctl = new RunController(this.run);
-    const fruit = this.ctl.start(this.unlockedFruitIds());
+    const fruit = this.ctl.start(this.unlockedFruitIds(), this.save.data.recentFruitIds);
     this.discover({ fruits: [fruit] });
+    this.save.update((s) => (s.recentFruitIds = [fruit, ...s.recentFruitIds.filter((x) => x !== fruit)].slice(0, 3)));
     this.save.update((s) => s.lifetime.runs++);
     this.persistRun();
     return fruit;

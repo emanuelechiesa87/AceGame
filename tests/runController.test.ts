@@ -133,4 +133,15 @@ describe('RunController', () => {
     }
     expect(AREAS).toHaveLength(4);
   });
+
+  it('il frutto iniziale varia: quello dell\'ultima run esce molto più di rado', () => {
+    const count = (recent: string[]) => {
+      let n = 0;
+      for (let seed = 1; seed <= 600; seed++) if (new RunController(createRunState('a', seed)).start([], recent) === 'fruit_frost') n++;
+      return n;
+    };
+    const free = count([]), penalized = count(['fruit_frost']);
+    expect(free).toBeGreaterThan(60); // ~1 su 6 tra i frutti iniziali
+    expect(penalized).toBeLessThan(free / 4);
+  });
 });

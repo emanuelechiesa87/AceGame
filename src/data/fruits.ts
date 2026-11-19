@@ -124,7 +124,7 @@ export const FRUITS: FruitDef[] = [
   {
     id: 'fruit_glue', name: 'Kiwi Colla', rarity: 'common', element: 'glue', color: '#a8d84a',
     description: 'Appiccica tutto. Soprattutto le dita.',
-    passive: { def: 1, maxHp: 4 }, startsUnlocked: false,
+    passive: { def: 1, maxHp: 4 }, startsUnlocked: true,
     abilities: [
       lv('pw_glue', 'Rete Appiccicosa', 'Danno 120% a tutti, -50% VEL e vulnerabili per 2 turni.', 2, 'allEnemies', [{ kind: 'damage', mult: 1.2 }, { kind: 'status', status: 'slow', turns: 2, value: 0.5 }, { kind: 'status', status: 'vulnerable', turns: 2 }]),
       lv('pw_glue_2', 'Rete Appiccicosa II', 'Danno 150% a tutti, -50% VEL e vulnerabili per 3 turni.', 2, 'allEnemies', [{ kind: 'damage', mult: 1.5 }, { kind: 'status', status: 'slow', turns: 3, value: 0.5 }, { kind: 'status', status: 'vulnerable', turns: 3 }]),
@@ -160,7 +160,7 @@ export const FRUITS: FruitDef[] = [
   {
     id: 'fruit_magnet', name: 'Melagrana Magnete', rarity: 'common', element: 'magnet', color: '#e4342f',
     description: 'Le posate le volano addosso. Sempre.',
-    passive: { atk: 1, def: 1 }, startsUnlocked: false,
+    passive: { atk: 1, def: 1 }, startsUnlocked: true,
     abilities: [
       lv('pw_magnet', 'Strappo Magnetico', 'Ruba lo scudo, danno 190% e vulnerabile per 2 turni.', 2, 'enemy', [{ kind: 'stealShield' }, { kind: 'damage', mult: 1.9 }, { kind: 'status', status: 'vulnerable', turns: 2 }]),
       lv('pw_magnet_2', 'Strappo Magnetico II', 'Ruba lo scudo, danno 240% e vulnerabile per 3 turni.', 2, 'enemy', [{ kind: 'stealShield' }, { kind: 'damage', mult: 2.4 }, { kind: 'status', status: 'vulnerable', turns: 3 }]),

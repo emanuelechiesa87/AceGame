@@ -71,6 +71,8 @@ export interface PersistentGameState {
   discoveredFruitIds: string[];
   /** Frutti entrati nel pool iniziale grazie ai punti sblocco. */
   unlockedFruitIds: string[];
+  /** Frutti iniziali delle ultime run (il più recente per primo): pesano meno al sorteggio. */
+  recentFruitIds: string[];
   /** Punti verso il prossimo sblocco (vittoria +2, sconfitta +1). */
   unlockPoints: number;
   discoveredArtifactIds: string[];
