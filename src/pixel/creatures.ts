@@ -4,6 +4,7 @@ import { creatureKey } from './keys';
 import { block, INK, pixelTexture, shade, type Px } from './render';
 import { bandana, captainHat, eyes, GOLD, rblock } from './creatureKit';
 import { SEA_CREATURES } from './seaCreatures';
+import { F1_CREATURES } from './f1Creatures';
 
 /**
  * Nemici del mare e compagni, tutti "a blocchi". Ogni creatura ha due
@@ -202,7 +203,7 @@ function crab(px: Px, hit: boolean, c: string, captain: boolean): void {
   } else bandana(px, 16, 13, 24, GOLD);
 }
 
-Object.assign(DEFS, SEA_CREATURES);
+Object.assign(DEFS, SEA_CREATURES, F1_CREATURES);
 
 export interface CreatureArt { w: number; h: number }
 
@@ -215,6 +216,11 @@ export const CREATURE_SCALE: Record<string, number> = {
   en_urchin: 1.15, en_puffer_horn: 1.1, en_coral: 1.15, en_hermit: 1.1, en_moray: 1.4, en_anemone_queen: 1.45,
   en_lanternfish: 1.1, en_neonjelly: 1.15, en_mimic_squid: 1.15, en_gunshrimp: 1.05, en_archivist: 1.35, en_abyss_lighthouse: 1.4,
   en_anchor: 1.1, en_barrel: 1.15, en_siren: 1.1, en_ghost_lamp: 1.2, en_figurehead: 1.35, en_wreck_admiral: 1.35,
+  // F1 (0.6.6)
+  en_rat: 1.1, en_bomb_crab: 1.1, en_catfish: 1.1, en_lobster: 1.4,
+  en_starfish: 1.1, en_seahorse: 1.1, en_clownfish: 1.05, en_hammerhead: 1.35,
+  en_anglerfish: 1.15, en_eel: 1.1, en_viperfish: 1.05, en_colossal_squid: 1.35, en_tentacle: 1,
+  en_skeleton: 1.1, en_ghost_gunner: 1.1, en_plague_rat: 1.1, en_headless: 1.35,
   comp_bobo: 1, comp_lumi: 1, comp_zip: 1,
 };
 

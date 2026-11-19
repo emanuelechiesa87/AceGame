@@ -58,6 +58,15 @@ export const BALANCE = {
      * Chi colpiscono gli attacchi a bersaglio singolo (F1): probabilità di mirare
      * all'eroe e all'alleato più malconcio (in % di HP); il resto è a caso.
      */
+    /** Affissi delle élite (F1): valori di ciascun tratto. */
+    affix: {
+      armored: { shieldPct: 0.25, def: 4 },
+      swift: { every: 3 },
+      vampire: { lifesteal: 0.4 },
+      spiky: { reflect: 0.2 },
+      regen: { pct: 0.05 },
+      commander: { atkUp: 0.2 },
+    },
     aim: {
       normal: { hero: 0.45, weakest: 0.35 },
       elite: { hero: 0.5, weakest: 0.4 },

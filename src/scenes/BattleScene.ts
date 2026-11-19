@@ -12,7 +12,7 @@ import { GameSession } from '../state/GameSession';
 import { effectiveStats } from '../state/RunState';
 import { Battle, makeCompanionUnit, makeEnemyUnit, makeHeroUnit } from '../systems/combat/Battle';
 import type { BattleEvent, PlayerAction, Unit } from '../systems/combat/types';
-import type { Ability, StatusId } from '../types/content';
+import type { Ability, AffixId, StatusId } from '../types/content';
 import { BiomeBackdrop } from '../ui/BiomeBackdrop';
 import { Button } from '../ui/Button';
 import { UnitView } from '../ui/battle/UnitView';
@@ -30,7 +30,9 @@ function boom(scene: Phaser.Scene, x: number, y: number, colors: number[], radiu
 import { BaseScene, visibleBounds } from './BaseScene';
 import { allySpots, frameFor, pickTapTarget, placeEnemy, type BattleFrame, type Box, type TapTarget } from './battleLayout';
 
-const STATUS_NAME: Record<StatusId, string> = { burn: 'Bruciatura!', poison: 'Veleno!', stun: 'Congelato!', shield: 'Scudo', atkUp: 'Furia!', vulnerable: 'Vulnerabile!', guard: 'In guardia', evade: 'Nebbia!', defUp: 'Corazza!', slow: 'Appiccicato!', reflect: 'Specchio!',
+/** Nomi degli affissi delle élite (F1). */
+const AFFIX_NAME: Record<AffixId, string> = { armored: 'Corazzato', swift: 'Rapido', vampire: 'Vampiro', spiky: 'Spinoso', regen: 'Rigenerante', commander: 'Comandante' };
+const STATUS_NAME: Record<StatusId, string> = { burn: 'Bruciatura!', poison: 'Veleno!', stun: 'Congelato!', shield: 'Scudo', atkUp: 'Furia!', vulnerable: 'Vulnerabile!', guard: 'In guardia', evade: 'Nebbia!', defUp: 'Corazza!', slow: 'Appiccicato!', reflect: 'Specchio!', immune: 'Immune ai poteri!',
   weak: 'Tanfo! -ATT', acid: 'Acido!', bubble: 'Nella bolla!', mine: 'Mina!', swarm: 'Sciame!', twin: 'Gemella!' };
 
 /**
@@ -192,6 +194,11 @@ export class BattleScene extends BaseScene {
     this.views.set(u.uid, v);
     if (u.side === 'enemy') {
       if (ENEMY_BY_ID.get(u.defId)!.tier === 'normal') v.showName(false);
+      if (u.affixes?.length) {
+        // tratti dell'élite: etichetta gialla sotto la barra HP
+        const t = addBody(this, 0, 40, u.affixes.map((a) => AFFIX_NAME[a]).join(' · '), 17, '#ffcf3a').setStroke('#1f1633', 5);
+        v.root.add(t);
+      }
       this.showIntent(this.battle.intentEvent(u));
     }
     return v;
@@ -525,6 +532,40 @@ export class BattleScene extends BaseScene {
           await wait(this, 300 / s);
           break;
         }
+        case 'phase': {
+          this.cameras.main.shake(500 / s, 0.016);
+          Audio.play('boom');
+          const v = this.views.get(e.uid);
+          if (v) this.tweens.add({ targets: v.root, scaleX: 1.12, scaleY: 1.12, duration: 160 / s, yoyo: true, repeat: 2 });
+          await banner(this, this.bannerY, `FASE 2: ${e.name.toUpperCase()}!`, COLORS.hot, 44, 800 / s);
+          break;
+        }
+        case 'drain': {
+          Audio.play('status');
+          const v = this.views.get('hero');
+          if (v) floatText(this, v.x, v.topY - 20, `-${e.amount}⚡ rubata!`, '#ffcf3a', 36, s);
+          this.log.setText(`${this.battle.unit(e.uid)!.name} ti ruba energia! (in DIFESA non può)`);
+          this.updateHud();
+          await wait(this, 300 / s);
+          break;
+        }
+        case 'burst': {
+          const v = this.views.get(e.uid);
+          Audio.play('boom');
+          this.cameras.main.shake(300 / s, 0.016);
+          if (v) { boom(this, v.x, v.centerY, [0xff9a2a, 0xffe14a, 0x9be06a, 0xe4342f], 180); floatText(this, v.x, v.topY, 'ESPLODE!', '#ff9a2a', 48, s); }
+          await wait(this, 300 / s);
+          break;
+        }
+        case 'rise': {
+          const v = this.views.get(e.uid);
+          if (v) { v.refresh(); floatText(this, v.x, v.topY, 'SI RIALZA!', '#7fffd0', 44, s); this.tweens.add({ targets: v.root, y: v.root.y - 20, duration: 160 / s, yoyo: true }); }
+          await wait(this, 450 / s);
+          break;
+        }
+        case 'immune': { const v = this.views.get(e.target); if (v) { floatText(this, v.x, v.centerY, 'IMMUNE!', '#d6a8ff', 40, s); await wait(this, 220 / s); } break; }
+        case 'swift': { const v = this.views.get(e.uid); if (v) { floatText(this, v.x, v.topY, 'RAPIDO! DI NUOVO', '#9fe8ff', 32, s); await wait(this, 300 / s); } break; }
+        case 'affixes': break; // etichette già mostrate sotto il nome
         case 'enrage': this.cameras.main.shake(400 / s, 0.012); await banner(this, this.bannerY, `${this.battle.unit(e.uid)!.name.toUpperCase()} SI ARRABBIA!`, COLORS.hot, 46, 600 / s); break;
         case 'intent': this.showIntent(e); break;
         case 'windup': {

@@ -1,3 +1,4 @@
+import { ENEMY_BY_ID } from '../src/data/enemies';
 import { BALANCE } from '../src/data/balance';
 import { ARTIFACT_BY_ID } from '../src/data/artifacts';
 import type { NodeType } from '../src/data/areas';
@@ -128,7 +129,9 @@ function pickTarget(b: Battle): Unit {
   const threat = (f: Unit) => {
     const mv = b.moveOf(f);
     const summoner = mv.effects.some((e) => e.kind === 'summon') ? 2 : 1;
-    return ((f.atk * Math.max(0.5, dmgMult(mv))) * summoner) / f.hp;
+    // F1: chi cura o protegge gli alleati va eliminato presto
+    const support = Object.values(ENEMY_BY_ID.get(f.defId)!.moves).some((m) => m.target !== 'self' && m.effects.some((e) => e.kind === 'heal' || e.kind === 'shield')) ? 1.8 : 1;
+    return ((f.atk * Math.max(0.5, dmgMult(mv))) * summoner * support) / f.hp;
   };
   return foes.reduce((m, f) => (threat(f) > threat(m) ? f : m));
 }

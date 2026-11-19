@@ -4,7 +4,9 @@
 export type Rarity = 'common' | 'rare' | 'epic';
 export type StatusId = 'burn' | 'poison' | 'stun' | 'shield' | 'atkUp' | 'vulnerable' | 'guard' | 'evade' | 'defUp' | 'slow' | 'reflect'
   // dalla 0.5.5 (fase 4): tanfo (-ATT), acido (danno che cresce, DIF annullata), bolla, mina, sciame di acini, gemella
-  | 'weak' | 'acid' | 'bubble' | 'mine' | 'swarm' | 'twin';
+  | 'weak' | 'acid' | 'bubble' | 'mine' | 'swarm' | 'twin'
+  // dalla 0.6.6 (F1): immune ai poteri (nemici che cambiano fase a turni alterni)
+  | 'immune';
 export type TargetRule = 'enemy' | 'allEnemies' | 'self' | 'allAllies' | 'lowestAlly';
 /** `charge` = il nemico sta caricando un colpo forte (F1, 0.6.5): parte al suo turno successivo. */
 export type Intent = 'attack' | 'heavy' | 'defend' | 'debuff' | 'special' | 'charge';
@@ -29,7 +31,9 @@ export type Effect =
   /** Aggiunge acini allo sciame dell'eroe: a fine turno ognuno colpisce il bersaglio (danno `mult`). */
   | { kind: 'swarm'; count: number; mult: number; max: number }
   /** Gemella: per `turns` turni ripete gli attacchi e i poteri dell'eroe con il `ratio` del danno. */
-  | { kind: 'twin'; turns: number; ratio: number };
+  | { kind: 'twin'; turns: number; ratio: number }
+  /** (F1) Toglie energia all'eroe (una volta per uso, anche se colpisce più bersagli). */
+  | { kind: 'drainEnergy'; amount: number };
 
 export interface Ability {
   id: string;
@@ -40,6 +44,8 @@ export interface Ability {
   intent?: Intent;
   /** Costo in energia (solo protagonista). */
   cost?: number;
+  /** (F1) Turni di carica prima del colpo: le mosse `heavy` ne hanno 1 di base. */
+  windup?: number;
 }
 
 export interface StatMods { maxHp?: number; atk?: number; def?: number; spd?: number }
@@ -104,4 +110,19 @@ export interface EnemyDef {
   moves: Record<string, Ability>;
   /** Mossa unica usata una volta sotto il 50% di HP (boss). */
   enrage?: string;
+  /** (F1) Seconda fase dei boss: sotto il 50% di HP, dopo la mossa `enrage`, segue questo schema. */
+  phase2?: { name: string; pattern: string[] };
+  /** (F1) `companions` = mira sempre il compagno più malconcio (l'eroe solo se è rimasto da solo). */
+  aim?: 'companions';
+  /** (F1) Quando cade esplode: danno `mult` × ATT a tutta la squadra (la Difesa lo dimezza). */
+  deathBurst?: { mult: number; poison?: number };
+  /** (F1) Si rialza una volta con questa frazione di HP. */
+  reviveOnce?: number;
+  /** (F1) Si cura di questa frazione di HP all'inizio di ogni suo turno. */
+  regen?: number;
+  /** (F1) Un turno sì e uno no è immune ai poteri del frutto. */
+  phaseShift?: boolean;
 }
+
+/** (F1) Affissi delle élite: tratti in più estratti all'inizio dello scontro. */
+export type AffixId = 'armored' | 'swift' | 'vampire' | 'spiky' | 'regen' | 'commander';

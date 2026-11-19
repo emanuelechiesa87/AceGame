@@ -137,6 +137,7 @@ export class RunController {
       guardEnergyBonus: sum((x) => x.guardEnergyBonus),
       reviveOncePct: pearl,
       enemyStartHpPct: this.run.nextBattleEnemyHpPct,
+      eliteAffixes: this.run.areaIndex >= 2 ? 2 : 1,
     };
   }
 

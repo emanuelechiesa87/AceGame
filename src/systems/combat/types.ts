@@ -1,4 +1,4 @@
-import type { Ability, Intent, StatusId } from '../../types/content';
+import type { Ability, AffixId, Intent, StatusId } from '../../types/content';
 
 export type Side = 'ally' | 'enemy';
 
@@ -29,6 +29,16 @@ export interface Unit {
   chargeState?: 'windup' | 'release';
   /** Bersaglio già scelto per la prossima mossa a bersaglio singolo (mostrato per i colpi caricati). */
   aimUid?: string;
+  /** Turni di carica che restano (colpi caricati lunghi). */
+  windupLeft?: number;
+  /** (F1) Affissi delle élite. */
+  affixes?: AffixId[];
+  /** (F1) Seconda fase dei boss in corso. */
+  phase?: 2;
+  /** (F1) Si è già rialzato (vedi `EnemyDef.reviveOnce`). */
+  revived?: boolean;
+  /** (F1) Turni giocati (affisso Rapido: agisce due volte ogni 3 turni). */
+  turns?: number;
 }
 
 export interface BattleMods {
@@ -50,6 +60,8 @@ export interface BattleMods {
   reviveOncePct?: number;
   /** Cannone Abbandonato: i nemici iniziano con questa frazione di HP. */
   enemyStartHpPct?: number;
+  /** (F1) Quanti affissi ricevono le élite (1 nei mari 1-2, 2 nei mari 3-4). */
+  eliteAffixes?: number;
 }
 
 /** Contatori dell'eroe in uno scontro (HP persi, cure, pozioni, HP minimo, turni giocati). */
@@ -100,6 +112,20 @@ export type BattleEvent =
   | { t: 'parry'; uid: string; energy: number }
   /** Carica interrotta (nemico congelato o nella bolla). */
   | { t: 'interrupt'; uid: string }
+  /** (F1) Energia rubata all'eroe. */
+  | { t: 'drain'; uid: string; amount: number; energy: number }
+  /** (F1) Esplosione alla morte di un nemico. */
+  | { t: 'burst'; uid: string }
+  /** (F1) Il nemico si rialza. */
+  | { t: 'rise'; uid: string; hp: number }
+  /** (F1) Il boss entra nella seconda fase. */
+  | { t: 'phase'; uid: string; name: string }
+  /** (F1) Colpo annullato dall'immunità ai poteri. */
+  | { t: 'immune'; target: string }
+  /** (F1) Affissi delle élite, a inizio scontro. */
+  | { t: 'affixes'; uid: string; affixes: AffixId[] }
+  /** (F1) L'affisso Rapido fa agire di nuovo il nemico. */
+  | { t: 'swift'; uid: string }
   | { t: 'energy'; value: number }
   | { t: 'charge'; uid: string; value: number }
   | { t: 'round'; n: number }
@@ -111,7 +137,7 @@ export type BattleEvent =
   | { t: 'swarm'; count: number }
   | { t: 'swarmLoss'; count: number };
 
-export type DamageKind = 'hit' | 'burn' | 'poison' | 'reflect' | 'acid' | 'mine' | 'pop' | 'swarm';
+export type DamageKind = 'hit' | 'burn' | 'poison' | 'reflect' | 'acid' | 'mine' | 'pop' | 'swarm' | 'blast';
 
 export type Phase = 'awaitingInput' | 'victory' | 'defeat';
 

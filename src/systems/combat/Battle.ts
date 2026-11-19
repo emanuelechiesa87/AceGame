@@ -2,7 +2,7 @@ import { BASIC_ATTACK, GUARD } from '../../data/abilities';
 import { BALANCE } from '../../data/balance';
 import { COMPANION_BY_ID } from '../../data/companions';
 import { ENEMY_BY_ID } from '../../data/enemies';
-import type { Ability, Effect, StatusId } from '../../types/content';
+import type { Ability, AffixId, Effect, StatusId } from '../../types/content';
 import type { Rng } from '../Rng';
 import type { BattleEvent, BattleTally, BattleMods, DamageKind, Phase, PlayerAction, Side, StatusInstance, Unit } from './types';
 
@@ -11,7 +11,10 @@ const NEGATIVE: StatusId[] = ['burn', 'poison', 'stun', 'vulnerable', 'slow', 'w
 /** Stati che scadono alla fine del turno di chi li porta. */
 const TIMED: StatusId[] = ['atkUp', 'vulnerable', 'shield', 'defUp', 'evade', 'slow', 'reflect', 'weak', 'twin'];
 /** Stati che durano finché non vengono consumati (non scadono a fine turno). */
-const KEPT: StatusId[] = ['guard', 'stun', 'burn', 'poison', 'acid', 'bubble', 'mine', 'swarm'];
+const KEPT: StatusId[] = ['guard', 'stun', 'burn', 'poison', 'acid', 'bubble', 'mine', 'swarm', 'immune'];
+export const AFFIXES: AffixId[] = ['armored', 'swift', 'vampire', 'spiky', 'regen', 'commander'];
+const AF = BALANCE.enemies.affix;
+const hasAffix = (u: Unit, a: AffixId) => !!u.affixes?.includes(a);
 
 export interface BattleSetup {
   hero: Unit;
@@ -63,6 +66,16 @@ export class Battle {
     const hpPct = this.mods.enemyStartHpPct;
     if (hpPct !== undefined && hpPct < 1) for (const e of this.enemies()) e.hp = Math.max(1, Math.round(e.maxHp * hpPct));
     for (const e of this.enemies()) this.planNext(e, []);
+    if (this.mods.eliteAffixes) for (const e of this.enemies()) if (ENEMY_BY_ID.get(e.defId)!.tier === 'elite') this.giveAffixes(e, this.mods.eliteAffixes);
+  }
+
+  /** Affissi delle élite (F1): estratti senza ripetizioni; gli effetti fissi si applicano subito. */
+  private giveAffixes(e: Unit, n: number): void {
+    const pool = [...AFFIXES];
+    e.affixes = [];
+    for (let i = 0; i < n && pool.length; i++) e.affixes.push(pool.splice(Math.floor(this.rng.next() * pool.length), 1)[0]);
+    if (hasAffix(e, 'armored')) { e.def += AF.armored.def; e.statuses.push({ id: 'shield', turns: 3, value: Math.round(e.maxHp * AF.armored.shieldPct) }); }
+    if (hasAffix(e, 'commander')) for (const o of this.enemies()) if (o !== e) this.addStatus(o, { id: 'atkUp', turns: 99, value: AF.commander.atkUp });
   }
 
   // --- interrogazioni ----------------------------------------------------------
@@ -76,7 +89,7 @@ export class Battle {
   /** Avvia la battaglia: risolve i turni fino al primo input del giocatore. */
   start(): BattleEvent[] {
     const ev: BattleEvent[] = [];
-    for (const e of this.enemies()) ev.push(this.intentEvent(e));
+    for (const e of this.enemies()) { if (e.affixes?.length) ev.push({ t: 'affixes', uid: e.uid, affixes: e.affixes }); ev.push(this.intentEvent(e)); }
     if (this.mods.openingShield) this.applyEffect(this.hero, this.hero, { kind: 'shield', amount: this.mods.openingShield }, ev, false);
     this.advance(ev);
     return ev;
@@ -179,6 +192,7 @@ export class Battle {
       ev.push({ t: 'turn', uid: u.uid });
       this.tickDots(u, ev);
       if (u.hp <= 0) continue;
+      if (u.kind === 'enemy') this.enemyTurnStart(u, ev);
       this.removeStatus(u, 'guard');
       const bub = this.getStatus(u, 'bubble');
       if (bub) {
@@ -200,7 +214,15 @@ export class Battle {
       }
       if (u.kind === 'hero') { this.phase = 'awaitingInput'; return; }
       if (u.kind === 'companion') this.companionTurn(u, ev);
-      else this.enemyTurn(u, ev);
+      else {
+        this.enemyTurn(u, ev);
+        u.turns = (u.turns ?? 0) + 1;
+        if (hasAffix(u, 'swift') && u.turns % AF.swift.every === 0 && u.hp > 0 && !this.checkEnd(ev)) {
+          ev.push({ t: 'swift', uid: u.uid });
+          this.enemyTurn(u, ev);
+        }
+        this.enemyTurnEnd(u, ev);
+      }
       this.endTurn(u);
     }
     throw new Error('Ciclo di battaglia senza uscita');
@@ -282,11 +304,13 @@ export class Battle {
       u.enraged = true;
       u.chargeState = undefined; // la furia ha la precedenza sulla carica
       moveId = def.enrage;
-      ev.push({ t: 'enrage', uid: u.uid });
+      if (def.phase2) { u.phase = 2; u.patternIndex = 0; ev.push({ t: 'phase', uid: u.uid, name: def.phase2.name }); }
+      else ev.push({ t: 'enrage', uid: u.uid });
     }
     if (u.chargeState === 'windup') {
-      // primo turno: carica e conferma il bersaglio (se è caduto, ne sceglie un altro)
-      u.chargeState = 'release';
+      // turno di carica: conferma il bersaglio (se è caduto, ne sceglie un altro)
+      u.windupLeft = (u.windupLeft ?? 1) - 1;
+      if (u.windupLeft <= 0) u.chargeState = 'release';
       if (this.moveOf(u).target === 'enemy' && !this.aliveAlly(u.aimUid)) u.aimUid = this.pickAim(u, true);
       ev.push({ t: 'windup', uid: u.uid, aim: u.aimUid });
       ev.push(this.intentEvent(u));
@@ -322,6 +346,32 @@ export class Battle {
     }
   }
 
+  /** Inizio turno di un nemico: rigenerazione (dati o affisso). */
+  private enemyTurnStart(u: Unit, ev: BattleEvent[]): void {
+    const pct = (ENEMY_BY_ID.get(u.defId)!.regen ?? 0) + (hasAffix(u, 'regen') ? AF.regen.pct : 0);
+    if (pct > 0 && u.hp < u.maxHp) this.heal(u, Math.max(1, Math.round(u.maxHp * pct)), ev);
+  }
+
+  /** Fine turno di un nemico: chi cambia fase alterna l'immunità ai poteri. */
+  private enemyTurnEnd(u: Unit, ev: BattleEvent[]): void {
+    if (u.hp <= 0 || !ENEMY_BY_ID.get(u.defId)!.phaseShift) return;
+    if (this.hasStatus(u, 'immune')) this.removeStatus(u, 'immune');
+    else { u.statuses.push({ id: 'immune', turns: 99, value: 0 }); ev.push({ t: 'status', target: u.uid, status: 'immune', turns: 1 }); }
+    ev.push({ t: 'cleanse', target: u.uid }); // la scena ridisegna gli stati
+  }
+
+  /** Esplosione alla morte: colpisce tutta la squadra (la Difesa la dimezza). */
+  private burst(u: Unit, ev: BattleEvent[]): void {
+    const B = ENEMY_BY_ID.get(u.defId)!.deathBurst!;
+    ev.push({ t: 'burst', uid: u.uid });
+    for (const a of this.alive('ally')) {
+      let dmg = this.mitigate(a, u.atk * B.mult);
+      if (this.hasStatus(a, 'guard')) dmg = Math.max(1, Math.round(dmg * C.guardMult));
+      this.applyDamage(a, dmg, ev, u.uid, false, 'blast');
+      if (B.poison && a.hp > 0) { this.addStatus(a, { id: 'poison', turns: 3, value: B.poison }); ev.push({ t: 'status', target: a.uid, status: 'poison', turns: 3 }); }
+    }
+  }
+
   /** Congelato o nella bolla mentre carica: il colpo va perso e si passa alla mossa dopo. */
   private interruptCharge(u: Unit, ev: BattleEvent[]): void {
     if (u.kind !== 'enemy' || !u.chargeState || u.hp <= 0) return;
@@ -332,10 +382,12 @@ export class Battle {
 
   private planNext(u: Unit, ev: BattleEvent[]): void {
     const def = ENEMY_BY_ID.get(u.defId)!;
-    u.nextMove = def.pattern[u.patternIndex % def.pattern.length];
+    const pattern = u.phase === 2 && def.phase2 ? def.phase2.pattern : def.pattern;
+    u.nextMove = pattern[u.patternIndex % pattern.length];
     u.patternIndex++;
     const mv = def.moves[u.nextMove];
     u.chargeState = isCharged(mv) ? 'windup' : undefined;
+    u.windupLeft = u.chargeState ? mv.windup ?? 1 : undefined;
     u.aimUid = mv.target === 'enemy' ? this.pickAim(u, !!u.chargeState) : undefined;
     ev.push(this.intentEvent(u));
   }
@@ -343,7 +395,7 @@ export class Battle {
   /** Fumetto dell'intenzione: per i colpi caricati mostra anche chi è nel mirino. */
   intentEvent(u: Unit): Extract<BattleEvent, { t: 'intent' }> {
     const mv = this.moveOf(u);
-    if (u.chargeState === 'windup') return { t: 'intent', uid: u.uid, intent: 'charge', move: u.nextMove!, aim: u.aimUid, label: 'Carica…' };
+    if (u.chargeState === 'windup') return { t: 'intent', uid: u.uid, intent: 'charge', move: u.nextMove!, aim: u.aimUid, label: (u.windupLeft ?? 1) > 1 ? `Carica… ${u.windupLeft}` : 'Carica…' };
     if (u.chargeState === 'release') return { t: 'intent', uid: u.uid, intent: 'heavy', move: u.nextMove!, aim: u.aimUid, label: `${mv.name}!` };
     return { t: 'intent', uid: u.uid, intent: mv.intent ?? 'attack', move: u.nextMove! };
   }
@@ -366,7 +418,12 @@ export class Battle {
   private pickAim(u: Unit, charged: boolean): string | undefined {
     const allies = this.alive('ally');
     if (!allies.length) return undefined;
-    const tier = ENEMY_BY_ID.get(u.defId)!.tier;
+    const def = ENEMY_BY_ID.get(u.defId)!;
+    if (def.aim === 'companions') {
+      const comps = allies.filter((a) => a.kind !== 'hero');
+      return (comps.length ? comps.reduce((m, a) => (a.hp / a.maxHp < m.hp / m.maxHp ? a : m)) : allies[0]).uid;
+    }
+    const tier = def.tier;
     const w = charged ? { hero: C.charged.aimHero, weakest: 1 - C.charged.aimHero } : BALANCE.enemies.aim[tier];
     const r = this.rng.next();
     const hero = allies.find((a) => a.kind === 'hero');
@@ -413,6 +470,11 @@ export class Battle {
         if (cur) cur.value = n; else actor.statuses.push({ id: 'swarm', turns: 99, value: n });
         ev.push({ t: 'status', target: actor.uid, status: 'swarm', turns: n });
       }
+      if (eff.kind === 'drainEnergy' && actor.side === 'enemy') {
+        // in Difesa l'eroe non si fa rubare energia
+        const amt = this.hasStatus(this.hero, 'guard') ? 0 : Math.min(this.energy, eff.amount);
+        if (amt > 0) { this.energy -= amt; ev.push({ t: 'drain', uid: actor.uid, amount: amt, energy: this.energy }); ev.push({ t: 'energy', value: this.energy }); }
+      }
       if (eff.kind === 'twin') {
         // +1: il turno in corso non deve consumarla
         this.addStatus(actor, { id: 'twin', turns: eff.turns + 1, value: eff.ratio });
@@ -432,6 +494,7 @@ export class Battle {
       case 'damage': {
         for (let h = 0; h < (eff.hits ?? 1) && target.hp > 0 && actor.hp > 0; h++) {
           if (this.rng.next() < this.statusValue(target, 'evade')) { ev.push({ t: 'dodge', target: target.uid }); continue; }
+          if (isPower && this.hasStatus(target, 'immune')) { ev.push({ t: 'immune', target: target.uid }); continue; }
           const atkUp = this.statusValue(actor, 'atkUp');
           let dmg = actor.atk * (1 + atkUp) * (1 - this.statusValue(actor, 'weak')) * eff.mult;
           if (isPower) dmg *= this.mods.powerDamageMult;
@@ -448,6 +511,8 @@ export class Battle {
           const incoming = Math.max(1, Math.round(dmg));
           const dealt = this.applyDamage(target, incoming, ev, actor.uid, crit, kind);
           if (eff.lifesteal && dealt > 0) this.heal(actor, Math.round(dealt * eff.lifesteal), ev, true);
+          if (hasAffix(actor, 'vampire') && dealt > 0 && actor.hp > 0) this.heal(actor, Math.max(1, Math.round(dealt * AF.vampire.lifesteal)), ev);
+          if (hasAffix(target, 'spiky') && actor.side === 'ally' && actor.hp > 0) this.applyDamage(actor, Math.max(1, Math.round(incoming * AF.spiky.reflect)), ev, target.uid, false, 'reflect');
           const refl = this.statusValue(target, 'reflect');
           // lo specchio riflette il colpo intero, anche quello parato dallo scudo
           if (refl > 0 && actor.uid !== target.uid) this.applyDamage(actor, Math.max(1, Math.round(incoming * refl)), ev, target.uid, false, 'reflect');
@@ -485,7 +550,7 @@ export class Battle {
         ev.push({ t: 'steal', source: actor.uid, target: target.uid, amount: sh.value });
         break;
       }
-      case 'extraAction': case 'swarm': case 'twin': break; // gestite in act() / useAbility()
+      case 'extraAction': case 'swarm': case 'twin': case 'drainEnergy': break; // gestite in act() / useAbility()
       case 'meltShield': {
         const sh = this.getStatus(target, 'shield');
         if (!sh || sh.value <= 0) break;
@@ -556,10 +621,22 @@ export class Battle {
     // ogni colpo nemico sull'eroe fa scoppiare un acino dello sciame
     const sw = target.kind === 'hero' && kind === 'hit' && dealt > 0 ? this.getStatus(target, 'swarm') : undefined;
     if (sw && sw.value > 0) { sw.value--; ev.push({ t: 'swarmLoss', count: sw.value }); }
+    if (target.hp <= 0 && target.kind === 'enemy') {
+      const d = ENEMY_BY_ID.get(target.defId)!;
+      if (d.reviveOnce && !target.revived) {
+        target.revived = true;
+        target.statuses = [];
+        target.hp = Math.max(1, Math.round(target.maxHp * d.reviveOnce));
+        target.chargeState = undefined;
+        ev.push({ t: 'rise', uid: target.uid, hp: target.hp });
+        return dealt;
+      }
+    }
     if (target.hp <= 0) {
       target.statuses = [];
       if (target.side === 'ally') this.koCount++;
       ev.push({ t: 'ko', uid: target.uid });
+      if (target.kind === 'enemy' && ENEMY_BY_ID.get(target.defId)!.deathBurst) this.burst(target, ev);
     }
     return dealt;
   }
@@ -618,5 +695,5 @@ export function makeHeroUnit(name: string, stats: { maxHp: number; atk: number; 
 
 /** Le mosse "forti" a danno (intenzione `heavy`) diventano colpi caricati (F1). */
 export function isCharged(a: Ability): boolean {
-  return a.intent === 'heavy' && a.effects.some((e) => e.kind === 'damage');
+  return (a.intent === 'heavy' || a.windup !== undefined) && a.effects.some((e) => e.kind === 'damage');
 }

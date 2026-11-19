@@ -8,7 +8,7 @@ import { block, INK, shade, type Px } from './render';
  */
 
 /** Bocca: sorriso, ghigno con denti o "ahia" (colpito). */
-function mouth(px: Px, x: number, y: number, w: number, hit: boolean, kind: 'smile' | 'grin' | 'frown' = 'smile'): void {
+export function mouth(px: Px, x: number, y: number, w: number, hit: boolean, kind: 'smile' | 'grin' | 'frown' = 'smile'): void {
   if (hit) { px(x + Math.floor(w / 2) - 2, y - 1, INK, 5, 4); px(x + Math.floor(w / 2) - 1, y, '#ff6b8a', 3, 2); return; }
   if (kind === 'grin') {
     px(x, y, INK, w, 4); px(x + 1, y + 1, '#a8211e', w - 2, 2);
@@ -19,10 +19,10 @@ function mouth(px: Px, x: number, y: number, w: number, hit: boolean, kind: 'smi
   px(x + 1, y + 1, INK, w - 2, 1); px(x, y, INK, 1, 1); px(x + w - 1, y, INK, 1, 1);
 }
 
-const cheeks = (px: Px, x1: number, x2: number, y: number, c = '#ff9ad5') => { px(x1, y, c, 3, 2); px(x2, y, c, 3, 2); };
+export const cheeks = (px: Px, x1: number, x2: number, y: number, c = '#ff9ad5') => { px(x1, y, c, 3, 2); px(x2, y, c, 3, 2); };
 
 /** Linea spessa da (x0,y0) a (x1,y1) con contorno: aculei, rami, tentacoli rigidi. */
-function stroke(px: Px, x0: number, y0: number, x1: number, y1: number, c: string, outline = true): void {
+export function stroke(px: Px, x0: number, y0: number, x1: number, y1: number, c: string, outline = true): void {
   const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0), 1);
   for (let i = 0; i <= n; i++) {
     const x = Math.round(x0 + ((x1 - x0) * i) / n), y = Math.round(y0 + ((y1 - y0) * i) / n);
@@ -35,7 +35,7 @@ function stroke(px: Px, x0: number, y0: number, x1: number, y1: number, c: strin
 }
 
 /** Tentacolo ondulato verso il basso. */
-function tentacle(px: Px, x: number, y: number, len: number, c: string, off = 0, amp = 2, w = 3): void {
+export function tentacle(px: Px, x: number, y: number, len: number, c: string, off = 0, amp = 2, w = 3): void {
   for (let i = 0; i < len; i++) {
     const dx = Math.round(Math.sin((i + off) / 2.4) * amp);
     px(x + dx - 1, y + i, INK, w + 2, 1);
@@ -46,7 +46,7 @@ function tentacle(px: Px, x: number, y: number, len: number, c: string, off = 0,
 }
 
 /** Ventose (puntini chiari) lungo un tentacolo. */
-const suckers = (px: Px, x: number, y: number, n: number, step: number, c: string) => { for (let i = 0; i < n; i++) px(x, y + i * step, c, 2, 1); };
+export const suckers = (px: Px, x: number, y: number, n: number, step: number, c: string) => { for (let i = 0; i < n; i++) px(x, y + i * step, c, 2, 1); };
 
 export const SEA_CREATURES: Record<string, CreatureDef> = {
   // ======================= MARE 2 · SCOGLIERA DEI CORALLI =======================

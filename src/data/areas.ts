@@ -22,27 +22,31 @@ export interface AreaDef {
 }
 
 const PORT_GROUPS: AreaDef['groups'] = {
-  early: [['en_jelly'], ['en_bat'], ['en_jelly', 'en_bat']],
-  late: [['en_jelly', 'en_jelly'], ['en_shroom', 'en_bat'], ['en_shroom', 'en_jelly'], ['en_bat', 'en_bat', 'en_jelly']],
-  elite: [['en_shroom_boss']],
+  early: [['en_jelly'], ['en_bat'], ['en_jelly', 'en_bat'], ['en_rat'], ['en_bomb_crab', 'en_jelly']],
+  late: [['en_jelly', 'en_jelly'], ['en_shroom', 'en_bat'], ['en_shroom', 'en_jelly'], ['en_bat', 'en_bat', 'en_jelly'],
+    ['en_catfish', 'en_shroom'], ['en_rat', 'en_bomb_crab', 'en_bat'], ['en_catfish', 'en_bat', 'en_jelly']],
+  elite: [['en_shroom_boss'], ['en_lobster']],
   boss: ['en_pudding_king'],
 };
 const REEF_GROUPS: AreaDef['groups'] = {
-  early: [['en_urchin', 'en_puffer_horn'], ['en_coral', 'en_hermit'], ['en_hermit', 'en_puffer_horn']],
-  late: [['en_urchin', 'en_coral'], ['en_hermit', 'en_hermit', 'en_puffer_horn'], ['en_coral', 'en_urchin', 'en_puffer_horn'], ['en_urchin', 'en_hermit']],
-  elite: [['en_moray']],
+  early: [['en_urchin', 'en_puffer_horn'], ['en_coral', 'en_hermit'], ['en_hermit', 'en_puffer_horn'], ['en_seahorse', 'en_puffer_horn'], ['en_clownfish', 'en_coral']],
+  late: [['en_urchin', 'en_coral'], ['en_hermit', 'en_hermit', 'en_puffer_horn'], ['en_coral', 'en_urchin', 'en_puffer_horn'], ['en_urchin', 'en_hermit'],
+    ['en_starfish', 'en_urchin', 'en_seahorse'], ['en_clownfish', 'en_hermit', 'en_starfish']],
+  elite: [['en_moray'], ['en_hammerhead']],
   boss: ['en_anemone_queen'],
 };
 const ABYSS_GROUPS: AreaDef['groups'] = {
-  early: [['en_lanternfish', 'en_neonjelly'], ['en_mimic_squid', 'en_lanternfish'], ['en_gunshrimp', 'en_neonjelly']],
-  late: [['en_gunshrimp', 'en_mimic_squid'], ['en_neonjelly', 'en_neonjelly', 'en_lanternfish'], ['en_lanternfish', 'en_gunshrimp', 'en_mimic_squid'], ['en_mimic_squid', 'en_neonjelly']],
-  elite: [['en_archivist']],
+  early: [['en_lanternfish', 'en_neonjelly'], ['en_mimic_squid', 'en_lanternfish'], ['en_gunshrimp', 'en_neonjelly'], ['en_eel', 'en_lanternfish'], ['en_anglerfish', 'en_neonjelly']],
+  late: [['en_gunshrimp', 'en_mimic_squid'], ['en_neonjelly', 'en_neonjelly', 'en_lanternfish'], ['en_lanternfish', 'en_gunshrimp', 'en_mimic_squid'], ['en_mimic_squid', 'en_neonjelly'],
+    ['en_viperfish', 'en_gunshrimp'], ['en_anglerfish', 'en_eel', 'en_mimic_squid'], ['en_viperfish', 'en_neonjelly', 'en_lanternfish']],
+  elite: [['en_archivist'], ['en_colossal_squid']],
   boss: ['en_abyss_lighthouse'],
 };
 const GRAVE_GROUPS: AreaDef['groups'] = {
-  early: [['en_anchor', 'en_ghost_lamp'], ['en_barrel', 'en_siren'], ['en_ghost_lamp', 'en_barrel']],
-  late: [['en_anchor', 'en_siren'], ['en_barrel', 'en_barrel', 'en_ghost_lamp'], ['en_siren', 'en_ghost_lamp', 'en_anchor'], ['en_anchor', 'en_barrel']],
-  elite: [['en_figurehead']],
+  early: [['en_anchor', 'en_ghost_lamp'], ['en_barrel', 'en_siren'], ['en_ghost_lamp', 'en_barrel'], ['en_skeleton', 'en_ghost_lamp'], ['en_plague_rat', 'en_siren']],
+  late: [['en_anchor', 'en_siren'], ['en_barrel', 'en_barrel', 'en_ghost_lamp'], ['en_siren', 'en_ghost_lamp', 'en_anchor'], ['en_anchor', 'en_barrel'],
+    ['en_ghost_gunner', 'en_skeleton', 'en_barrel'], ['en_plague_rat', 'en_plague_rat', 'en_anchor'], ['en_ghost_gunner', 'en_siren']],
+  elite: [['en_figurehead'], ['en_headless']],
   boss: ['en_wreck_admiral'],
 };
 

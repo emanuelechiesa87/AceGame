@@ -173,6 +173,10 @@ const STATUSES: Record<string, () => Cells> = {
   reflect: () => fromGrid([
     'FFFFFFFFFF', 'FMMMMMMMMF', 'FMWMMMMMMF', 'FMMWMMMMMF', 'FMMMWMMMMF', 'FMWMMWMMMF', 'FMMWMMMMMF', 'FMMMWMMMMF', 'FMMMMMMMMF', 'FMMMMMMMMF', 'FFFFFFFFFF', '....FF', '...FFFF',
   ], { F: '#c8a26b', M: '#9fe8ff', W: '#ffffff' }, 3, 1),
+  // F1 (0.6.6): immune ai poteri (scudo viola barrato)
+  immune: () => fromGrid(sym([
+    'WWWWWWW', 'WVVVVVV', 'WVVVVVV', 'WVVKVVV', 'WVVVKVV', '.WVVVKV', '.WVVVVK', '..WVVVV', '...WVVV', '....WVV', '.....WV',
+  ]), { W: '#ffffff', V: '#b46bff', K: '#1f1633' }, 1, 2),
   // dalla 0.5.5: tanfo, acido, bolla, mina, sciame, gemella
   weak: () => fromGrid(sym([
     '...GG..', '..G..G.', '..G....', '...G...', '....RRR', '....RRR', '....RRR', '....RRR', 'RRRRRRR', '.RRRRRR', '..RRRRR', '...RRRR', '....RRR', '.....RR', '......R',

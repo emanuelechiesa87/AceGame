@@ -47,7 +47,10 @@ export const ENEMIES: EnemyDef[] = [
     id: 'en_pudding_king', name: 'Capitan Pancia-Palla', tier: 'boss', stats: { maxHp: 200, atk: 11, def: 4, spd: 7 },
     pattern: ['slam', 'wave', 'harden', 'crush', 'wave'],
     enrage: 'royal_call',
+    phase2: { name: 'Pancia Gonfia', pattern: ['tide', 'slam', 'belly_bomb', 'crush'] },
     moves: {
+      tide: mv('tide', 'Maremoto', 'allEnemies', 'attack', [{ kind: 'damage', mult: 0.9 }]),
+      belly_bomb: { ...mv('belly_bomb', 'Pancia Bomba', 'allEnemies', 'heavy', [{ kind: 'damage', mult: 1.2 }]), windup: 2 },
       slam: atk(1, 'Panciata'),
       crush: atk(1.7, 'Aculeo Reale'),
       wave: { id: 'wave', name: 'Onda Anomala', description: '', target: 'allEnemies', intent: 'attack', effects: [{ kind: 'damage', mult: 0.75 }] },
@@ -103,7 +106,10 @@ export const ENEMIES: EnemyDef[] = [
     id: 'en_anemone_queen', name: 'Regina Anemone', tier: 'boss', stats: { maxHp: 230, atk: 12, def: 5, spd: 8 },
     pattern: ['lash', 'sting', 'bloom', 'lash', 'crush'],
     enrage: 'royal_bloom',
+    phase2: { name: 'Fioritura Tossica', pattern: ['spines', 'toxic', 'lash', 'crush'] },
     moves: {
+      spines: mv('spines', 'Corona di Spine', 'self', 'defend', [{ kind: 'shield', amount: 30 }, st('reflect', 2, 0.5)]),
+      toxic: mv('toxic', 'Polline Tossico', 'allEnemies', 'debuff', [{ kind: 'damage', mult: 0.5 }, st('poison', 3, 5)]),
       lash: mv('lash', 'Frustata di Tentacoli', 'allEnemies', 'attack', [{ kind: 'damage', mult: 0.7 }]),
       sting: mv('queen_sting', 'Bacio Urticante', 'enemy', 'debuff', [{ kind: 'damage', mult: 1.1 }, st('stun', 1, undefined, 0.5)]),
       bloom: mv('bloom', 'Corona Chiusa', 'self', 'defend', [{ kind: 'shield', amount: 28 }]),
@@ -130,6 +136,7 @@ export const ENEMIES: EnemyDef[] = [
   },
   {
     id: 'en_mimic_squid', name: 'Calamaro Mimo', tier: 'normal', stats: { maxHp: 38, atk: 8, def: 2, spd: 12 },
+    phaseShift: true, // F1: un turno sì e uno no è immune ai poteri
     pattern: ['ink', 'vanish', 'whip'],
     moves: {
       ink: mv('squid_ink', 'Spruzzo d\'Inchiostro', 'enemy', 'debuff', [{ kind: 'damage', mult: 0.5 }, st('vulnerable', 2)]),
@@ -159,7 +166,9 @@ export const ENEMIES: EnemyDef[] = [
     id: 'en_abyss_lighthouse', name: 'Faro Abissale', tier: 'boss', stats: { maxHp: 250, atk: 12, def: 4, spd: 7 },
     pattern: ['beam', 'dark', 'chomp', 'beam', 'flash'],
     enrage: 'full_beam',
+    phase2: { name: 'Luce Accecante', pattern: ['blind_beam', 'chomp', 'flash', 'beam'] },
     moves: {
+      blind_beam: { ...mv('blind_beam', 'Raggio Accecante', 'allEnemies', 'heavy', [{ kind: 'damage', mult: 1.3 }, st('weak', 2, 0.25)]), windup: 2 },
       beam: mv('beam', 'Raggio del Faro', 'allEnemies', 'attack', [{ kind: 'damage', mult: 0.85 }]),
       dark: mv('dark', 'Luci Spente', 'self', 'defend', [st('evade', 2, 0.6)]),
       chomp: atk(1.5, 'Fauci Abissali'),
@@ -213,12 +222,169 @@ export const ENEMIES: EnemyDef[] = [
     id: 'en_wreck_admiral', name: 'Ammiraglio Relitto', tier: 'boss', stats: { maxHp: 280, atk: 13, def: 6, spd: 6 },
     pattern: ['broadside', 'cannon', 'repair', 'broadside', 'drag'],
     enrage: 'boarding',
+    phase2: { name: 'Ciurma Fantasma', pattern: ['ghost_call', 'full_broadside', 'cannon', 'drag'] },
     moves: {
+      ghost_call: mv('ghost_call', 'Fischio dei Dannati', 'self', 'special', [{ kind: 'summon', enemyId: 'en_skeleton', maxEnemies: 3 }, { kind: 'shield', amount: 20 }]),
+      full_broadside: { ...mv('full_broadside', 'Bordata Completa', 'allEnemies', 'heavy', [{ kind: 'damage', mult: 1.4 }, st('burn', 2, 5)]), windup: 2 },
       broadside: mv('broadside', 'Bordata', 'allEnemies', 'attack', [{ kind: 'damage', mult: 0.8 }]),
       cannon: atk(1.6, 'Cannone di Prua'),
       repair: mv('repair', 'Rattoppo', 'self', 'defend', [{ kind: 'shield', amount: 30 }]),
       drag: mv('drag', 'Catena dell\'Ancora', 'enemy', 'debuff', [{ kind: 'damage', mult: 1.2 }, st('stun', 1, undefined, 0.4)]),
       boarding: mv('boarding', 'All\'Arrembaggio!', 'self', 'special', [{ kind: 'summon', enemyId: 'en_barrel', maxEnemies: 3 }, st('atkUp', 99, 0.3)]),
+    },
+  },
+
+  // ===== F1 (0.6.6) · nemici nuovi =======================================================
+  // --- Mare 1 ---
+  {
+    id: 'en_rat', name: 'Topo di Stiva', tier: 'normal', stats: { maxHp: 26, atk: 7, def: 1, spd: 13 },
+    pattern: ['nibble', 'steal', 'nibble'],
+    moves: {
+      nibble: atk(1, 'Rosicchiata'),
+      steal: mv('rat_steal', 'Ruba la Miccia', 'enemy', 'debuff', [{ kind: 'damage', mult: 0.6 }, { kind: 'drainEnergy', amount: 1 }]),
+    },
+  },
+  {
+    id: 'en_bomb_crab', name: 'Granchio Bombarolo', tier: 'normal', stats: { maxHp: 32, atk: 8, def: 3, spd: 7 },
+    deathBurst: { mult: 0.9 },
+    pattern: ['pinch', 'fuse', 'pinch'],
+    moves: {
+      pinch: atk(1, 'Pizzico'),
+      fuse: mv('fuse', 'Accende la Miccia', 'self', 'special', [st('atkUp', 2, 0.3)]),
+    },
+  },
+  {
+    id: 'en_catfish', name: 'Mozzo Pesce-Gatto', tier: 'normal', stats: { maxHp: 34, atk: 6, def: 2, spd: 9 },
+    pattern: ['mend', 'whisker', 'whisker'],
+    moves: {
+      mend: mv('mend', 'Rattoppo di Bordo', 'lowestAlly', 'defend', [{ kind: 'heal', pctMaxHp: 0.25 }]),
+      whisker: atk(1, 'Frustata di Baffi'),
+    },
+  },
+  {
+    id: 'en_lobster', name: 'Nostromo Aragosta', tier: 'elite', stats: { maxHp: 105, atk: 12, def: 5, spd: 8 },
+    pattern: ['cover', 'claws', 'mega', 'claws'],
+    moves: {
+      cover: mv('lob_cover', 'Tutti al Riparo!', 'allAllies', 'defend', [{ kind: 'shield', amount: 14 }]),
+      claws: mv('lob_claws', 'Doppia Chela', 'enemy', 'attack', [{ kind: 'damage', mult: 0.7, hits: 2 }]),
+      mega: { ...mv('lob_mega', 'Chela Maestra', 'allEnemies', 'heavy', [{ kind: 'damage', mult: 1.1 }]), windup: 2 },
+    },
+  },
+  // --- Mare 2 ---
+  {
+    id: 'en_starfish', name: 'Stella Marina', tier: 'normal', stats: { maxHp: 36, atk: 6, def: 3, spd: 6 },
+    regen: 0.06,
+    pattern: ['star_heal', 'spin', 'spin'],
+    moves: {
+      star_heal: mv('star_heal', 'Luce Stellare', 'allAllies', 'defend', [{ kind: 'heal', pctMaxHp: 0.12 }]),
+      spin: atk(1, 'Girandola'),
+    },
+  },
+  {
+    id: 'en_seahorse', name: 'Cavalluccio Lanciere', tier: 'normal', stats: { maxHp: 30, atk: 8, def: 2, spd: 11 },
+    pattern: ['lance', 'poke'],
+    moves: {
+      lance: atk(1.5, 'Carica con la Lancia'),
+      poke: atk(0.9, 'Punzecchio'),
+    },
+  },
+  {
+    id: 'en_clownfish', name: 'Pesce Pagliaccio Burlone', tier: 'normal', stats: { maxHp: 30, atk: 7, def: 1, spd: 14 },
+    pattern: ['prank', 'slap', 'prank_all'],
+    moves: {
+      prank: mv('prank', 'Scherzetto', 'enemy', 'debuff', [{ kind: 'damage', mult: 0.7 }, { kind: 'drainEnergy', amount: 1 }]),
+      slap: atk(1, 'Pinnata'),
+      prank_all: mv('prank_all', 'Torta in Faccia', 'allEnemies', 'debuff', [st('weak', 2, 0.2)]),
+    },
+  },
+  {
+    id: 'en_hammerhead', name: 'Squalo Martello', tier: 'elite', stats: { maxHp: 115, atk: 12, def: 4, spd: 12 },
+    aim: 'companions',
+    pattern: ['hammer', 'bite', 'circle', 'hammer'],
+    enrage: 'frenzy',
+    moves: {
+      hammer: atk(1.5, 'Testata a Martello'),
+      bite: mv('shark_bite', 'Morso Affamato', 'enemy', 'attack', [{ kind: 'damage', mult: 1, lifesteal: 0.5 }]),
+      circle: mv('circle', 'Gira in Tondo', 'self', 'defend', [{ kind: 'shield', amount: 15 }]),
+      frenzy: mv('frenzy', 'Frenesia', 'self', 'special', [st('atkUp', 99, 0.4)]),
+    },
+  },
+  // --- Mare 3 ---
+  {
+    id: 'en_anglerfish', name: 'Rana Pescatrice', tier: 'normal', stats: { maxHp: 38, atk: 8, def: 2, spd: 8 },
+    aim: 'companions',
+    pattern: ['lure', 'gulp', 'gulp'],
+    moves: {
+      lure: mv('lure', 'Esca Luminosa', 'allEnemies', 'debuff', [st('slow', 2, 0.3)]),
+      gulp: atk(1.15, 'Boccone'),
+    },
+  },
+  {
+    id: 'en_eel', name: 'Anguilla Elettrica', tier: 'normal', stats: { maxHp: 34, atk: 7, def: 2, spd: 12 },
+    pattern: ['shock', 'chain', 'shock'],
+    moves: {
+      shock: mv('eel_shock', 'Scossa', 'enemy', 'debuff', [{ kind: 'damage', mult: 0.8 }, { kind: 'drainEnergy', amount: 1 }]),
+      chain: mv('eel_chain', 'Scossa a Catena', 'allEnemies', 'attack', [{ kind: 'damage', mult: 0.55 }]),
+    },
+  },
+  {
+    id: 'en_viperfish', name: 'Pesce Vipera', tier: 'normal', stats: { maxHp: 36, atk: 9, def: 2, spd: 9 },
+    pattern: ['fang', 'nip', 'nip'],
+    moves: {
+      fang: { ...mv('viper_fang', 'Zanna dell\'Abisso', 'enemy', 'heavy', [{ kind: 'damage', mult: 1.6 }]), windup: 2 },
+      nip: atk(0.9, 'Morsetto'),
+    },
+  },
+  {
+    id: 'en_colossal_squid', name: 'Calamaro Colosso', tier: 'elite', stats: { maxHp: 125, atk: 11, def: 4, spd: 9 },
+    pattern: ['call', 'wrap', 'slam', 'wrap'],
+    moves: {
+      call: mv('call_tentacle', 'Tentacolo dal Buio', 'self', 'special', [{ kind: 'summon', enemyId: 'en_tentacle', maxEnemies: 3 }]),
+      wrap: mv('wrap', 'Stretta', 'enemy', 'debuff', [{ kind: 'damage', mult: 0.9 }, st('slow', 2, 0.4)]),
+      slam: atk(1.6, 'Colpo di Mantello'),
+    },
+  },
+  {
+    id: 'en_tentacle', name: 'Tentacolo', tier: 'normal', stats: { maxHp: 22, atk: 6, def: 1, spd: 10 },
+    pattern: ['flick'],
+    moves: { flick: atk(0.9, 'Sferzata') },
+  },
+  // --- Mare 4 ---
+  {
+    id: 'en_skeleton', name: 'Scheletro Mozzo', tier: 'normal', stats: { maxHp: 28, atk: 8, def: 2, spd: 9 },
+    reviveOnce: 0.5,
+    pattern: ['bone', 'bone', 'rattle'],
+    moves: {
+      bone: atk(1, 'Colpo d\'Osso'),
+      rattle: mv('rattle', 'Sferragliata', 'self', 'defend', [{ kind: 'shield', amount: 10 }]),
+    },
+  },
+  {
+    id: 'en_ghost_gunner', name: 'Cannoniere Fantasma', tier: 'normal', stats: { maxHp: 32, atk: 8, def: 2, spd: 7 },
+    pattern: ['volley', 'musket'],
+    moves: {
+      volley: { ...mv('ghost_volley', 'Cannonata Fantasma', 'allEnemies', 'heavy', [{ kind: 'damage', mult: 1 }]), windup: 2 },
+      musket: atk(0.9, 'Moschetto'),
+    },
+  },
+  {
+    id: 'en_plague_rat', name: 'Ratto Pestilente', tier: 'normal', stats: { maxHp: 28, atk: 7, def: 1, spd: 11 },
+    deathBurst: { mult: 0.6, poison: 4 },
+    pattern: ['plague_bite', 'plague_bite', 'squeak'],
+    moves: {
+      plague_bite: mv('plague_bite', 'Morso Infetto', 'enemy', 'attack', [{ kind: 'damage', mult: 0.8 }, st('poison', 3, 3)]),
+      squeak: mv('squeak', 'Squittio', 'allAllies', 'special', [st('atkUp', 2, 0.2)]),
+    },
+  },
+  {
+    id: 'en_headless', name: 'Capitano Senzatesta', tier: 'elite', stats: { maxHp: 130, atk: 12, def: 6, spd: 8 },
+    pattern: ['saber', 'summon_crew', 'saber', 'cleave'],
+    enrage: 'wrath',
+    moves: {
+      saber: atk(1.1, 'Sciabolata'),
+      summon_crew: mv('summon_crew', 'In Riga, Ciurma!', 'self', 'special', [{ kind: 'summon', enemyId: 'en_skeleton', maxEnemies: 3 }]),
+      cleave: atk(1.7, 'Fendente Maledetto'),
+      wrath: mv('wrath', 'Collera senza Testa', 'self', 'special', [st('atkUp', 99, 0.4), { kind: 'shield', amount: 25 }]),
     },
   },
 ];

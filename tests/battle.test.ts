@@ -146,10 +146,11 @@ describe('Battle', () => {
     b.start();
     b.unit('e0')!.hp = 90;
     const ev = b.act({ type: 'guard' });
-    expect(ev.filter((e) => e.t === 'enrage').length).toBe(1);
+    // F1: il boss entra nella seconda fase (evento `phase` al posto di `enrage`)
+    expect(ev.filter((e) => e.t === 'phase').length).toBe(1);
     expect(ev.some((e) => e.t === 'summon')).toBe(true);
     const ev2 = b.phase === 'awaitingInput' ? b.act({ type: 'guard' }) : [];
-    expect(ev2.some((e) => e.t === 'enrage')).toBe(false);
+    expect(ev2.some((e) => e.t === 'phase' || e.t === 'enrage')).toBe(false);
   });
 
   it('ogni nemico mostra in anticipo la prossima mossa', () => {
