@@ -24,6 +24,7 @@ export const BALANCE = {
     critMult: 1.5,
     guardMult: 0.5,
     vulnerableMult: 1.3,
+    acidGrowth: 1.4, // l'acido (Limone Acido) fa il 40% di danno in più a ogni turno
     energyStart: 2,
     energyMax: 5,
     energyPerRound: 1,

@@ -44,8 +44,8 @@ export type PlayerAction =
 /** Eventi prodotti dal motore: la scena li anima in sequenza (e può saltarli). */
 export type BattleEvent =
   | { t: 'turn'; uid: string }
-  | { t: 'use'; uid: string; ability: string; name: string; isPower?: boolean; isSpecial?: boolean }
-  | { t: 'damage'; source: string; target: string; amount: number; absorbed: number; crit: boolean; kind: 'hit' | 'burn' | 'poison' | 'reflect' }
+  | { t: 'use'; uid: string; ability: string; name: string; isPower?: boolean; isSpecial?: boolean; isTwin?: boolean }
+  | { t: 'damage'; source: string; target: string; amount: number; absorbed: number; crit: boolean; kind: DamageKind }
   | { t: 'heal'; target: string; amount: number }
   | { t: 'shield'; target: string; amount: number }
   | { t: 'status'; target: string; status: StatusId; turns: number }
@@ -63,7 +63,15 @@ export type BattleEvent =
   | { t: 'energy'; value: number }
   | { t: 'charge'; uid: string; value: number }
   | { t: 'round'; n: number }
-  | { t: 'end'; result: 'victory' | 'defeat' };
+  | { t: 'end'; result: 'victory' | 'defeat' }
+  | { t: 'melt'; target: string; amount: number }
+  /** Turno saltato dentro la bolla; `pop` = la bolla scoppia subito dopo. */
+  | { t: 'bubbled'; uid: string; pop: boolean }
+  /** Lo sciame di acini attacca (count acini); `lost` = acini scoppiati sull'eroe colpito. */
+  | { t: 'swarm'; count: number }
+  | { t: 'swarmLoss'; count: number };
+
+export type DamageKind = 'hit' | 'burn' | 'poison' | 'reflect' | 'acid' | 'mine' | 'pop' | 'swarm';
 
 export type Phase = 'awaitingInput' | 'victory' | 'defeat';
 

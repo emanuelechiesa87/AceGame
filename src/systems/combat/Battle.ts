@@ -4,12 +4,14 @@ import { COMPANION_BY_ID } from '../../data/companions';
 import { ENEMY_BY_ID } from '../../data/enemies';
 import type { Ability, Effect, StatusId } from '../../types/content';
 import type { Rng } from '../Rng';
-import type { BattleEvent, BattleMods, Phase, PlayerAction, Side, StatusInstance, Unit } from './types';
+import type { BattleEvent, BattleMods, DamageKind, Phase, PlayerAction, Side, StatusInstance, Unit } from './types';
 
 const C = BALANCE.combat;
-const NEGATIVE: StatusId[] = ['burn', 'poison', 'stun', 'vulnerable', 'slow'];
+const NEGATIVE: StatusId[] = ['burn', 'poison', 'stun', 'vulnerable', 'slow', 'weak', 'acid', 'bubble', 'mine'];
 /** Stati che scadono alla fine del turno di chi li porta. */
-const TIMED: StatusId[] = ['atkUp', 'vulnerable', 'shield', 'defUp', 'evade', 'slow', 'reflect'];
+const TIMED: StatusId[] = ['atkUp', 'vulnerable', 'shield', 'defUp', 'evade', 'slow', 'reflect', 'weak', 'twin'];
+/** Stati che durano finché non vengono consumati (non scadono a fine turno). */
+const KEPT: StatusId[] = ['guard', 'stun', 'burn', 'poison', 'acid', 'bubble', 'mine', 'swarm'];
 
 export interface BattleSetup {
   hero: Unit;
@@ -40,6 +42,8 @@ export class Battle {
   /** Ultimo nemico scelto dal giocatore: i compagni attaccano lui (fuoco concentrato). */
   private focusUid?: string;
   koCount = 0;
+  /** Danno di ogni acino dello sciame (Uva Sciame): l'ultimo livello usato. */
+  private swarmMult = 0;
 
   constructor(setup: BattleSetup, private readonly rng: Rng, private readonly mods: BattleMods = setup.mods) {
     this.units = [setup.hero, ...setup.companions, ...setup.enemies];
@@ -84,6 +88,7 @@ export class Battle {
       case 'attack':
         this.focusUid = action.targetUid;
         this.useAbility(hero, BASIC_ATTACK, action.targetUid, ev);
+        this.twinStrike(BASIC_ATTACK, action.targetUid, ev);
         break;
       case 'power': {
         const a = this.powers.find((p) => p.id === action.abilityId);
@@ -92,6 +97,7 @@ export class Battle {
         ev.push({ t: 'energy', value: this.energy });
         if (a.target === 'enemy') this.focusUid = action.targetUid;
         this.useAbility(hero, a, action.targetUid, ev, { isPower: true });
+        this.twinStrike(a, action.targetUid, ev, true);
         if (a.effects.some((e) => e.kind === 'extraAction') && !this.checkEnd(ev)) {
           ev.push({ t: 'extraAction', uid: hero.uid });
           return ev; // stesso turno: il protagonista agisce ancora
@@ -111,9 +117,32 @@ export class Battle {
         break;
       }
     }
+    if (!this.checkEnd(ev)) this.swarmStrike(ev);
     this.endTurn(hero);
     if (!this.checkEnd(ev)) this.advance(ev);
     return ev;
+  }
+
+  /** La gemella ripete il colpo dell'eroe (solo la parte di danno), con il suo rapporto. */
+  private twinStrike(a: Ability, chosen: string | undefined, ev: BattleEvent[], isPower = false): void {
+    const twin = this.getStatus(this.hero, 'twin');
+    if (!twin || this.checkEnd(ev)) return;
+    const effects = a.effects.filter((e): e is Extract<Effect, { kind: 'damage' }> => e.kind === 'damage').map((e) => ({ ...e, mult: e.mult * twin.value, lifesteal: undefined }));
+    if (!effects.length) return;
+    this.useAbility(this.hero, { ...a, id: 'twin_strike', name: 'Gemella', effects }, chosen, ev, { isPower, isTwin: true });
+  }
+
+  /** A fine turno dell'eroe ogni acino dello sciame colpisce il bersaglio scelto. */
+  private swarmStrike(ev: BattleEvent[]): void {
+    const sw = this.getStatus(this.hero, 'swarm');
+    if (!sw || sw.value <= 0) return;
+    ev.push({ t: 'swarm', count: sw.value });
+    for (let i = 0; i < sw.value; i++) {
+      const foes = this.enemies();
+      if (!foes.length) break;
+      const t = foes.find((f) => f.uid === this.focusUid) ?? foes[0];
+      this.applyEffect(this.hero, t, { kind: 'damage', mult: this.swarmMult }, ev, false, 'swarm');
+    }
   }
 
   // --- ciclo dei turni ---------------------------------------------------------
@@ -128,6 +157,16 @@ export class Battle {
       this.tickDots(u, ev);
       if (u.hp <= 0) continue;
       this.removeStatus(u, 'guard');
+      const bub = this.getStatus(u, 'bubble');
+      if (bub) {
+        // nella bolla non si agisce; all'ultimo turno la bolla scoppia
+        bub.turns--;
+        const pop = bub.turns <= 0;
+        ev.push({ t: 'bubbled', uid: u.uid, pop });
+        if (pop) { this.removeStatus(u, 'bubble'); this.applyDamage(u, this.mitigate(u, bub.value), ev, 'hero', false, 'pop'); }
+        this.endTurn(u);
+        continue;
+      }
       if (this.hasStatus(u, 'stun')) {
         ev.push({ t: 'stunned', uid: u.uid });
         this.removeStatus(u, 'stun');
@@ -162,15 +201,41 @@ export class Battle {
 
   private endTurn(u: Unit): void {
     for (const s of u.statuses) if (TIMED.includes(s.id)) s.turns--;
-    u.statuses = u.statuses.filter((s) => s.turns > 0 || s.id === 'guard' || s.id === 'stun' || s.id === 'burn' || s.id === 'poison');
+    u.statuses = u.statuses.filter((s) => s.turns > 0 || KEPT.includes(s.id));
   }
 
   private tickDots(u: Unit, ev: BattleEvent[]): void {
-    for (const s of u.statuses.filter((x) => x.id === 'burn' || x.id === 'poison')) {
-      this.applyDamage(u, s.value, ev, u.uid, false, s.id as 'burn' | 'poison');
+    for (const s of u.statuses.filter((x) => x.id === 'burn' || x.id === 'poison' || x.id === 'acid')) {
+      if (u.hp <= 0) break;
+      this.applyDamage(u, s.value, ev, u.uid, false, s.id as 'burn' | 'poison' | 'acid');
+      if (s.id === 'acid') s.value = Math.round(s.value * C.acidGrowth); // l'acido corrode sempre di più
       s.turns--;
     }
-    u.statuses = u.statuses.filter((s) => !((s.id === 'burn' || s.id === 'poison') && s.turns <= 0));
+    u.statuses = u.statuses.filter((s) => !((s.id === 'burn' || s.id === 'poison' || s.id === 'acid') && s.turns <= 0));
+    // mina: esplode all'inizio del turno di chi la porta
+    const mine = this.getStatus(u, 'mine');
+    if (mine && u.hp > 0) {
+      this.removeStatus(u, 'mine');
+      this.applyDamage(u, this.mitigate(u, mine.value), ev, 'hero', false, 'mine');
+    }
+  }
+
+  /** Danno "grezzo" (già moltiplicato per l'ATT di chi lo lancia) ridotto dalla difesa del bersaglio. */
+  private mitigate(target: Unit, raw: number): number {
+    let dmg = raw * (100 / (100 + this.effDef(target) * C.defFactor));
+    if (this.hasStatus(target, 'vulnerable')) dmg *= C.vulnerableMult;
+    return Math.max(1, Math.round(dmg));
+  }
+
+  /** Difesa effettiva: la corazza la alza, l'acido la annulla. */
+  private effDef(u: Unit): number {
+    if (this.hasStatus(u, 'acid')) return 0;
+    return Math.max(0, u.def) * (1 + this.statusValue(u, 'defUp'));
+  }
+
+  /** ATT "grezzo" di chi lancia un potere ritardato (mina, bolla). */
+  private rawPower(actor: Unit, mult: number, isPower: boolean): number {
+    return actor.atk * (1 + this.statusValue(actor, 'atkUp')) * (1 - this.statusValue(actor, 'weak')) * mult * (isPower ? this.mods.powerDamageMult : 1);
   }
 
   private companionTurn(u: Unit, ev: BattleEvent[]): void {
@@ -227,8 +292,23 @@ export class Battle {
     }
   }
 
-  private useAbility(actor: Unit, a: Ability, chosen: string | undefined, ev: BattleEvent[], flags: { isPower?: boolean; isSpecial?: boolean } = {}): void {
+  private useAbility(actor: Unit, a: Ability, chosen: string | undefined, ev: BattleEvent[], flags: { isPower?: boolean; isSpecial?: boolean; isTwin?: boolean } = {}): void {
     ev.push({ t: 'use', uid: actor.uid, ability: a.id, name: a.name, ...flags });
+    // effetti su chi lancia (sciame, gemella): una volta sola, anche se il potere colpisce tutti
+    for (const eff of a.effects) {
+      if (eff.kind === 'swarm') {
+        const cur = this.getStatus(actor, 'swarm');
+        const n = Math.min(eff.max, (cur?.value ?? 0) + eff.count);
+        this.swarmMult = Math.max(this.swarmMult, eff.mult);
+        if (cur) cur.value = n; else actor.statuses.push({ id: 'swarm', turns: 99, value: n });
+        ev.push({ t: 'status', target: actor.uid, status: 'swarm', turns: n });
+      }
+      if (eff.kind === 'twin') {
+        // +1: il turno in corso non deve consumarla
+        this.addStatus(actor, { id: 'twin', turns: eff.turns + 1, value: eff.ratio });
+        ev.push({ t: 'status', target: actor.uid, status: 'twin', turns: eff.turns });
+      }
+    }
     for (const target of this.targets(actor, a, chosen)) {
       for (const eff of a.effects) {
         if (target.hp <= 0 && eff.kind !== 'summon') break;
@@ -237,23 +317,22 @@ export class Battle {
     }
   }
 
-  private applyEffect(actor: Unit, target: Unit, eff: Effect, ev: BattleEvent[], isPower: boolean): void {
+  private applyEffect(actor: Unit, target: Unit, eff: Effect, ev: BattleEvent[], isPower: boolean, kind: DamageKind = 'hit'): void {
     switch (eff.kind) {
       case 'damage': {
         for (let h = 0; h < (eff.hits ?? 1) && target.hp > 0 && actor.hp > 0; h++) {
           if (this.rng.next() < this.statusValue(target, 'evade')) { ev.push({ t: 'dodge', target: target.uid }); continue; }
           const atkUp = this.statusValue(actor, 'atkUp');
-          let dmg = actor.atk * (1 + atkUp) * eff.mult;
+          let dmg = actor.atk * (1 + atkUp) * (1 - this.statusValue(actor, 'weak')) * eff.mult;
           if (isPower) dmg *= this.mods.powerDamageMult;
-          const def = Math.max(0, target.def) * (1 + this.statusValue(target, 'defUp'));
-          dmg *= 100 / (100 + def * C.defFactor);
+          dmg *= 100 / (100 + this.effDef(target) * C.defFactor);
           dmg *= 1 - C.variance + this.rng.next() * C.variance * 2;
           const crit = this.rng.next() < C.critChance;
           if (crit) dmg *= C.critMult;
           if (this.hasStatus(target, 'vulnerable')) dmg *= C.vulnerableMult;
           if (this.hasStatus(target, 'guard')) dmg *= C.guardMult;
           const incoming = Math.max(1, Math.round(dmg));
-          const dealt = this.applyDamage(target, incoming, ev, actor.uid, crit, 'hit');
+          const dealt = this.applyDamage(target, incoming, ev, actor.uid, crit, kind);
           if (eff.lifesteal && dealt > 0) this.heal(actor, Math.round(dealt * eff.lifesteal), ev);
           const refl = this.statusValue(target, 'reflect');
           // lo specchio riflette il colpo intero, anche quello parato dallo scudo
@@ -289,7 +368,28 @@ export class Battle {
         ev.push({ t: 'steal', source: actor.uid, target: target.uid, amount: sh.value });
         break;
       }
-      case 'extraAction': break; // gestita in act()
+      case 'extraAction': case 'swarm': case 'twin': break; // gestite in act() / useAbility()
+      case 'meltShield': {
+        const sh = this.getStatus(target, 'shield');
+        if (!sh || sh.value <= 0) break;
+        this.removeStatus(target, 'shield');
+        ev.push({ t: 'melt', target: target.uid, amount: sh.value });
+        break;
+      }
+      case 'bubble': {
+        const boss = target.kind === 'enemy' && ENEMY_BY_ID.get(target.defId)?.tier === 'boss';
+        const turns = boss ? 1 : eff.turns;
+        this.addStatus(target, { id: 'bubble', turns, value: this.rawPower(actor, eff.popMult, isPower) });
+        ev.push({ t: 'status', target: target.uid, status: 'bubble', turns });
+        break;
+      }
+      case 'mine': {
+        const cur = this.getStatus(target, 'mine');
+        const raw = this.rawPower(actor, eff.mult, isPower);
+        if (cur) cur.value += raw; else target.statuses.push({ id: 'mine', turns: 1, value: raw });
+        ev.push({ t: 'status', target: target.uid, status: 'mine', turns: 1 });
+        break;
+      }
       case 'summon': {
         if (this.alive(actor.side).length >= eff.maxEnemies) break;
         const u = makeEnemyUnit(eff.enemyId, `e${this.nextUid++}`, this.mods.enemyScale);
@@ -304,10 +404,10 @@ export class Battle {
   }
 
   /** Applica danno passando prima dallo scudo; ritorna gli HP effettivamente tolti. */
-  private applyDamage(target: Unit, amount: number, ev: BattleEvent[], source: string, crit: boolean, kind: 'hit' | 'burn' | 'poison' | 'reflect'): number {
+  private applyDamage(target: Unit, amount: number, ev: BattleEvent[], source: string, crit: boolean, kind: DamageKind): number {
     let absorbed = 0;
     const shield = this.getStatus(target, 'shield');
-    if (shield && (kind === 'hit' || kind === 'reflect')) {
+    if (shield && kind !== 'burn' && kind !== 'poison' && kind !== 'acid') {
       absorbed = Math.min(shield.value, amount);
       shield.value -= absorbed;
       if (shield.value <= 0) this.removeStatus(target, 'shield');
@@ -324,6 +424,9 @@ export class Battle {
     dealt = Math.min(dealt, target.hp);
     target.hp -= dealt;
     ev.push({ t: 'damage', source, target: target.uid, amount: dealt, absorbed, crit, kind });
+    // ogni colpo nemico sull'eroe fa scoppiare un acino dello sciame
+    const sw = target.kind === 'hero' && kind === 'hit' && dealt > 0 ? this.getStatus(target, 'swarm') : undefined;
+    if (sw && sw.value > 0) { sw.value--; ev.push({ t: 'swarmLoss', count: sw.value }); }
     if (target.hp <= 0) {
       target.statuses = [];
       if (target.side === 'ally') this.koCount++;

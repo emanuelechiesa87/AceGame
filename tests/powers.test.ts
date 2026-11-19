@@ -32,9 +32,9 @@ describe('Poteri dei frutti', () => {
     }
   });
 
-  it('ci sono 13 frutti con ID unici e almeno 3 iniziali', () => {
-    expect(FRUITS).toHaveLength(13);
-    expect(new Set(FRUITS.map((f) => f.id)).size).toBe(13);
+  it('ci sono 20 frutti con ID unici e almeno 3 iniziali', () => {
+    expect(FRUITS).toHaveLength(20);
+    expect(new Set(FRUITS.map((f) => f.id)).size).toBe(20);
     expect(FRUITS.filter((f) => f.startsUnlocked).length).toBeGreaterThanOrEqual(3);
   });
 
@@ -92,5 +92,95 @@ describe('Poteri dei frutti', () => {
     const ev = use(b, 'fruit_magnet');
     expect(ev.some((e) => e.t === 'steal' && e.amount === 25)).toBe(true);
     expect(b.hasStatus(b.unit('e0')!, 'shield')).toBe(false);
+  });
+
+  // --- frutti della 0.5.5 ---------------------------------------------------------------------
+  it('Morso Vampiro cura l\'eroe con il danno inflitto', () => {
+    const b = setup('fruit_blood');
+    b.hero.hp = 50;
+    const ev = use(b, 'fruit_blood');
+    expect(ev.some((e) => e.t === 'heal' && e.target === 'hero' && e.amount > 0)).toBe(true);
+  });
+
+  it('Nube Puzzolente avvelena e indebolisce tutti: un nemico indebolito colpisce meno forte', () => {
+    const b = setup('fruit_stench', ['en_jelly', 'en_bat']);
+    use(b, 'fruit_stench');
+    for (const u of b.alive('enemy')) { expect(b.hasStatus(u, 'weak')).toBe(true); expect(b.hasStatus(u, 'poison')).toBe(true); }
+    const avg = (weak: boolean) => {
+      let tot = 0;
+      for (let seed = 1; seed <= 40; seed++) {
+        const x = setup('fruit_stone', ['en_pudding_king'], seed);
+        if (weak) x.unit('e0')!.statuses.push({ id: 'weak', turns: 9, value: 0.3 });
+        tot += x.act({ type: 'guard' }).reduce((m, e) => m + (e.t === 'damage' && e.target === 'hero' ? e.amount + e.absorbed : 0), 0);
+      }
+      return tot;
+    };
+    expect(avg(true)).toBeLessThan(avg(false));
+  });
+
+  it('Spruzzo Acido scioglie lo scudo e il suo danno cresce a ogni turno', () => {
+    const b = setup('fruit_acid', ['en_pudding_king']);
+    b.unit('e0')!.statuses.push({ id: 'shield', turns: 3, value: 30 });
+    const ev = use(b, 'fruit_acid');
+    expect(ev.some((e) => e.t === 'melt' && e.amount === 30)).toBe(true);
+    const ticks: number[] = [];
+    let all = ev;
+    for (let i = 0; i < 3 && b.phase === 'awaitingInput'; i++) all = all.concat(b.act({ type: 'guard' }));
+    for (const e of all) if (e.t === 'damage' && e.kind === 'acid') ticks.push(e.amount);
+    expect(ticks.length).toBeGreaterThanOrEqual(2);
+    expect(ticks[1]).toBeGreaterThan(ticks[0]);
+  });
+
+  it('Bolla Prigione: il nemico salta il turno e poi la bolla scoppia', () => {
+    const b = setup('fruit_bubble', ['en_jelly']);
+    b.unit('e0')!.maxHp = b.unit('e0')!.hp = 999;
+    let ev = use(b, 'fruit_bubble');
+    for (let i = 0; i < 2 && b.phase === 'awaitingInput'; i++) ev = ev.concat(b.act({ type: 'guard' }));
+    expect(ev.some((e) => e.t === 'bubbled' && e.uid === 'e0')).toBe(true);
+    expect(ev.some((e) => e.t === 'damage' && e.kind === 'pop' && e.target === 'e0')).toBe(true);
+  });
+
+  it('nei boss la bolla dura al massimo 1 turno', () => {
+    const b = setup('fruit_bubble', ['en_pudding_king']);
+    b.act({ type: 'power', abilityId: 'pw_bubble', targetUid: 'e0' });
+    const b2 = new Battle({
+      hero: makeHeroUnit('Ema', { maxHp: 100, atk: 12, def: 4, spd: 30 }, 100), companions: [],
+      enemies: [makeEnemyUnit('en_pudding_king', 'e0')], powers: [FRUIT_BY_ID.get('fruit_bubble')!.abilities[1]], potions: 0,
+      mods: { powerDamageMult: 1, surviveLethalOnce: false },
+    }, new Rng(3));
+    b2.start(); b2.energy = 5;
+    const ev = b2.act({ type: 'power', abilityId: 'pw_bubble_2', targetUid: 'e0' });
+    const st = ev.find((e) => e.t === 'status' && e.status === 'bubble');
+    expect(st && st.t === 'status' ? st.turns : 0).toBe(1);
+  });
+
+  it('Seme-Mina esplode all\'inizio del turno del nemico', () => {
+    const b = setup('fruit_mine', ['en_pudding_king']);
+    const ev = use(b, 'fruit_mine');
+    const iTurn = ev.findIndex((e) => e.t === 'turn' && e.uid === 'e0');
+    const iBoom = ev.findIndex((e) => e.t === 'damage' && e.kind === 'mine' && e.target === 'e0');
+    expect(iTurn).toBeGreaterThanOrEqual(0);
+    expect(iBoom).toBeGreaterThan(iTurn);
+    expect(b.hasStatus(b.unit('e0')!, 'mine')).toBe(false);
+  });
+
+  it('Grappolo: gli acini attaccano a fine turno e scoppiano quando l\'eroe è colpito', () => {
+    const b = setup('fruit_swarm', ['en_pudding_king']);
+    const ev = use(b, 'fruit_swarm');
+    const sw = ev.find((e) => e.t === 'swarm');
+    expect(sw && sw.t === 'swarm' ? sw.count : 0).toBe(3);
+    expect(ev.filter((e) => e.t === 'damage' && e.kind === 'swarm').length).toBe(3);
+    const hits = ev.filter((e) => e.t === 'damage' && e.target === 'hero' && e.kind === 'hit' && e.amount > 0).length;
+    expect(b.getStatus(b.hero, 'swarm')!.value).toBe(Math.max(0, 3 - hits));
+  });
+
+  it('Doppio: la gemella ripete gli attacchi dell\'eroe per i turni indicati', () => {
+    const b = setup('fruit_twin', ['en_pudding_king']);
+    b.unit('e0')!.maxHp = b.unit('e0')!.hp = 9999;
+    const ev = use(b, 'fruit_twin');
+    expect(ev.some((e) => e.t === 'use' && e.isTwin)).toBe(true);
+    let twins = 0;
+    for (let i = 0; i < 5 && b.phase === 'awaitingInput'; i++) twins += b.act({ type: 'attack', targetUid: 'e0' }).filter((e) => e.t === 'use' && e.isTwin).length;
+    expect(twins).toBe(3); // 3 turni di gemella dopo il turno del potere
   });
 });

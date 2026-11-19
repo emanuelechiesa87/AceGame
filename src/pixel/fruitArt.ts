@@ -10,7 +10,7 @@ import { INK, shade, type Px } from './render';
 
 type Pt = [number, number];
 type ColorFn = (x: number, y: number) => string | undefined;
-type Shape = 'round' | 'apple' | 'drop' | 'tall' | 'peach';
+type Shape = 'round' | 'apple' | 'drop' | 'tall' | 'peach' | 'berry';
 
 const BAYER4 = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map((v) => (v + 0.5) / 16);
 const LIGHT = (() => { const l = [-0.5, -0.62, 0.6]; const n = Math.hypot(...l); return l.map((v) => v / n); })();
@@ -113,6 +113,8 @@ interface Body { cx: number; cy: number; rx: number; ry: number; shape: Shape }
 function bodyInside(b: Body, u: number, v: number): { n: number[]; r: number } | null {
   let a = (u - b.cx) / b.rx, c = (v - b.cy) / b.ry;
   if (b.shape === 'drop') a /= 0.52 + 0.48 * Math.min(1, Math.max(0, (c + 1) / 1.35)) ** 0.7;
+  // fragola: larga in alto, a punta in basso
+  if (b.shape === 'berry') a /= 0.3 + 0.7 * Math.min(1, Math.max(0, (1 - c) / 1.5)) ** 0.8;
   let r = Math.hypot(a, c);
   if (b.shape === 'apple' || b.shape === 'round') {
     const dip = (b.shape === 'apple' ? 0.2 : 0.1) * Math.exp(-((a / 0.22) ** 2)) * Math.max(0, -c);
@@ -224,7 +226,21 @@ function drupelets(k: SkinCtx, step: number): string | undefined {
   return k.tone(base + 0.22 - d * 0.3);
 }
 
-// --- i 13 frutti ------------------------------------------------------------------------
+/** Semi in una griglia sfalsata (fragola). */
+function seeds(k: SkinCtx, step: number, col: string): string | undefined {
+  const row = Math.floor((k.b + 2) / step), off = row % 2 ? step / 2 : 0;
+  const cu = Math.floor((k.a + 2 + off) / step) * step - 2 - off + step / 2, cv = row * step - 2 + step / 2;
+  const d = Math.hypot((k.a - cu) / step, (k.b - cv) / (step * 1.4));
+  if (d < (k.c.hi ? 0.14 : 0.2) && k.edge < 0.9) return k.I > 0.2 ? col : shade(col, -0.3);
+  return undefined;
+}
+/** Bolla: anello con riflesso. */
+function bubbleRing(c: FruitCanvas, u: number, v: number, r: number, col: string): void {
+  c.fill((x, y) => { const d = Math.hypot(x - u, y - v); return d <= r && d > r - Math.max(1.1 / c.N, r * 0.28); }, col);
+  c.dot(u - r * 0.4, v - r * 0.4, '#ffffff', r > 0.05);
+}
+
+// --- i 20 frutti ------------------------------------------------------------------------
 export const FRUIT_DESIGNS: Record<string, FruitDesign> = {
   // Bacca Brace: bacca rosso fuoco, lingue di fiamma in cima, braci che brillano sulla buccia
   fruit_ember: {
@@ -412,5 +428,113 @@ export const FRUIT_DESIGNS: Record<string, FruitDesign> = {
       c.poly([[0.45, 0.3], [0.4, 0.2], [0.44, 0.16], [0.5, 0.25], [0.6, 0.12], [0.57, 0.3]], '#5a3a9a');
     },
     front: (c) => { if (c.hi) { c.dot(0.2, 0.3, '#c9a8ff'); c.dot(0.84, 0.5, '#c9a8ff'); c.dot(0.16, 0.66, '#5a3a9a', true); } },
+  },
+  // Fragola Vampira: fragola cremisi con calice a pipistrello, semi dorati e due "canini"
+  fruit_blood: {
+    body: '#e02848', gem: '#ffe14a', shape: 'berry', box: { cy: 0.58, rx: 0.37, ry: 0.36 },
+    skin: (k) => seeds(k, k.c.hi ? 0.34 : 0.5, '#ffd25a'),
+    back: (c) => {
+      // calice a forma di ali di pipistrello
+      c.polyLit([[0.5, 0.3], [0.12, 0.2], [0.2, 0.28], [0.1, 0.34], [0.3, 0.33]], '#3a7a3a');
+      c.polyLit([[0.5, 0.3], [0.88, 0.2], [0.8, 0.28], [0.9, 0.34], [0.7, 0.33]], '#2f6a30');
+    },
+    top: (c) => { stem(c, 0.5, 0.27, 0.48, 0.12, '#3a7a3a'); leaf(c, 0.4, 0.27, 0.08, -0.2, '#3fb36a'); leaf(c, 0.6, 0.27, 0.08, 0.2, '#3fb36a'); },
+    front: (c) => {
+      c.poly([[0.38, 0.5], [0.46, 0.5], [0.42, 0.64]], '#fff7e6');
+      c.poly([[0.54, 0.5], [0.62, 0.5], [0.58, 0.64]], '#fff7e6');
+      c.ellLit(0.58, 0.72, 0.022, 0.03, '#ff3b5c');
+    },
+    gemAt: [0.5, 0.42], gemSize: 0.08,
+  },
+  // Durian Tanfo: durian giallo-verde tutto spine, con riccioli di puzza verdi
+  fruit_stench: {
+    body: '#b8b432', gem: '#a8f06a', shape: 'round', box: { cy: 0.6, rx: 0.37, ry: 0.33 },
+    skin: (k) => {
+      const f = k.c.hi ? 3.6 : 2.6;
+      const p = k.a * f + 0.5, q = k.b * f + (Math.floor(k.a * f + 0.5) % 2 ? 0.5 : 0);
+      const dp = Math.abs(p - Math.round(p)), dq = Math.abs(q - Math.round(q));
+      const spike = 1 - Math.max(dp, dq) * 2; // piramidi
+      if (spike > 0.55) return k.tone((k.I + 0.32) / 1.3 + 0.25);
+      if (spike < 0.12) return k.tone((k.I + 0.32) / 1.3 - 0.4);
+      return undefined;
+    },
+    back: (c, b) => {
+      // spine sul profilo
+      for (let i = 0; i < 12; i++) {
+        const a = (i / 12) * Math.PI * 2, u = b.cx + Math.cos(a) * b.rx, v = b.cy + Math.sin(a) * b.ry;
+        c.poly([[u - Math.sin(a) * 0.04, v + Math.cos(a) * 0.04], [u + Math.cos(a) * 0.07, v + Math.sin(a) * 0.07], [u + Math.sin(a) * 0.04, v - Math.cos(a) * 0.04]], '#8a8622');
+      }
+    },
+    top: (c) => { stem(c, 0.5, 0.29, 0.5, 0.14, '#6b4a2a'); },
+    front: (c) => {
+      const wisp = (x0: number, y0: number, ph: number) => { for (let t = 0; t <= 1; t += 0.5 / (c.N * 0.18)) c.dot(x0 + Math.sin(t * 7 + ph) * 0.03, y0 - t * 0.18, t > 0.6 ? '#d6f08a' : '#8fd04a'); };
+      wisp(0.2, 0.36, 0); wisp(0.8, 0.4, 2); if (c.hi) wisp(0.66, 0.22, 4);
+    },
+  },
+  // Limone Acido: limone giallo-lime con le punte, pori e gocce d'acido che colano
+  fruit_acid: {
+    body: '#f2e43a', gem: '#7bf0a0', shape: 'round', box: { cy: 0.58, rx: 0.36, ry: 0.28 },
+    skin: (k) => (hash(k.x, k.y, 9) < (k.c.hi ? 0.06 : 0.04) && k.I < 0.7 ? k.tone((k.I + 0.32) / 1.3 - 0.35) : undefined),
+    back: (c, b) => { c.ellLit(b.cx - b.rx - 0.02, b.cy + 0.01, 0.06, 0.045, '#e6d630'); c.ellLit(b.cx + b.rx + 0.02, b.cy - 0.01, 0.06, 0.045, '#d8c828'); },
+    top: (c) => { stem(c, 0.5, 0.32, 0.53, 0.2, '#5a8a2a'); leaf(c, 0.66, 0.2, 0.11, 0.35, '#3fb36a'); },
+    front: (c) => {
+      // goccia d'acido che cade di lato e sfrigola
+      c.ellLit(0.86, 0.62, 0.045, 0.06, '#b6f04a');
+      c.ellLit(0.8, 0.84, 0.035, 0.045, '#b6f04a');
+      if (c.hi) { c.dot(0.72, 0.9, '#d8ff7a', true); c.dot(0.9, 0.92, '#d8ff7a'); c.dot(0.66, 0.84, '#ffffff'); c.dot(0.2, 0.3, '#ffffff'); }
+    },
+  },
+  // Arancia Bolla: arancia succosa con pori, foglia e bolle che le girano intorno
+  fruit_bubble: {
+    body: '#ff8c1a', gem: '#5fd3ff', shape: 'round', box: { cy: 0.6, rx: 0.33, ry: 0.32 },
+    skin: (k) => (k.c.hi && hash(k.x, k.y, 10) < 0.07 && k.I > -0.2 ? k.tone((k.I + 0.32) / 1.3 + 0.2) : undefined),
+    top: (c) => { stem(c, 0.5, 0.3, 0.5, 0.2); leaf(c, 0.62, 0.2, 0.1, 0.3, '#3fb36a'); },
+    front: (c) => {
+      bubbleRing(c, 0.18, 0.34, c.hi ? 0.08 : 0.1, '#bfeaff');
+      bubbleRing(c, 0.84, 0.46, 0.06, '#ffd8a8');
+      if (c.hi) { bubbleRing(c, 0.78, 0.16, 0.05, '#bfeaff'); bubbleRing(c, 0.12, 0.8, 0.04, '#ffd8a8'); }
+    },
+  },
+  // Anguria Mina: anguria a strisce con la miccia accesa, come una bomba
+  fruit_mine: {
+    body: '#3fae4a', gem: '#ff3b30', shape: 'round', box: { cy: 0.62, rx: 0.35, ry: 0.32 },
+    skin: (k) => {
+      const stripe = Math.sin(k.a * 7.5 + Math.sin(k.b * 6) * 0.6);
+      if (stripe > 0.45) return k.tone((k.I + 0.32) / 1.3 - 0.5);
+      return undefined;
+    },
+    top: (c) => {
+      c.ellLit(0.5, 0.31, 0.07, 0.04, '#5a5a6e');
+      c.line(0.5, 0.28, 0.56, 0.18, '#8a5232', 0.05);
+      c.line(0.56, 0.18, 0.66, 0.13, '#8a5232', 0.05);
+      sparkle(c, 0.7, 0.1, '#ffe14a', c.hi ? 3 : 1);
+      c.dot(0.7, 0.1, '#ffffff', true);
+      if (c.hi) { c.dot(0.78, 0.05, '#ff9a2a'); c.dot(0.8, 0.14, '#ffe14a'); }
+    },
+  },
+  // Uva Sciame: grappolo viola con un acino che vola via ronzando
+  fruit_swarm: {
+    body: '#8a52e0', gem: '#ffe14a', shape: 'round', box: { cx: 0.47, cy: 0.66, rx: 0.17, ry: 0.17 },
+    back: (c) => {
+      for (const [u, v] of [[0.3, 0.38], [0.5, 0.36], [0.7, 0.38], [0.38, 0.54], [0.62, 0.52], [0.66, 0.68], [0.52, 0.82]] as Pt[]) c.ellLit(u, v, 0.115, 0.115, '#7a44cc');
+    },
+    top: (c) => { stem(c, 0.5, 0.26, 0.5, 0.1, '#5a8a2a'); leaf(c, 0.66, 0.15, 0.11, 0.4, '#3fb36a'); },
+    front: (c) => {
+      c.ellLit(0.86, 0.22, 0.07, 0.07, '#9a62f0');
+      if (c.hi) { c.line(0.74, 0.27, 0.68, 0.29, '#d9b8ff', 0.02); c.line(0.75, 0.21, 0.69, 0.21, '#d9b8ff', 0.02); c.dot(0.86, 0.12, '#ffffff'); c.dot(0.92, 0.13, '#ffffff'); }
+    },
+    gemSize: 0.07,
+  },
+  // Ciliegia Gemella: due ciliegie con un solo picciolo
+  fruit_twin: {
+    body: '#e8264a', gem: '#fff1df', shape: 'round', box: { cx: 0.64, cy: 0.66, rx: 0.22, ry: 0.22 },
+    back: (c) => {
+      c.line(0.36, 0.48, 0.5, 0.12, '#3a7a3a', 0.05);
+      c.line(0.64, 0.46, 0.5, 0.12, '#3a7a3a', 0.05);
+      leaf(c, 0.64, 0.12, 0.12, -0.3, '#3fb36a');
+      c.ellLit(0.34, 0.62, 0.21, 0.21, '#d81f42');
+    },
+    front: (c) => { if (c.hi) { c.dot(0.26, 0.54, '#ffffff', true); } },
+    gemAt: [0.64, 0.68], gemSize: 0.085,
   },
 };

@@ -17,10 +17,20 @@ import { Button } from '../ui/Button';
 import { UnitView } from '../ui/battle/UnitView';
 import { addBody, addTitle } from '../ui/text';
 import { banner, floatText, steppedRect, wait } from '../ui/widgets';
+
+/** Esplosione di quadretti (mine, bolle che scoppiano): solo grafica. */
+function boom(scene: Phaser.Scene, x: number, y: number, colors: number[], radius: number): void {
+  for (let i = 0; i < 18; i++) {
+    const a = (i / 18) * Math.PI * 2, d = radius * (0.5 + Phaser.Math.FloatBetween(0, 0.6));
+    const p = scene.add.rectangle(x, y, 16, 16, colors[i % colors.length]).setStrokeStyle(3, 0x1f1633, 0.6).setDepth(320);
+    scene.tweens.add({ targets: p, x: x + Math.cos(a) * d, y: y + Math.sin(a) * d, alpha: 0, scale: 0.3, duration: 480, ease: 'Quad.easeOut', onComplete: () => p.destroy() });
+  }
+}
 import { BaseScene, visibleBounds } from './BaseScene';
 import { allySpots, frameFor, placeEnemy, type BattleFrame, type Box } from './battleLayout';
 
-const STATUS_NAME: Record<StatusId, string> = { burn: 'Bruciatura!', poison: 'Veleno!', stun: 'Congelato!', shield: 'Scudo', atkUp: 'Furia!', vulnerable: 'Vulnerabile!', guard: 'In guardia', evade: 'Nebbia!', defUp: 'Corazza!', slow: 'Appiccicato!', reflect: 'Specchio!' };
+const STATUS_NAME: Record<StatusId, string> = { burn: 'Bruciatura!', poison: 'Veleno!', stun: 'Congelato!', shield: 'Scudo', atkUp: 'Furia!', vulnerable: 'Vulnerabile!', guard: 'In guardia', evade: 'Nebbia!', defUp: 'Corazza!', slow: 'Appiccicato!', reflect: 'Specchio!',
+  weak: 'Tanfo! -ATT', acid: 'Acido!', bubble: 'Nella bolla!', mine: 'Mina!', swarm: 'Sciame!', twin: 'Gemella!' };
 
 /**
  * Battaglia a turni. Il motore (Battle) decide tutto; la scena anima gli eventi
@@ -371,6 +381,14 @@ export class BattleScene extends BaseScene {
         case 'use': {
           const v = this.views.get(e.uid);
           const who = this.battle.unit(e.uid)!;
+          if (e.isTwin) {
+            // la gemella ripete il colpo: scatta lei, non l'eroe
+            const next = events.slice(idx + 1).find((x) => x.t === 'damage' && x.source === e.uid) as Extract<BattleEvent, { t: 'damage' }> | undefined;
+            const tv = next ? this.views.get(next.target) : undefined;
+            this.log.setText('La gemella ripete il colpo!');
+            if (v && tv) await v.twinLunge({ x: tv.x, y: tv.root.y }, s);
+            break;
+          }
           this.log.setText(`${who.name}: ${e.name}`);
           if (e.isPower || e.isSpecial) {
             if (v) this.actionCam(v.x, v.centerY, 1.1, 700 / s);
@@ -399,7 +417,11 @@ export class BattleScene extends BaseScene {
           if (!v) break;
           v.refresh();
           if (e.absorbed > 0) floatText(this, v.x + 40, v.centerY - 30, `-${e.absorbed}🛡`, '#9cc8ff', 30, s);
-          const col = e.kind === 'burn' ? '#ff8a3d' : e.kind === 'poison' ? '#9be06a' : e.kind === 'reflect' ? '#9fe8ff' : e.crit ? '#ffe14a' : '#ffffff';
+          const KCOL: Record<string, string> = { burn: '#ff8a3d', poison: '#9be06a', reflect: '#9fe8ff', acid: '#d8f04a', mine: '#ff9a2a', pop: '#ffb45f', swarm: '#c9a8ff' };
+          const col = KCOL[e.kind] ?? (e.crit ? '#ffe14a' : '#ffffff');
+          if (e.kind === 'mine') { this.cameras.main.shake(260 / s, 0.014); boom(this, v.x, v.root.y - 20, [0xff9a2a, 0xffe14a, 0x3fae4a, 0xe4342f], 160); floatText(this, v.x, v.topY, 'BOOM!', '#ffcf3a', 52, s); }
+          if (e.kind === 'pop') { boom(this, v.x, v.centerY, [0xffb45f, 0xffffff, 0xffd8a8], 120); floatText(this, v.x, v.topY, 'POP!', '#ffd8a8', 48, s); }
+          if (e.kind === 'swarm') { if (e.amount > 0 || e.absorbed === 0) floatText(this, v.x + Phaser.Math.Between(-40, 40), v.centerY + Phaser.Math.Between(-30, 30), String(e.amount), col, 34, s); v.refresh(); await wait(this, 70 / s); break; }
           if (e.amount > 0 || e.absorbed === 0) floatText(this, v.x, v.centerY, `${e.crit ? 'CRIT! ' : ''}${e.amount}`, col, e.crit ? 60 : 50, s);
           if (e.amount > 0) { if (e.crit) this.cameras.main.shake(120 / s, 0.01); await v.hit(s); }
           else await wait(this, 160 / s);
@@ -429,6 +451,16 @@ export class BattleScene extends BaseScene {
         case 'intent': { const u = this.battle.unit(e.uid); const v = this.views.get(e.uid); if (u && v) v.setIntent(e.intent, ENEMY_BY_ID.get(u.defId)!.moves[e.move].name); break; }
         case 'energy': case 'charge': this.updateHud(); break;
         case 'end': break;
+        case 'melt': { const v = this.views.get(e.target); if (v) { v.refresh(); floatText(this, v.x, v.topY, `-${e.amount} scudo sciolto!`, '#d8f04a', 30, s); await wait(this, 200 / s); } break; }
+        case 'bubbled': { const v = this.views.get(e.uid); if (v) { if (!e.pop) floatText(this, v.x, v.topY, 'NELLA BOLLA', '#ffd8a8', 34, s); await wait(this, 300 / s); v.refresh(); } break; }
+        case 'swarm': {
+          const hv = this.views.get('hero');
+          const tv = this.views.get(this.currentTarget() ?? '');
+          this.log.setText(`Lo sciame attacca! (${e.count} acini)`);
+          if (hv && tv) { hv.flingGrapes({ x: tv.x, y: tv.centerY }, s); await wait(this, 260 / s); }
+          break;
+        }
+        case 'swarmLoss': { this.views.get('hero')?.refresh(); break; }
       }
     }
     void lastUser;

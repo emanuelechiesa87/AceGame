@@ -34,11 +34,12 @@ export class CollectionScene extends BaseScene {
     const inPool = FRUITS.length - GameSession.lockedFruitIds().length;
     addBody(this, 360, 190, `nel pool: ${inPool}`, 18, '#6fe08a');
     FRUITS.forEach((f, i) => {
-      const x = 105 + (i % 4) * 170, y = 260 + Math.floor(i / 4) * 105;
+      // 20 frutti: griglia 5×4
+      const x = 76 + (i % 5) * 142, y = 252 + Math.floor(i / 5) * 100;
       const known = s.discoveredFruitIds.includes(f.id);
-      const ic = icon(this, x, y - 8, iconKey('fruit', f.id), 72);
+      const ic = icon(this, x, y - 10, iconKey('fruit', f.id), 62);
       if (!known) ic.setTintFill(0x3a2414);
-      addBody(this, x, y + 38, known ? f.name : '???', 17, known ? '#fff7e6' : '#a89580');
+      addBody(this, x, y + 36, known ? f.name : '???', 15, known ? '#fff7e6' : '#a89580').setWordWrapWidth(134).setAlign('center').setLineSpacing(-4);
     });
 
     const ar = ARTIFACTS.filter((a) => s.discoveredArtifactIds.includes(a.id));

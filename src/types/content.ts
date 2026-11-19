@@ -2,7 +2,9 @@
  *  dopo il rilascio, perché finiscono nei salvataggi. */
 
 export type Rarity = 'common' | 'rare' | 'epic';
-export type StatusId = 'burn' | 'poison' | 'stun' | 'shield' | 'atkUp' | 'vulnerable' | 'guard' | 'evade' | 'defUp' | 'slow' | 'reflect';
+export type StatusId = 'burn' | 'poison' | 'stun' | 'shield' | 'atkUp' | 'vulnerable' | 'guard' | 'evade' | 'defUp' | 'slow' | 'reflect'
+  // dalla 0.5.5 (fase 4): tanfo (-ATT), acido (danno che cresce, DIF annullata), bolla, mina, sciame di acini, gemella
+  | 'weak' | 'acid' | 'bubble' | 'mine' | 'swarm' | 'twin';
 export type TargetRule = 'enemy' | 'allEnemies' | 'self' | 'allAllies' | 'lowestAlly';
 export type Intent = 'attack' | 'heavy' | 'defend' | 'debuff' | 'special';
 
@@ -16,7 +18,17 @@ export type Effect =
   | { kind: 'stealShield' }
   /** Chi usa l'abilità agisce di nuovo subito (solo protagonista). */
   | { kind: 'extraAction' }
-  | { kind: 'summon'; enemyId: string; maxEnemies: number };
+  | { kind: 'summon'; enemyId: string; maxEnemies: number }
+  /** Scioglie lo scudo del bersaglio (senza rubarlo). */
+  | { kind: 'meltShield' }
+  /** Chiude il bersaglio in una bolla: salta i turni, poi la bolla scoppia (danno `popMult`). I boss ci restano 1 turno. */
+  | { kind: 'bubble'; turns: number; popMult: number }
+  /** Piazza una mina: esplode all'inizio del prossimo turno del bersaglio (danno `mult`). */
+  | { kind: 'mine'; mult: number }
+  /** Aggiunge acini allo sciame dell'eroe: a fine turno ognuno colpisce il bersaglio (danno `mult`). */
+  | { kind: 'swarm'; count: number; mult: number; max: number }
+  /** Gemella: per `turns` turni ripete gli attacchi e i poteri dell'eroe con il `ratio` del danno. */
+  | { kind: 'twin'; turns: number; ratio: number };
 
 export interface Ability {
   id: string;
@@ -35,7 +47,8 @@ export interface FruitDef {
   id: string;
   name: string;
   rarity: Rarity;
-  element: 'fire' | 'ice' | 'storm' | 'stone' | 'life' | 'shadow' | 'elastic' | 'mist' | 'beast' | 'glue' | 'mirror' | 'time' | 'magnet';
+  element: 'fire' | 'ice' | 'storm' | 'stone' | 'life' | 'shadow' | 'elastic' | 'mist' | 'beast' | 'glue' | 'mirror' | 'time' | 'magnet'
+    | 'blood' | 'stench' | 'acid' | 'bubble' | 'mine' | 'swarm' | 'twin';
   color: string;
   description: string;
   passive: StatMods;

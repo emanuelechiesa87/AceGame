@@ -372,6 +372,133 @@ const FX: Record<string, Fx> = {
     shake(scene, 200 / s, 0.012);
     await wait(scene, 300 / s);
   },
+
+  // --- dalla 0.5.5 (fase 4) ---------------------------------------------------------------------
+  /** Fragola Vampira: due canini rossi incrociati sul bersaglio, gocce rosse che tornano all'eroe. Lv III: notte rossa su tutti. */
+  fruit_blood: async ({ scene, caster, targets, level, speed: s }) => {
+    const red = [0xe02848, 0xff5f6d, 0x8a1030, 0xffd6de];
+    await gather(scene, hand(caster).x, hand(caster).y, red, 10 + level * 5, 360 / s);
+    if (level >= 3) flash(scene, 0x8a1030, 0.4, 500 / s);
+    await Promise.all(targets.map(async (t, i) => {
+      await wait(scene, (i * 90) / s);
+      void slash(scene, t.x - 16, t.y, 150 + level * 20, 62, 0xe02848, 14 + level * 2, 120 / s);
+      await slash(scene, t.x + 16, t.y, 150 + level * 20, 118, 0xfff7e6, 12 + level * 2, 120 / s);
+      burst(scene, t.x, t.y, red, 12 + level * 4, 110 + level * 20, 420 / s, 12);
+    }));
+    shake(scene, 180 / s, 0.01 + level * 0.002);
+    // il sangue torna all'eroe: cura
+    await Promise.all(targets.flatMap((t) => Array.from({ length: 3 + level }, (_, k) => wait(scene, (k * 60) / s).then(() => shoot(scene, { x: t.x, y: t.y }, { x: caster.x, y: caster.y }, 10, 0xe02848, red, 360 / s, 80)))));
+    void ring(scene, caster.x, caster.y, 0xff5f6d, 200, 400 / s);
+  },
+
+  /** Durian Tanfo: nube verde che rotola sui nemici e ci resta sopra a ristagnare. */
+  fruit_stench: async ({ scene, caster, targets, level, speed: s }) => {
+    const gas = [0x9bd03a, 0xc9c23a, 0x6f9a2a, 0xe8f0a0];
+    const puffs: Phaser.GameObjects.Rectangle[] = [];
+    for (let i = 0; i < 18 + level * 6; i++) {
+      const t = targets[i % targets.length];
+      const p = sq(scene, caster.x + R(-30, 30), caster.y + R(-30, 30), R(14, 24), gas[i % 4], 0.85);
+      puffs.push(p);
+      scene.tweens.add({ targets: p, x: t.x + R(-90, 90), y: t.y + R(-80, 40), duration: R(380, 620) / s, ease: 'Sine.easeOut', delay: (i * 14) / s });
+    }
+    if (level >= 3) flash(scene, 0x9bd03a, 0.3, 600 / s);
+    await wait(scene, 680 / s);
+    for (const t of targets) {
+      for (let i = 0; i < 4 + level; i++) {
+        // riccioli di puzza che salgono
+        const x0 = t.x + R(-60, 60);
+        for (let k = 0; k < 5; k++) {
+          const p = sq(scene, x0 + Math.sin(k) * 10, t.top - k * 18, 8, 0x9bd03a);
+          scene.tweens.add({ targets: p, y: p.y - 60, x: p.x + Math.sin(k + 1) * 14, alpha: 0, duration: 700 / s, delay: (i * 80 + k * 40) / s, onComplete: () => p.destroy() });
+        }
+      }
+    }
+    await tw(scene, { targets: puffs, alpha: 0, y: '-=40', duration: 600 / s });
+    puffs.forEach((p) => p.destroy());
+  },
+
+  /** Limone Acido: spruzzo di acido ad arco, schizzi che colano. Lv III: pioggia acida dall'alto. */
+  fruit_acid: async ({ scene, caster, targets, level, speed: s }) => {
+    const acid = [0xd8f04a, 0xb6f04a, 0xf2e43a, 0xffffff];
+    if (level >= 3) {
+      flash(scene, 0xd8f04a, 0.28, 400 / s);
+      await Promise.all(targets.flatMap((t) => Array.from({ length: 6 + level * 2 }, (_, k) => wait(scene, (k * 45) / s).then(() => shoot(scene, { x: t.x + R(-60, 60), y: t.top - 420 }, { x: t.x + R(-50, 50), y: t.y + R(-30, 40) }, 10, 0xd8f04a, acid, 280 / s)))));
+    } else await Promise.all(targets.map((t) => shoot(scene, hand(caster), { x: t.x, y: t.y }, 22 + level * 6, 0xd8f04a, acid, 340 / s, 120)));
+    for (const t of targets) {
+      burst(scene, t.x, t.y, acid, 14 + level * 4, 130, 480 / s, 12, 90);
+      for (let i = 0; i < 4 + level * 2; i++) {
+        const d = sq(scene, t.x + R(-50, 50), t.y + R(-20, 30), 8, 0xb6f04a);
+        scene.tweens.add({ targets: d, y: d.y + R(60, 120), alpha: 0, duration: R(500, 800) / s, ease: 'Quad.easeIn', onComplete: () => d.destroy() });
+      }
+    }
+    shake(scene, 160 / s, 0.008 + level * 0.002);
+    await wait(scene, 380 / s);
+  },
+
+  /** Arancia Bolla: bolle che partono dalla mano e si gonfiano attorno ai nemici. */
+  fruit_bubble: async ({ scene, caster, targets, level, speed: s }) => {
+    const bub = (x: number, y: number, r: number) => {
+      const g = scene.add.graphics().setDepth(DEPTH);
+      g.lineStyle(8, COLORS.ink, 0.6).strokeCircle(0, 0, r).lineStyle(5, 0xffd8a8, 1).strokeCircle(0, 0, r).fillStyle(0xffffff, 0.9).fillRect(-r * 0.5, -r * 0.55, 8, 6);
+      return g.setPosition(x, y);
+    };
+    for (let i = 0; i < 6 + level * 3; i++) {
+      const b = bub(hand(caster).x, hand(caster).y, R(10, 22));
+      scene.tweens.add({ targets: b, x: b.x + R(-60, 160), y: b.y - R(80, 260), alpha: 0, duration: R(600, 1000) / s, onComplete: () => b.destroy() });
+    }
+    await Promise.all(targets.map(async (t, i) => {
+      await wait(scene, (i * 80) / s);
+      const b = bub(hand(caster).x, hand(caster).y, 26);
+      await tw(scene, { targets: b, x: t.x, y: t.y, duration: 340 / s, ease: 'Sine.easeInOut' });
+      await tw(scene, { targets: b, scale: 3.4 + level * 0.2, duration: 240 / s, ease: 'Back.easeOut' });
+      scene.tweens.add({ targets: b, alpha: 0, duration: 260 / s, onComplete: () => b.destroy() });
+    }));
+    await wait(scene, 160 / s);
+  },
+
+  /** Anguria Mina: semi neri lanciati ad arco che si piantano ai piedi dei nemici e iniziano a lampeggiare. */
+  fruit_mine: async ({ scene, caster, targets, level, speed: s }) => {
+    await gather(scene, hand(caster).x, hand(caster).y, [0x3fae4a, 0xe4342f, 0x1f1633], 8 + level * 4, 320 / s);
+    await Promise.all(targets.map(async (t, i) => {
+      await wait(scene, (i * 110) / s);
+      const feet = { x: t.x + 30, y: t.root.y - 6 };
+      await shoot(scene, hand(caster), feet, 12, 0x1f1633, [0x3fae4a, 0x1f1633], 420 / s, 200);
+      void ring(scene, feet.x, feet.y, 0xff3b30, 120, 360 / s, 6);
+      burst(scene, feet.x, feet.y, [0x8a5232, 0x3fae4a], 8, 60, 300 / s, 8);
+    }));
+    await wait(scene, 200 / s);
+  },
+
+  /** Uva Sciame: acini che ronzano attorno all'eroe e poi si lanciano a sciame. */
+  fruit_swarm: async ({ scene, caster, targets, level, speed: s }) => {
+    const grape = [0x8a52e0, 0x6a34b8, 0xb07bff];
+    const n = 8 + level * 4;
+    const bees = Array.from({ length: n }, (_, i) => sq(scene, caster.x + Math.cos(i) * 90, caster.y + Math.sin(i) * 50, 10, grape[i % 3]));
+    const spin = { a: 0 };
+    await tw(scene, { targets: spin, a: Math.PI * 2, duration: 520 / s, onUpdate: () => bees.forEach((b, i) => b.setPosition(caster.x + Math.cos(spin.a * 2 + i) * (70 + (i % 3) * 20), caster.y - 40 + Math.sin(spin.a * 2 + i) * 40)) });
+    await Promise.all(bees.map((b, i) => {
+      const t = targets[i % targets.length];
+      return tw(scene, { targets: b, x: t.x + R(-40, 40), y: t.y + R(-50, 50), duration: R(220, 380) / s, delay: (i * 18) / s, ease: 'Quad.easeIn' }).then(() => { burst(scene, b.x, b.y, grape, 4, 40, 260 / s, 8); b.destroy(); });
+    }));
+    shake(scene, 140 / s, 0.008);
+  },
+
+  /** Ciliegia Gemella: lampo rosa, la gemella compare e i due colpi si incrociano. */
+  fruit_twin: async ({ scene, caster, targets, level, speed: s }) => {
+    const cherry = [0xe8264a, 0xff8fa8, 0xffffff];
+    flash(scene, 0xff8fa8, 0.3, 360 / s);
+    void ring(scene, caster.x - 70, caster.y, 0xff8fa8, 240, 420 / s);
+    void ring(scene, caster.x, caster.y, 0xe8264a, 240, 420 / s);
+    await wait(scene, 240 / s);
+    await Promise.all(targets.map(async (t, i) => {
+      await wait(scene, (i * 80) / s);
+      void slash(scene, t.x, t.y, 170 + level * 16, 45, 0xe8264a, 14 + level * 2, 110 / s);
+      await wait(scene, 90 / s);
+      await slash(scene, t.x, t.y, 170 + level * 16, 135, 0xff8fa8, 14 + level * 2, 110 / s);
+      burst(scene, t.x, t.y, cherry, 12 + level * 4, 120, 400 / s, 12);
+    }));
+    shake(scene, 160 / s, 0.01);
+  },
 };
 
 /** Riproduce l'animazione del potere del frutto. */

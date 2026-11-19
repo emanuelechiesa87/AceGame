@@ -169,6 +169,91 @@ export const FRUITS: FruitDef[] = [
       lv('pw_magnet_5', 'Campo Gravitazionale', 'Ruba gli scudi, danno 260% a TUTTI, vulnerabili per 3 turni e 30% di bloccarli.', 3, 'allEnemies', [{ kind: 'stealShield' }, { kind: 'damage', mult: 2.6 }, { kind: 'status', status: 'vulnerable', turns: 3 }, { kind: 'status', status: 'stun', turns: 1, chance: 0.3 }]),
     ],
   },
+  // --- dalla 0.5.5 (fase 4 della 0.6): 7 frutti con meccaniche nuove -----------------------------
+  {
+    id: 'fruit_blood', name: 'Fragola Vampira', rarity: 'common', element: 'blood', color: '#e8304f',
+    description: 'Ha due semi più lunghi degli altri. Sembrano canini.',
+    passive: { atk: 1, maxHp: 5 }, startsUnlocked: false,
+    abilities: [
+      lv('pw_blood', 'Morso Vampiro', 'Danno 190% e ti curi del 60% del danno inflitto.', 2, 'enemy', [{ kind: 'damage', mult: 1.9, lifesteal: 0.6 }]),
+      lv('pw_blood_2', 'Morso Vampiro II', 'Danno 230% e ti curi del 70% del danno inflitto.', 2, 'enemy', [{ kind: 'damage', mult: 2.3, lifesteal: 0.7 }]),
+      lv('pw_blood_3', 'Banchetto Rosso', 'Danno 170% a TUTTI e ti curi del 40% del danno inflitto.', 3, 'allEnemies', [{ kind: 'damage', mult: 1.7, lifesteal: 0.4 }]),
+      lv('pw_blood_4', 'Banchetto Rosso II', 'Danno 210% a TUTTI e ti curi del 45% del danno inflitto.', 3, 'allEnemies', [{ kind: 'damage', mult: 2.1, lifesteal: 0.45 }]),
+      lv('pw_blood_5', 'Notte Cremisi', 'Danno 250% a TUTTI, ti curi del 50% del danno e vulnerabili per 2 turni.', 3, 'allEnemies', [{ kind: 'damage', mult: 2.5, lifesteal: 0.5 }, { kind: 'status', status: 'vulnerable', turns: 2 }]),
+    ],
+  },
+  {
+    id: 'fruit_stench', name: 'Durian Tanfo', rarity: 'common', element: 'stench', color: '#c9c23a',
+    description: 'Si sente da tre isole di distanza. I gabbiani svengono.',
+    passive: { def: 1, maxHp: 6 }, startsUnlocked: false,
+    abilities: [
+      lv('pw_stench', 'Nube Puzzolente', 'Danno 100% a TUTTI, veleno (4/turno) per 3 turni e -20% ATT per 2 turni.', 2, 'allEnemies', [{ kind: 'damage', mult: 1 }, { kind: 'status', status: 'poison', turns: 3, value: 4 }, { kind: 'status', status: 'weak', turns: 2, value: 0.2 }]),
+      lv('pw_stench_2', 'Nube Puzzolente II', 'Danno 120% a TUTTI, veleno (6/turno) per 3 turni e -25% ATT per 3 turni.', 2, 'allEnemies', [{ kind: 'damage', mult: 1.2 }, { kind: 'status', status: 'poison', turns: 3, value: 6 }, { kind: 'status', status: 'weak', turns: 3, value: 0.25 }]),
+      lv('pw_stench_3', 'Miasma', 'Danno 150% a TUTTI, veleno (8/turno) per 3 turni e -30% ATT per 3 turni.', 3, 'allEnemies', [{ kind: 'damage', mult: 1.5 }, { kind: 'status', status: 'poison', turns: 3, value: 8 }, { kind: 'status', status: 'weak', turns: 3, value: 0.3 }]),
+      lv('pw_stench_4', 'Miasma II', 'Danno 180% a TUTTI, veleno (10/turno) per 3 turni e -35% ATT per 3 turni.', 3, 'allEnemies', [{ kind: 'damage', mult: 1.8 }, { kind: 'status', status: 'poison', turns: 3, value: 10 }, { kind: 'status', status: 'weak', turns: 3, value: 0.35 }]),
+      lv('pw_stench_5', 'Tanfo Leggendario', 'Danno 220% a TUTTI, veleno (13/turno) per 4 turni, -40% ATT per 3 turni e -30% VEL.', 3, 'allEnemies', [{ kind: 'damage', mult: 2.2 }, { kind: 'status', status: 'poison', turns: 4, value: 13 }, { kind: 'status', status: 'weak', turns: 3, value: 0.4 }, { kind: 'status', status: 'slow', turns: 2, value: 0.3 }]),
+    ],
+  },
+  {
+    id: 'fruit_acid', name: 'Limone Acido', rarity: 'rare', element: 'acid', color: '#e6f04a',
+    description: 'Una goccia buca il ponte. Due bucano la stiva.',
+    passive: { atk: 2 }, startsUnlocked: false,
+    abilities: [
+      lv('pw_acid', 'Spruzzo Acido', 'Scioglie lo scudo, danno 170% e acido per 3 turni: 6 danni che crescono ogni turno, DIF annullata.', 2, 'enemy', [{ kind: 'meltShield' }, { kind: 'damage', mult: 1.7 }, { kind: 'status', status: 'acid', turns: 3, value: 6 }]),
+      lv('pw_acid_2', 'Spruzzo Acido II', 'Scioglie lo scudo, danno 210% e acido (9, cresce ogni turno) per 3 turni.', 2, 'enemy', [{ kind: 'meltShield' }, { kind: 'damage', mult: 2.1 }, { kind: 'status', status: 'acid', turns: 3, value: 9 }]),
+      lv('pw_acid_3', 'Pioggia Acida', 'Scioglie gli scudi, danno 150% a TUTTI e acido (9, cresce) per 3 turni.', 3, 'allEnemies', [{ kind: 'meltShield' }, { kind: 'damage', mult: 1.5 }, { kind: 'status', status: 'acid', turns: 3, value: 9 }]),
+      lv('pw_acid_4', 'Pioggia Acida II', 'Scioglie gli scudi, danno 185% a TUTTI e acido (12, cresce) per 3 turni.', 3, 'allEnemies', [{ kind: 'meltShield' }, { kind: 'damage', mult: 1.85 }, { kind: 'status', status: 'acid', turns: 3, value: 12 }]),
+      lv('pw_acid_5', 'Diluvio Corrosivo', 'Scioglie gli scudi, danno 220% a TUTTI, acido (15, cresce) per 4 turni e vulnerabili per 2 turni.', 3, 'allEnemies', [{ kind: 'meltShield' }, { kind: 'damage', mult: 2.2 }, { kind: 'status', status: 'acid', turns: 4, value: 15 }, { kind: 'status', status: 'vulnerable', turns: 2 }]),
+    ],
+  },
+  {
+    id: 'fruit_bubble', name: 'Arancia Bolla', rarity: 'rare', element: 'bubble', color: '#ff9a2a',
+    description: 'Se la sbucci, ne escono bolle. Tante. Troppe.',
+    passive: { spd: 2, def: 1 }, startsUnlocked: false,
+    abilities: [
+      lv('pw_bubble', 'Bolla Prigione', 'Danno 130% e chiude il nemico in una bolla per 1 turno; poi scoppia (100%).', 2, 'enemy', [{ kind: 'damage', mult: 1.3 }, { kind: 'bubble', turns: 1, popMult: 1 }]),
+      lv('pw_bubble_2', 'Bolla Prigione II', 'Danno 160%, bolla per 2 turni, poi scoppia (130%). I boss restano nella bolla 1 turno.', 2, 'enemy', [{ kind: 'damage', mult: 1.6 }, { kind: 'bubble', turns: 2, popMult: 1.3 }]),
+      lv('pw_bubble_3', 'Mare di Bolle', 'Danno 110% a TUTTI e li chiude in bolle per 1 turno; poi scoppiano (100%).', 3, 'allEnemies', [{ kind: 'damage', mult: 1.1 }, { kind: 'bubble', turns: 1, popMult: 1 }]),
+      lv('pw_bubble_4', 'Mare di Bolle II', 'Danno 140% a TUTTI, bolle per 1 turno, poi scoppiano (130%).', 3, 'allEnemies', [{ kind: 'damage', mult: 1.4 }, { kind: 'bubble', turns: 1, popMult: 1.3 }]),
+      lv('pw_bubble_5', 'Bolla Oceanica', 'Danno 170% a TUTTI, bolle per 2 turni (boss 1), poi scoppiano (180%).', 3, 'allEnemies', [{ kind: 'damage', mult: 1.7 }, { kind: 'bubble', turns: 2, popMult: 1.8 }]),
+    ],
+  },
+  {
+    id: 'fruit_mine', name: 'Anguria Mina', rarity: 'rare', element: 'mine', color: '#3fae4a',
+    description: 'I semi ticchettano. Meglio non sputarli vicino a qualcuno.',
+    passive: { maxHp: 8 }, startsUnlocked: false,
+    abilities: [
+      lv('pw_mine', 'Seme-Mina', 'Pianta una mina: all\'inizio del suo prossimo turno il nemico esplode (danno 320%).', 2, 'enemy', [{ kind: 'mine', mult: 3.2 }]),
+      lv('pw_mine_2', 'Seme-Mina II', 'Mina da 400% sul nemico: esplode all\'inizio del suo prossimo turno.', 2, 'enemy', [{ kind: 'mine', mult: 4 }]),
+      lv('pw_mine_3', 'Campo Minato', 'Una mina da 260% sotto OGNI nemico.', 3, 'allEnemies', [{ kind: 'mine', mult: 2.6 }]),
+      lv('pw_mine_4', 'Campo Minato II', 'Una mina da 320% sotto OGNI nemico.', 3, 'allEnemies', [{ kind: 'mine', mult: 3.2 }]),
+      lv('pw_mine_5', 'Anguria Atomica', 'Una mina da 400% sotto OGNI nemico, che intanto rallenta (-30% VEL).', 3, 'allEnemies', [{ kind: 'mine', mult: 4 }, { kind: 'status', status: 'slow', turns: 2, value: 0.3 }]),
+    ],
+  },
+  {
+    id: 'fruit_swarm', name: 'Uva Sciame', rarity: 'epic', element: 'swarm', color: '#8a52e0',
+    description: 'Gli acini si staccano da soli e ronzano come api.',
+    passive: { atk: 2, spd: 1 }, startsUnlocked: false,
+    abilities: [
+      lv('pw_swarm', 'Grappolo', 'Danno 110% e +3 acini (max 6): a fine turno ognuno colpisce (35%). Ogni colpo che subisci ne fa scoppiare uno.', 2, 'enemy', [{ kind: 'damage', mult: 1.1 }, { kind: 'swarm', count: 3, mult: 0.35, max: 6 }]),
+      lv('pw_swarm_2', 'Grappolo II', 'Danno 130% e +3 acini (max 6), ognuno colpisce per il 40%.', 2, 'enemy', [{ kind: 'damage', mult: 1.3 }, { kind: 'swarm', count: 3, mult: 0.4, max: 6 }]),
+      lv('pw_swarm_3', 'Vendemmia', 'Danno 120% a TUTTI e +4 acini (max 8), ognuno colpisce per il 40%.', 3, 'allEnemies', [{ kind: 'damage', mult: 1.2 }, { kind: 'swarm', count: 4, mult: 0.4, max: 8 }]),
+      lv('pw_swarm_4', 'Vendemmia II', 'Danno 150% a TUTTI e +4 acini (max 8), ognuno colpisce per il 45%.', 3, 'allEnemies', [{ kind: 'damage', mult: 1.5 }, { kind: 'swarm', count: 4, mult: 0.45, max: 8 }]),
+      lv('pw_swarm_5', 'Tempesta di Chicchi', 'Danno 180% a TUTTI e +5 acini (max 10), ognuno colpisce per il 50%.', 3, 'allEnemies', [{ kind: 'damage', mult: 1.8 }, { kind: 'swarm', count: 5, mult: 0.5, max: 10 }]),
+    ],
+  },
+  {
+    id: 'fruit_twin', name: 'Ciliegia Gemella', rarity: 'epic', element: 'twin', color: '#e8264a',
+    description: 'Due ciliegie, un picciolo. Chi la mangia non è più solo.',
+    passive: { atk: 2, def: 1 }, startsUnlocked: false,
+    abilities: [
+      lv('pw_twin', 'Doppio', 'Danno 140% e una gemella ti affianca per 3 turni: ripete attacchi e poteri al 50%.', 2, 'enemy', [{ kind: 'twin', turns: 3, ratio: 0.5 }, { kind: 'damage', mult: 1.4 }]),
+      lv('pw_twin_2', 'Doppio II', 'Danno 170% e gemella per 3 turni al 60%.', 2, 'enemy', [{ kind: 'twin', turns: 3, ratio: 0.6 }, { kind: 'damage', mult: 1.7 }]),
+      lv('pw_twin_3', 'Sorelle Ciliegia', 'Danno 130% a TUTTI e gemella per 3 turni al 70%.', 3, 'allEnemies', [{ kind: 'twin', turns: 3, ratio: 0.7 }, { kind: 'damage', mult: 1.3 }]),
+      lv('pw_twin_4', 'Sorelle Ciliegia II', 'Danno 160% a TUTTI e gemella per 4 turni all\'80%.', 3, 'allEnemies', [{ kind: 'twin', turns: 4, ratio: 0.8 }, { kind: 'damage', mult: 1.6 }]),
+      lv('pw_twin_5', 'Legione Gemella', 'Danno 190% a TUTTI e gemella per 4 turni al 100%: ogni colpo vale doppio.', 3, 'allEnemies', [{ kind: 'twin', turns: 4, ratio: 1 }, { kind: 'damage', mult: 1.9 }]),
+    ],
+  },
 ];
 
 export const FRUIT_BY_ID = new Map(FRUITS.map((f) => [f.id, f]));

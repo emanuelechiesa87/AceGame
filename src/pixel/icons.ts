@@ -133,6 +133,25 @@ const STATUSES: Record<string, () => Cells> = {
   reflect: () => fromGrid([
     'FFFFFFFFFF', 'FMMMMMMMMF', 'FMWMMMMMMF', 'FMMWMMMMMF', 'FMMMWMMMMF', 'FMWMMWMMMF', 'FMMWMMMMMF', 'FMMMWMMMMF', 'FMMMMMMMMF', 'FMMMMMMMMF', 'FFFFFFFFFF', '....FF', '...FFFF',
   ], { F: '#c8a26b', M: '#9fe8ff', W: '#ffffff' }, 3, 1),
+  // dalla 0.5.5: tanfo, acido, bolla, mina, sciame, gemella
+  weak: () => fromGrid(sym([
+    '...GG..', '..G..G.', '..G....', '...G...', '....RRR', '....RRR', '....RRR', '....RRR', 'RRRRRRR', '.RRRRRR', '..RRRRR', '...RRRR', '....RRR', '.....RR', '......R',
+  ]), { G: '#c9c23a', R: '#9b8a5a' }, 1, 0),
+  acid: () => fromGrid(sym([
+    '......A', '.....AA', '.....AA', '....AWA', '...AAWA', '..AAAAA', '..AAAAA', '...AAAA', '....AAA', '', '.A....A', 'AAA..AA',
+  ]), { A: '#d8f04a', W: '#ffffff' }, 1, 2),
+  bubble: () => fromGrid(sym([
+    '....BBB', '..BB...', '.B.WW..', '.B.W...', 'B......', 'B......', 'B......', 'B......', '.B.....', '.B.....', '..BB...', '....BBB',
+  ]), { B: '#ffb45f', W: '#ffffff' }, 1, 2),
+  mine: () => fromGrid(sym([
+    '......R', '......D', '...GGGG', '..GgGGG', '.GGGgGG', '.GgGGGg', '.GGGgGG', '.GgGGGg', '..GGGgG', '...GGGG',
+  ]), { R: '#ff3b30', D: '#3a2414', G: '#3fae4a', g: '#a8e86a' }, 1, 3),
+  swarm: () => fromGrid([
+    '......S', '.....SS', '..PPP.PPP', '.PWPPPWPPP', '.PPPPPPPPP', '..PPPPPPP', '...PWPPPP', '...PPPPP', '....PPP', '.....P',
+  ], { S: '#3fb36a', P: '#8a52e0', W: '#d9b8ff' }, 2, 3),
+  twin: () => fromGrid([
+    '......SS', '.....S..S', '....S....S', '...S......S', '..RRR....RRR', '.RWRRR..RWRRR', '.RRRRR..RRRRR', '.RRRRR..RRRRR', '..RRR....RRR',
+  ], { S: '#3fb36a', R: '#e8264a', W: '#ffffff' }, 1, 3),
 };
 
 const POTION = () => fromGrid(sym([
