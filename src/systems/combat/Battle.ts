@@ -4,7 +4,7 @@ import { COMPANION_BY_ID } from '../../data/companions';
 import { ENEMY_BY_ID } from '../../data/enemies';
 import type { Ability, Effect, StatusId } from '../../types/content';
 import type { Rng } from '../Rng';
-import type { BattleEvent, BattleMods, DamageKind, Phase, PlayerAction, Side, StatusInstance, Unit } from './types';
+import type { BattleEvent, BattleTally, BattleMods, DamageKind, Phase, PlayerAction, Side, StatusInstance, Unit } from './types';
 
 const C = BALANCE.combat;
 const NEGATIVE: StatusId[] = ['burn', 'poison', 'stun', 'vulnerable', 'slow', 'weak', 'acid', 'bubble', 'mine'];
@@ -46,12 +46,15 @@ export class Battle {
   koCount = 0;
   /** Danno di ogni acino dello sciame (Uva Sciame): l'ultimo livello usato. */
   private swarmMult = 0;
+  /** Statistiche dell'eroe in questo scontro (riepilogo della run e simulatore). */
+  readonly tally: BattleTally;
 
   constructor(setup: BattleSetup, private readonly rng: Rng, private readonly mods: BattleMods = setup.mods) {
     this.units = [setup.hero, ...setup.companions, ...setup.enemies];
     this.units.forEach((u, i) => (u.order = i));
     this.powers = setup.powers;
     this.potions = setup.potions;
+    this.tally = { damageTaken: 0, healed: 0, lifesteal: 0, potions: 0, minHp: setup.hero.hp, heroTurns: 0 };
     this.energy = Math.min(C.energyMax, C.energyStart + (this.mods.energyBonus ?? 0));
     for (const c of this.units) if (c.kind === 'companion' && this.mods.companionStartCharge) c.charge = Math.min(c.chargeMax, c.charge + this.mods.companionStartCharge);
     const hpPct = this.mods.enemyStartHpPct;
@@ -80,6 +83,7 @@ export class Battle {
     if (this.phase !== 'awaitingInput') throw new Error('La battaglia non attende input');
     const ev: BattleEvent[] = [];
     const hero = this.hero;
+    if (action.type !== 'special') this.tally.heroTurns++;
     switch (action.type) {
       case 'special': {
         const c = this.unit(action.companionUid);
@@ -119,6 +123,7 @@ export class Battle {
       case 'potion': {
         if (this.potions <= 0) throw new Error('Nessuna pozione');
         this.potions--;
+        this.tally.potions++;
         ev.push({ t: 'use', uid: hero.uid, ability: 'potion', name: 'Pozione' });
         this.heal(hero, Math.round(hero.maxHp * (this.mods.potionHealPct ?? C.potionHealPct)), ev);
         break;
@@ -349,7 +354,7 @@ export class Battle {
           if (this.hasStatus(target, 'guard')) dmg *= C.guardMult;
           const incoming = Math.max(1, Math.round(dmg));
           const dealt = this.applyDamage(target, incoming, ev, actor.uid, crit, kind);
-          if (eff.lifesteal && dealt > 0) this.heal(actor, Math.round(dealt * eff.lifesteal), ev);
+          if (eff.lifesteal && dealt > 0) this.heal(actor, Math.round(dealt * eff.lifesteal), ev, true);
           const refl = this.statusValue(target, 'reflect');
           // lo specchio riflette il colpo intero, anche quello parato dallo scudo
           if (refl > 0 && actor.uid !== target.uid) this.applyDamage(actor, Math.max(1, Math.round(incoming * refl)), ev, target.uid, false, 'reflect');
@@ -436,6 +441,7 @@ export class Battle {
       this.lethalSaved = true;
       dealt = target.hp - 1;
       target.hp = 1;
+      this.tally.damageTaken += dealt; this.tally.minHp = 1;
       ev.push({ t: 'damage', source, target: target.uid, amount: dealt, absorbed, crit, kind });
       ev.push({ t: 'survive', uid: target.uid });
       return dealt;
@@ -444,6 +450,7 @@ export class Battle {
       // Perla del Ritorno: una volta per run l'eroe torna in piedi
       this.reviveUsed = true;
       const before = target.hp;
+      this.tally.damageTaken += before; this.tally.minHp = 0;
       target.hp = Math.max(1, Math.round(target.maxHp * this.mods.reviveOncePct));
       ev.push({ t: 'damage', source, target: target.uid, amount: before, absorbed, crit, kind });
       ev.push({ t: 'survive', uid: target.uid, by: 'pearl' });
@@ -452,6 +459,7 @@ export class Battle {
     }
     dealt = Math.min(dealt, target.hp);
     target.hp -= dealt;
+    if (target.kind === 'hero') { this.tally.damageTaken += dealt; this.tally.minHp = Math.min(this.tally.minHp, target.hp); }
     ev.push({ t: 'damage', source, target: target.uid, amount: dealt, absorbed, crit, kind });
     // ogni colpo nemico sull'eroe fa scoppiare un acino dello sciame
     const sw = target.kind === 'hero' && kind === 'hit' && dealt > 0 ? this.getStatus(target, 'swarm') : undefined;
@@ -464,9 +472,10 @@ export class Battle {
     return dealt;
   }
 
-  private heal(target: Unit, amount: number, ev: BattleEvent[]): void {
+  private heal(target: Unit, amount: number, ev: BattleEvent[], lifesteal = false): void {
     const healed = Math.min(amount, target.maxHp - target.hp);
     target.hp += healed;
+    if (target.kind === 'hero') { this.tally.healed += healed; if (lifesteal) this.tally.lifesteal += healed; }
     ev.push({ t: 'heal', target: target.uid, amount: healed });
   }
 

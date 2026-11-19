@@ -6,10 +6,12 @@ import { DurableStore } from '../systems/DurableStore';
 import { buildExport, parseExport } from '../systems/SaveTransfer';
 import { BUILD_VERSION } from '../app/config';
 import { randomSeed } from '../systems/Rng';
-import type { AvatarVariant, HallOfFameEntry, RunState } from '../types/game';
+import type { AvatarVariant, HallOfFameEntry, RunLogEntry, RunState } from '../types/game';
 import { createRunState } from './RunState';
 
 const RUN_KEY = 'acegame.run';
+/** Run concluse tenute nel salvataggio con le statistiche (F0). */
+const RUN_LOG_SIZE = 10;
 
 /**
  * Sessione condivisa tra le scene: salvataggio permanente, run in corso e
@@ -23,6 +25,18 @@ class GameSessionStore {
 
   constructor() {
     this.save.onWrite = (k, raw) => DurableStore.put(k, raw);
+  }
+
+  private clockId?: ReturnType<typeof setInterval>;
+  /**
+   * Orologio del tempo di gioco effettivo: conta un secondo alla volta solo
+   * con una run in corso e l'app visibile (pause e app in background non contano).
+   */
+  startClock(): void {
+    if (this.clockId !== undefined) return;
+    this.clockId = setInterval(() => {
+      if (this.ctl && typeof document !== 'undefined' && document.visibilityState === 'visible') this.ctl.addPlayTime(1);
+    }, 1000);
   }
 
   /**
@@ -190,6 +204,10 @@ class GameSessionStore {
       rank = r.rank;
       s.lifetime.enemiesDefeated += entry.enemiesDefeated;
       if (result === 'victory') s.lifetime.victories++;
+      if (run.stats) {
+        const log: RunLogEntry = { date: entry.date, result, fruit: run.activeFruitIds[0] ?? '', fruitLevel: run.fruitLevel ?? 1, maxArea: entry.maxArea, stats: run.stats };
+        s.runLog = [log, ...(s.runLog ?? [])].slice(0, RUN_LOG_SIZE);
+      }
     });
     const unlocked = this.grantUnlocks(result);
     this.clearRun();

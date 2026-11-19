@@ -7,8 +7,8 @@ import { EVENTS, type EventDef } from '../data/events';
 import { FRUITS, FRUIT_BY_ID, MAX_FRUIT_LEVEL, fruitAbility } from '../data/fruits';
 import { effectiveStats } from '../state/RunState';
 import type { Ability, ArtifactDef, Rarity } from '../types/content';
-import type { BattleMods } from './combat/types';
-import type { MapStep, RunState } from '../types/game';
+import type { BattleMods, BattleTally } from './combat/types';
+import type { AreaStats, MapStep, RunState } from '../types/game';
 import { Rng } from './Rng';
 
 const RARITY_WEIGHT: Record<Rarity, number> = { common: 60, rare: 30, epic: 10 };
@@ -90,6 +90,31 @@ export class RunController {
 
   // --- battaglia: effetti di artefatti ed eventi --------------------------------------
   private get arts(): ArtifactDef[] { return this.run.artifactIds.map((id) => ARTIFACT_BY_ID.get(id)).filter((a): a is ArtifactDef => !!a); }
+
+  // --- statistiche (F0) ----------------------------------------------------------------
+  /** Statistiche del mare corrente (create al primo uso, anche per le run vecchie). */
+  get areaStats(): AreaStats {
+    const st = (this.run.stats ??= { areas: [] });
+    while (st.areas.length <= this.run.areaIndex) st.areas.push(emptyAreaStats());
+    return st.areas[this.run.areaIndex];
+  }
+
+  /** Registra uno scontro (vinto o perso) nelle statistiche del mare. */
+  recordBattle(t: BattleTally): void {
+    const a = this.areaStats;
+    const max = effectiveStats(this.run).maxHp;
+    a.battles++;
+    a.heroTurns += t.heroTurns;
+    a.damageTaken += t.damageTaken;
+    a.healedInBattle += t.healed;
+    a.lifesteal += t.lifesteal;
+    a.potions += t.potions;
+    a.minHpPct = Math.min(a.minHpPct, Math.max(0, t.minHp) / max);
+  }
+
+  addPlayTime(sec: number): void { this.areaStats.playSec += sec; }
+
+  private recordOutsideHeal(amount: number): void { if (amount > 0) this.areaStats.healedOutside += amount; }
 
   /** Modificatori della battaglia dati da artefatti ed eventi (unico punto, usato da scena e simulazione). */
   battleMods(): BattleMods {
@@ -207,6 +232,7 @@ export class RunController {
       const pct = ARTIFACT_BY_ID.get(aid)?.healAfterVictoryPct;
       if (pct) hp += Math.round(stats.maxHp * pct);
     }
+    this.recordOutsideHeal(Math.min(stats.maxHp, hp) - heroHp);
     this.run.currentHp = Math.min(stats.maxHp, Math.max(1, hp));
     this.run.companions = companions.map((c) => {
       const max = companionMaxHp(c.id, this.run.areaIndex);
@@ -293,7 +319,9 @@ export class RunController {
 
   healPct(pct: number): void {
     const max = effectiveStats(this.run).maxHp;
+    const before = this.run.currentHp;
     this.run.currentHp = Math.min(max, this.run.currentHp + Math.round(max * pct));
+    this.recordOutsideHeal(this.run.currentHp - before);
   }
 
   gainArtifact(id: string): GainResult {
@@ -332,4 +360,8 @@ export class RunController {
     const max = effectiveStats(this.run).maxHp;
     this.run.currentHp = Math.max(1, Math.min(max, this.run.currentHp));
   }
+}
+
+export function emptyAreaStats(): AreaStats {
+  return { battles: 0, heroTurns: 0, damageTaken: 0, healedInBattle: 0, lifesteal: 0, healedOutside: 0, potions: 0, minHpPct: 1, playSec: 0 };
 }

@@ -506,7 +506,7 @@ export class BattleScene extends BaseScene {
     await banner(this, this.bannerY, 'VITTORIA!', 0xffcf3a, 90, 900);
     const comps = this.battle.units.filter((u) => u.kind === 'companion').map((u) => ({ id: u.defId, hp: u.hp, charge: u.charge }));
     ctl.run.potions = this.battle.potions;
-    ctl.run.heroKos += 0;
+    ctl.recordBattle(this.battle.tally);
     ctl.afterBattle(this.battle.reviveUsed);
     ctl.onVictory(this.enemyIds, this.battle.hero.hp, comps);
     if (this.node === 'boss') ctl.onAreaCleared();
@@ -518,6 +518,7 @@ export class BattleScene extends BaseScene {
     this.log.setText('');
     Audio.music(null); Audio.play('defeat'); Audio.buzz([80, 60, 160]);
     await banner(this, this.bannerY, 'SCONFITTA...', 0x4a3a33, 80, 1100);
+    GameSession.ctl?.recordBattle(this.battle.tally);
     GameSession.run!.currentHp = 0;
     GameSession.run!.potions = this.battle.potions;
     this.goTo('Summary', { result: 'defeat' });

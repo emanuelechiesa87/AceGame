@@ -48,6 +48,19 @@ export interface BattleMods {
   enemyStartHpPct?: number;
 }
 
+/** Contatori dell'eroe in uno scontro (HP persi, cure, pozioni, HP minimo, turni giocati). */
+export interface BattleTally {
+  damageTaken: number;
+  /** Tutte le cure ricevute in battaglia (pozioni, poteri, compagni, furto vita). */
+  healed: number;
+  /** Di cui da furto vita. */
+  lifesteal: number;
+  potions: number;
+  minHp: number;
+  /** Azioni dell'eroe (le speciali dei compagni non contano). */
+  heroTurns: number;
+}
+
 export type PlayerAction =
   | { type: 'attack'; targetUid: string }
   | { type: 'power'; abilityId: string; targetUid?: string }

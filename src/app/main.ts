@@ -43,6 +43,7 @@ async function start(): Promise<void> {
 
   // Esposto solo per il debug da console (es. chrome://inspect sull'S23).
   Audio.init(GameSession.save.data.settings);
+  GameSession.startClock();
   (window as unknown as { __game: Phaser.Game; __session: typeof GameSession }).__game = game;
   (window as unknown as { __session: typeof GameSession }).__session = GameSession;
   (window as unknown as { __HeroRig: typeof HeroRig }).__HeroRig = HeroRig;

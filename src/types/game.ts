@@ -16,6 +16,28 @@ export interface MapStep {
 
 export interface CompanionState { id: string; hp: number; charge: number }
 
+/** Statistiche di un mare (F0: misurare durata e difficoltà reali). */
+export interface AreaStats {
+  battles: number;
+  /** Azioni dell'eroe in battaglia. */
+  heroTurns: number;
+  /** HP persi in battaglia. */
+  damageTaken: number;
+  /** Cure ricevute in battaglia (pozioni, poteri, compagni, furto vita). */
+  healedInBattle: number;
+  /** Di cui da furto vita. */
+  lifesteal: number;
+  /** Cure fuori dalla battaglia (riposi, ricompense, eventi, cambio mare, artefatti). */
+  healedOutside: number;
+  potions: number;
+  /** HP più bassi toccati nel mare, in frazione degli HP max (1 = mai colpito). */
+  minHpPct: number;
+  /** Secondi di gioco effettivo (app aperta e visibile). */
+  playSec: number;
+}
+
+export interface RunStats { areas: AreaStats[] }
+
 /** Stato temporaneo: esiste solo durante una run e si azzera alla morte. */
 export interface RunState {
   runId: string;
@@ -51,6 +73,8 @@ export interface RunState {
   nextBattleEnemyHpPct?: number;
   /** Eventi già incontrati in questa run (non si ripetono). */
   seenEventIds?: string[];
+  /** Statistiche per mare (assenti nelle run salvate prima della 0.6.4). */
+  stats?: RunStats;
 }
 
 export interface HallOfFameEntry {
@@ -63,6 +87,16 @@ export interface HallOfFameEntry {
   enemiesDefeated: number;
   fruits: string[];
   result: 'defeat' | 'victory';
+}
+
+/** Riassunto di una run conclusa, tenuto nel salvataggio (ultime 10) per misurare il bilanciamento. */
+export interface RunLogEntry {
+  date: string;
+  result: 'defeat' | 'victory';
+  fruit: string;
+  fruitLevel: number;
+  maxArea: number;
+  stats: RunStats;
 }
 
 /** Stato permanente: sopravvive alla morte. */
@@ -84,6 +118,8 @@ export interface PersistentGameState {
   discoveredArtifactIds: string[];
   metCompanionIds: string[];
   hallOfFame: HallOfFameEntry[];
+  /** Ultime run concluse con le statistiche (la più recente per prima). */
+  runLog?: RunLogEntry[];
   lifetime: { runs: number; victories: number; enemiesDefeated: number };
   settings: GameSettings;
 }

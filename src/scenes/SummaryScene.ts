@@ -14,6 +14,8 @@ import { HeroRig } from '../ui/HeroRig';
 import { addBody, addTitle } from '../ui/text';
 import { icon, panel } from '../ui/widgets';
 import { BaseScene } from './BaseScene';
+import { formatDuration, totalStats } from '../systems/runStats';
+import { openRunStatsPanel } from '../ui/RunStatsPanel';
 
 /** Fine run: riepilogo, punteggio e aggiornamento dei record locali. */
 export class SummaryScene extends BaseScene {
@@ -47,13 +49,15 @@ export class SummaryScene extends BaseScene {
       const t = addTitle(this, GAME_WIDTH / 2, 645, res.rank === 0 ? 'NUOVO RECORD!' : `${res.rank + 1}° MIGLIOR RISULTATO!`, 34).setColor('#ff5f8a');
       this.tweens.add({ targets: t, scale: 1.1, duration: 400, yoyo: true, repeat: -1 });
     }
-    const dur = res ? `${Math.floor(res.entry.durationSec / 60)}m ${res.entry.durationSec % 60}s` : '-';
+    // tempo di gioco effettivo se misurato (dalla 0.6.4), altrimenti da inizio a fine run
+    const stats = snapshot.stats;
+    const dur = stats ? formatDuration(totalStats(stats).playSec) : res ? formatDuration(res.entry.durationSec) : '-';
     const rows = [
       ['Mari superati', `${snapshot.bossesDefeated} / ${AREAS.length}`],
       ['Nemici sconfitti', String(snapshot.enemiesDefeated)],
       ['Élite / Boss', `${snapshot.elitesDefeated} / ${snapshot.bossesDefeated}`],
       ['Eventi completati', String(snapshot.eventsCompleted)],
-      ['Durata', dur],
+      [stats ? 'Tempo di gioco' : 'Durata', dur],
     ];
     rows.forEach(([k, v], i) => {
       addBody(this, 110, 700 + i * 40, k, 26, '#fbe9c8').setOrigin(0, 0.5);
@@ -78,6 +82,9 @@ export class SummaryScene extends BaseScene {
       addBody(this, GAME_WIDTH / 2, 990, left ? `Prossimo frutto sbloccato tra ${BALANCE.unlocks.pointsPerFruit - pts} punti (vittoria +2, sconfitta +1)` : 'Hai sbloccato tutti i frutti!', 22, '#f1d7a8');
     }
     new Button(this, GAME_WIDTH / 2, 1080, 'NUOVA RUN', () => this.goTo('CharacterSelect'), { width: 460, height: 110, fontSize: 56 });
-    new Button(this, GAME_WIDTH / 2, 1200, 'MENU', () => this.goTo('Menu'), { variant: 'secondary', width: 300, height: 84, fontSize: 40 });
+    if (stats) {
+      new Button(this, 200, 1200, 'MENU', () => this.goTo('Menu'), { variant: 'secondary', width: 260, height: 84, fontSize: 40 });
+      new Button(this, 500, 1200, 'STATISTICHE', () => openRunStatsPanel(this, stats), { variant: 'secondary', width: 320, height: 84, fontSize: 36 });
+    } else new Button(this, GAME_WIDTH / 2, 1200, 'MENU', () => this.goTo('Menu'), { variant: 'secondary', width: 300, height: 84, fontSize: 40 });
   }
 }

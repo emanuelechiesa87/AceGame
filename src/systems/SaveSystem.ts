@@ -18,6 +18,7 @@ export function emptyPersistentState(now = new Date()): PersistentGameState {
     discoveredArtifactIds: [],
     metCompanionIds: [],
     hallOfFame: [],
+    runLog: [],
     lifetime: { runs: 0, victories: 0, enemiesDefeated: 0 },
     settings: { fastAnimations: false, music: 0.6, sfx: 0.8, vibration: true, tutorialDone: false },
   };
@@ -50,6 +51,7 @@ export function parseSave(raw: string): PersistentGameState {
     discoveredArtifactIds: arr(data.discoveredArtifactIds),
     metCompanionIds: arr(data.metCompanionIds),
     hallOfFame: Array.isArray(data.hallOfFame) ? data.hallOfFame.slice(0, BALANCE.limits.hallOfFameSize) : [],
+    runLog: Array.isArray(data.runLog) ? data.runLog.filter((r) => r && typeof r === 'object' && Array.isArray(r.stats?.areas)).slice(0, 10) : [],
     lifetime: { ...base.lifetime, ...(data.lifetime ?? {}) },
     settings: cleanSettings(base.settings, data.settings),
   };
