@@ -1,6 +1,8 @@
 import type Phaser from 'phaser';
 import { block, INK, pixelTexture, shade, type Px } from './render';
 import { heroKey, type Eyes, type HeroId, type Mouth } from './keys';
+import { FRUIT_LOOKS, lookKey, lookStage, type HeroLook } from '../data/fruitLooks';
+import { drawCape, drawEmblem, drawHeadBack, drawHeadFront, drawMarks, drawShoulder, type HeadCtx } from './heroLooks';
 
 /**
  * Eroi pirata "a blocchi": testa cubica, busto, braccia e gambe rettangolari,
@@ -14,15 +16,18 @@ export const HERO_PX = 4;
 
 export interface PartSpec { x0: number; y0: number; w: number; h: number; pivot: { x: number; y: number } }
 
-export const PARTS: Record<'legB' | 'legF' | 'body' | 'armB' | 'armF' | 'head' | 'tail', PartSpec> = {
+export const PARTS: Record<'legB' | 'legF' | 'body' | 'armB' | 'armF' | 'head' | 'tail' | 'cape', PartSpec> = {
   legB: { x0: -10, y0: -24, w: 10, h: 24, pivot: { x: -5, y: -24 } },
   legF: { x0: 0, y0: -24, w: 10, h: 24, pivot: { x: 5, y: -24 } },
   body: { x0: -12, y0: -48, w: 24, h: 26, pivot: { x: 0, y: -24 } },
-  armB: { x0: -16, y0: -48, w: 9, h: 22, pivot: { x: -12, y: -46 } },
-  armF: { x0: 7, y0: -48, w: 25, h: 26, pivot: { x: 12, y: -46 } },
-  // testa: tela più grande del cubo 24×24 per cappello, piuma e capelli
-  head: { x0: -26, y0: -90, w: 52, h: 46, pivot: { x: 0, y: -46 } },
+  // braccia: tela allargata verso l'alto per gli spallacci del frutto
+  armB: { x0: -21, y0: -56, w: 16, h: 30, pivot: { x: -12, y: -46 } },
+  armF: { x0: 2, y0: -56, w: 30, h: 34, pivot: { x: 12, y: -46 } },
+  // testa: tela più grande del cubo 24×24 per cappello, piuma, capelli e accessori del frutto
+  head: { x0: -32, y0: -108, w: 64, h: 64, pivot: { x: 0, y: -46 } },
   tail: { x0: -25, y0: -68, w: 15, h: 40, pivot: { x: -12, y: -64 } },
+  // mantello del livello V (vuoto negli altri casi)
+  cape: { x0: -34, y0: -72, w: 36, h: 72, pivot: { x: -8, y: -47 } },
 };
 
 interface HeroPal { skin: string; hair: string; top: string; topB: string; trim: string; legs: string; boots: string; belt: string; hat: string; blade: string; hilt: string; eye: string }
@@ -38,9 +43,36 @@ function part(scene: Phaser.Scene, key: string, spec: PartSpec, draw: (px: Px) =
   pixelTexture(scene, key, spec.w, spec.h, (px) => draw((x, y, c, w, h) => px(x - spec.x0, y - spec.y0, c, w, h)));
 }
 
-export function makeHeroTextures(scene: Phaser.Scene, id: HeroId): void {
-  const p = HERO_PAL[id];
-  const k = (n: string) => heroKey(id, n);
+/**
+ * Texture dell'eroe. Con `look` (frutto + livello) si ottiene la variante "contagiata" dal frutto:
+ * colori, segni, accessori e mantello crescono a ogni Risveglio (vedi data/fruitLooks.ts).
+ * Le texture sono create una volta sola per variante e restano in cache.
+ */
+export function makeHeroTextures(scene: Phaser.Scene, id: HeroId, look?: HeroLook | null): void {
+  const variant = lookKey(look);
+  const k = (n: string) => heroKey(id, n, variant);
+  if (scene.textures.exists(k('mouth-ouch'))) return;
+  const lk = variant ? FRUIT_LOOKS[look!.fruitId] : undefined;
+  const level = variant ? Math.min(5, look!.level) : 0;
+  const st = lookStage(level);
+  const p: HeroPal = { ...HERO_PAL[id] };
+  if (lk) {
+    // I: bandana / cappello e cintura del frutto
+    if (id === 'm') { p.hat = lk.main; p.belt = lk.dark; } else { p.hat = lk.dark; p.belt = lk.main; }
+    // II: occhi e bordi
+    if (st.eyes) { p.eye = lk.eye; if (id === 'f') p.trim = lk.light; else p.hilt = lk.light; }
+    // IV: capelli e abiti
+    if (st.hair) p.hair = lk.hair;
+    if (st.clothes) {
+      if (id === 'm') { p.topB = lk.main; p.trim = lk.dark; p.legs = shade(lk.dark, -0.25); }
+      else { p.topB = lk.dark; p.legs = shade(lk.light, -0.12); p.boots = shade(lk.dark, -0.35); }
+      p.blade = lk.light;
+    }
+  }
+  // piuma, nastro e fiocco di LEI prendono il colore del frutto
+  const ACC = lk ? lk.main : '#ff6fa8';
+  const ACC_L = lk ? lk.light : '#ffd6e6';
+  const headCtx: HeadCtx | undefined = lk ? { lk, s: st.headSize as 1 | 2 | 3, female: id === 'f', level } : undefined;
   const GOLD = '#ffcf3a';
 
   // --- gambe: pantaloni con cucitura e piega, stivali con risvolto e suola ---------------------
@@ -89,6 +121,7 @@ export function makeHeroTextures(scene: Phaser.Scene, id: HeroId): void {
       px(-9, -29, p.belt, 18, 4); px(-9, -29, shade(p.belt, 0.3), 18, 1);
       px(-3, -30, INK, 6, 6); px(-2, -29, GOLD, 4, 4); px(-1, -28, p.belt, 2, 2); px(-2, -29, '#fff3b0', 1, 1);
       px(-10, -24, shade(p.legs, -0.1), 20, 2);
+      if (lk) drawEmblem(px, lk, 6, -41);
       return;
     }
     // LEI: giacca sciancrata (spalle strette, vita stretta, falde svasate sui fianchi)
@@ -107,6 +140,7 @@ export function makeHeroTextures(scene: Phaser.Scene, id: HeroId): void {
     // fusciacca rosa con fiocco
     px(-7, -32, p.belt, 14, 4); px(-7, -32, shade(p.belt, 0.3), 14, 1);
     px(5, -33, INK, 6, 6); px(6, -32, p.belt, 2, 4); px(8, -31, shade(p.belt, -0.25), 2, 2); px(7, -31, INK, 1, 2);
+    if (lk) drawEmblem(px, lk, -6, -40);
   });
 
   // --- braccia (quello davanti impugna una sciabola) -----------------------------------
@@ -116,6 +150,7 @@ export function makeHeroTextures(scene: Phaser.Scene, id: HeroId): void {
     if (id === 'm') for (const y of [-44, -39]) px(-15, y, shade(p.topB, -0.15), 6, 2);
     else px(-15, -35, shade(p.trim, -0.2), 6, 1);
     block(px, -16, -34, 8, 8, shade(p.skin, -0.12));
+    if (lk && st.shoulders >= 2) drawShoulder(px, { ...lk, main: shade(lk.main, -0.15), light: shade(lk.light, -0.1) }, lk.shoulder, -12, -48, true);
   });
   part(scene, k('armF'), PARTS.armF, (px) => {
     // sciabola tenuta in avanti, disegnata prima della mano
@@ -128,10 +163,14 @@ export function makeHeroTextures(scene: Phaser.Scene, id: HeroId): void {
     else { px(8, -36, p.trim, 7, 2); px(8, -35, shade(p.trim, -0.3), 7, 1); }
     block(px, 7, -34, 10, 8, p.skin);
     px(9, -31, shade(p.skin, -0.2), 6, 1); // nocche
+    if (lk && st.shoulders >= 1) drawShoulder(px, lk, lk.shoulder, 12, -48, st.shoulderSize === 2);
+    // V: segno luminoso sull'avambraccio
+    if (lk && level >= 5) { px(8, -33, lk.glow, 8, 1); px(10, -32, lk.main, 4, 1); }
   });
 
   // --- testa cubica + cappello/capelli --------------------------------------------------
   part(scene, k('head'), PARTS.head, (px) => {
+    if (headCtx) drawHeadBack(px, headCtx);
     block(px, -12, -70, 24, 24, p.skin);
     px(-11, -69, shade(p.skin, 0.2), 4, 6); // luce sulla tempia
     px(-11, -57, INK, 4, 6); px(-10, -56, shade(p.skin, -0.12), 2, 4); px(-10, -55, shade(p.skin, -0.3), 1, 2); // orecchio
@@ -144,9 +183,11 @@ export function makeHeroTextures(scene: Phaser.Scene, id: HeroId): void {
       // bandana rossa con pois e piega
       block(px, -14, -73, 28, 8, p.hat, { dark: false });
       px(-13, -67, shade(p.hat, -0.3), 26, 1);
-      for (const [x, y] of [[-9, -71], [-1, -70], [6, -71], [10, -68], [-5, -68]]) px(x, y, '#fff3dc', 2, 2);
+      for (const [x, y] of [[-9, -71], [-1, -70], [6, -71], [10, -68], [-5, -68]]) px(x, y, lk ? lk.light : '#fff3dc', 2, 2);
       // basette
       px(-12, -65, p.hair, 3, 7); px(-12, -65, shade(p.hair, -0.3), 1, 7);
+      if (lk && st.eyes) drawMarks(px, lk, level);
+      if (headCtx) drawHeadFront(px, headCtx);
       return;
     }
     // LEI: capelli lunghi che incorniciano il viso fino alle spalle
@@ -161,23 +202,26 @@ export function makeHeroTextures(scene: Phaser.Scene, id: HeroId): void {
     // orecchino dorato
     px(-11, -50, GOLD, 2, 3); px(-11, -48, shade(GOLD, -0.3), 2, 1);
     // piuma rosa distesa all'indietro (dietro al cappello)
-    px(-25, -84, INK, 18, 8); px(-24, -83, '#ff6fa8', 16, 6);
-    px(-24, -83, '#ffd6e6', 7, 2); px(-23, -80, shade('#ff6fa8', -0.2), 14, 1); px(-22, -82, '#ffffff', 12, 1);
-    px(-26, -86, INK, 6, 4); px(-25, -85, '#ff6fa8', 3, 2);
+    px(-25, -84, INK, 18, 8); px(-24, -83, ACC, 16, 6);
+    px(-24, -83, ACC_L, 7, 2); px(-23, -80, shade(ACC, -0.2), 14, 1); px(-22, -82, '#ffffff', 12, 1);
+    px(-26, -86, INK, 6, 4); px(-25, -85, ACC, 3, 2);
     // cappello piumato a falda larga con nastro rosa e gemma
     block(px, -18, -75, 36, 6, p.hat);
     px(-17, -75, shade(p.hat, 0.35), 34, 1);
     block(px, -10, -84, 20, 10, p.hat);
     px(-9, -83, shade(p.hat, 0.3), 3, 7);
-    px(-9, -77, '#ff6fa8', 18, 2); px(-9, -77, '#ffd6e6', 18, 1);
-    px(-2, -82, INK, 5, 4); px(-1, -81, '#fff3dc', 3, 2); px(-1, -81, '#ffffff', 1, 1);
+    px(-9, -77, ACC, 18, 2); px(-9, -77, ACC_L, 18, 1);
+    px(-2, -82, INK, 5, 4); px(-1, -81, lk ? lk.light : '#fff3dc', 3, 2); px(-1, -81, '#ffffff', 1, 1);
+    if (lk && st.eyes) drawMarks(px, lk, level);
+    if (headCtx) drawHeadFront(px, headCtx);
   });
 
   // --- coda della bandana (lui) / coda di capelli (lei): oscilla al vento ---------------------
   part(scene, k('tail'), PARTS.tail, (px) => {
     if (id === 'm') {
-      px(-20, -67, INK, 9, 8); px(-19, -66, p.hat, 7, 6); px(-17, -64, '#fff3dc', 2, 2);
-      px(-24, -60, INK, 8, 10); px(-23, -59, p.hat, 6, 8); px(-22, -56, '#fff3dc', 2, 2);
+      const dot = lk ? lk.light : '#fff3dc';
+      px(-20, -67, INK, 9, 8); px(-19, -66, p.hat, 7, 6); px(-17, -64, dot, 2, 2);
+      px(-24, -60, INK, 8, 10); px(-23, -59, p.hat, 6, 8); px(-22, -56, dot, 2, 2);
       px(-21, -51, INK, 6, 8); px(-20, -50, shade(p.hat, -0.2), 4, 6);
     } else {
       // coda lunga e ondulata con fiocco rosa
@@ -185,9 +229,12 @@ export function makeHeroTextures(scene: Phaser.Scene, id: HeroId): void {
       block(px, -21, -45, 9, 13, p.hair, { light: false });
       px(-17, -59, shade(p.hair, 0.35), 2, 14); px(-19, -43, shade(p.hair, 0.35), 2, 8);
       px(-20, -33, INK, 6, 3); px(-19, -33, p.hair, 4, 2);
-      px(-20, -66, INK, 10, 7); px(-19, -65, '#ff6fa8', 8, 5); px(-19, -65, '#ffd6e6', 3, 1); px(-16, -65, INK, 2, 5); // fiocco
+      px(-20, -66, INK, 10, 7); px(-19, -65, ACC, 8, 5); px(-19, -65, ACC_L, 3, 1); px(-16, -65, INK, 2, 5); // fiocco
     }
   });
+
+  // --- mantello (solo al V) ---------------------------------------------------------------
+  part(scene, k('cape'), PARTS.cape, (px) => { if (lk && st.cape) drawCape(px, lk, lk.cape); });
 
   // --- espressioni: occhi e bocca sovrapposti alla faccia ---------------------------------
   const face = (name: string, draw: (px: Px) => void) => part(scene, k(name), PARTS.head, draw);
@@ -195,6 +242,13 @@ export function makeHeroTextures(scene: Phaser.Scene, id: HeroId): void {
   const lashes = (px: Px) => { if (id === 'f') { px(-8, -62, INK, 1, 1); px(-7, -61, INK, 4, 1); px(3, -61, INK, 4, 1); px(7, -62, INK, 1, 1); } };
   const EYE_FN: Record<Eyes, (px: Px) => void> = {
     open: (px) => {
+      if (st.glowEyes && lk) {
+        lashes(px);
+        // occhi luminosi: bianco acceso, pupilla del frutto e scia di luce verso l'esterno
+        for (const x of EX) { px(x, -63, INK, 4, 1); px(x, -60, lk.glow, 4, 4); px(x + 2, -60, lk.eye, 2, 4); px(x + 2, -60, '#ffffff', 1, 1); }
+        px(-9, -60, lk.eye, 2, 1); px(-10, -61, shade(lk.eye, 0.3), 1, 1); px(7, -60, lk.eye, 2, 1); px(9, -61, shade(lk.eye, 0.3), 1, 1);
+        return;
+      }
       if (id === 'f') {
         lashes(px);
         for (const x of EX) { px(x, -64, shade(p.hair, -0.1), 4, 1); px(x, -60, '#ffffff', 4, 5); px(x + 1, -60, p.eye, 3, 5); px(x + 2, -59, INK, 2, 3); px(x + 1, -60, '#ffffff', 1, 1); px(x + 1, -56, shade(p.eye, 0.4), 2, 1); }
@@ -209,7 +263,10 @@ export function makeHeroTextures(scene: Phaser.Scene, id: HeroId): void {
       // sopracciglia inclinate verso il centro
       px(-8, -64, INK, 2, 1); px(-6, -63, INK, 2, 1); px(-4, -62, INK, 1, 1);
       px(5, -64, INK, 2, 1); px(3, -63, INK, 2, 1); px(3, -62, INK, 1, 1);
-      for (const x of EX) { px(x, -60, '#ffffff', 4, 3); px(x + 2, -60, INK, 2, 3); if (id === 'f') px(x + 1, -60, p.eye, 1, 3); }
+      for (const x of EX) {
+        if (st.glowEyes && lk) { px(x, -60, lk.glow, 4, 3); px(x + 2, -60, lk.eye, 2, 3); continue; }
+        px(x, -60, '#ffffff', 4, 3); px(x + 2, -60, INK, 2, 3); if (id === 'f') px(x + 1, -60, p.eye, 1, 3);
+      }
     },
   };
   // lei: labbra rosa, bocca più piccola

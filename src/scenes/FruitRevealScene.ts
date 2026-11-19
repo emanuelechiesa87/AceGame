@@ -1,4 +1,5 @@
 import { FX_SCALE } from '../pixel/backgrounds';
+import { runLook } from '../data/fruitLooks';
 import { COLORS, GAME_WIDTH } from '../app/config';
 import { iconKey } from '../pixel/keys';
 import { GameSession } from '../state/GameSession';
@@ -47,9 +48,13 @@ export class FruitRevealScene extends BaseScene {
     const hero = new HeroRig(this, 170, 1240, run.avatar === 'a' ? 'm' : 'f', 0.75).idle();
     hero.setDepth(11);
     addBody(this, GAME_WIDTH / 2, 890, 'Unico frutto della run · tasto POTERE in battaglia\nLe ricompense lo RISVEGLIANO: livello III qui, fino al V nei mari lontani', 24, '#fbe9c8').setDepth(11);
+    let eaten = false;
     new Button(this, 440, 1050, 'MANGIALO!', () => {
-      hero.cheer('happy', 'shout');
-      this.time.delayedCall(500, () => this.goTo('Exploration'));
+      if (eaten) return;
+      eaten = true;
+      // il frutto "contagia" subito l'eroe: colori e stemma del livello I
+      hero.setLook(runLook(run), true);
+      this.time.delayedCall(1300, () => this.goTo('Exploration'));
     }, { width: 400, height: 116, fontSize: 60 }).setDepth(12);
   }
 }

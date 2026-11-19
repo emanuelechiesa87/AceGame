@@ -1,4 +1,5 @@
 import { FX_SCALE } from '../pixel/backgrounds';
+import { runLook } from '../data/fruitLooks';
 import { COLORS, GAME_WIDTH } from '../app/config';
 import { AREAS } from '../data/areas';
 import { BALANCE } from '../data/balance';
@@ -40,7 +41,7 @@ export class NewSeaScene extends BaseScene {
     addTitle(this, GAME_WIDTH / 2, 300, area.name.toUpperCase(), 48);
     addBody(this, GAME_WIDTH / 2, 356, area.tagline, 26, '#fbe9c8');
 
-    const hero = new HeroRig(this, GAME_WIDTH / 2, 625, run.avatar === 'a' ? 'm' : 'f', 0.62).walk();
+    const hero = new HeroRig(this, GAME_WIDTH / 2, 625, run.avatar === 'a' ? 'm' : 'f', 0.62, runLook(run)).walk();
     this.time.delayedCall(900, () => hero.idle());
 
     panel(this, 60, 640, 600, 330, COLORS.panel, 0.95);

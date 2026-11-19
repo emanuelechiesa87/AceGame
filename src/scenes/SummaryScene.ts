@@ -1,4 +1,5 @@
 import { FX_SCALE } from '../pixel/backgrounds';
+import { runLook } from '../data/fruitLooks';
 import { COLORS, GAME_WIDTH } from '../app/config';
 import { iconKey } from '../pixel/keys';
 import { BALANCE } from '../data/balance';
@@ -34,7 +35,7 @@ export class SummaryScene extends BaseScene {
       this.tweens.add({ targets: lines, angle: 360, duration: 30000, repeat: -1 });
     }
     addTitle(this, GAME_WIDTH / 2, 150, win ? `${snapshot.heroName.toUpperCase()} HA VINTO!` : `${snapshot.heroName.toUpperCase()} È K.O.`, 60).setAngle(-3).setColor(win ? '#ffe14a' : '#ff9ab0');
-    const hero = new HeroRig(this, GAME_WIDTH / 2, 470, snapshot.avatar === 'a' ? 'm' : 'f', 0.85).idle();
+    const hero = new HeroRig(this, GAME_WIDTH / 2, 470, snapshot.avatar === 'a' ? 'm' : 'f', 0.85, runLook(snapshot)).idle();
     if (win) this.time.addEvent({ delay: 1400, loop: true, callback: () => hero.cheer('happy', 'shout') });
     else hero.setBaseExpression('closed', 'ouch');
 

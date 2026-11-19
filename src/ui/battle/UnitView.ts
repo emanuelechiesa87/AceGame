@@ -1,4 +1,6 @@
 import Phaser from 'phaser';
+import { runLook } from '../../data/fruitLooks';
+import { GameSession } from '../../state/GameSession';
 import { TEXTURE_SCALE } from '../../app/config';
 import { CREATURE_SCALE, CREATURES } from '../../pixel/creatures';
 import { creatureKey, iconKey } from '../../pixel/keys';
@@ -38,7 +40,7 @@ export class UnitView {
     this.root = scene.add.container(x, y);
     this.heroId = heroId;
     if (unit.kind === 'hero') {
-      const rig = new HeroRig(scene, 0, 0, heroId!, 0.82 * k).idle();
+      const rig = new HeroRig(scene, 0, 0, heroId!, 0.82 * k, runLook(GameSession.run)).idle();
       scene.children.remove(rig);
       this.sprite = rig;
       this.height = Math.round(270 * k);
@@ -121,7 +123,7 @@ export class UnitView {
     // gemella
     const twin = this.has('twin') !== undefined && this.sprite instanceof HeroRig;
     if (twin && !this.twin) {
-      const t = new HeroRig(sc, -78, -22, this.heroId ?? 'm', 0.82 * this.k).idle();
+      const t = new HeroRig(sc, -78, -22, this.heroId ?? 'm', 0.82 * this.k, runLook(GameSession.run)).idle();
       sc.children.remove(t);
       t.setAlpha(0);
       this.root.addAt(t, 0);

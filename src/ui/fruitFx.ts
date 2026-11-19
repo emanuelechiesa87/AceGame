@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 import { COLORS, GAME_WIDTH } from '../app/config';
 import { FRUIT_BY_ID, fruitAbility } from '../data/fruits';
-import { iconKey } from '../pixel/keys';
+import { iconKey, type HeroId } from '../pixel/keys';
+import { HeroRig } from './HeroRig';
 import { addBody, addTitle } from './text';
 import { icon } from './widgets';
 
@@ -529,14 +530,20 @@ async function highLevelIntro({ scene, caster, level, speed: s }: FxCtx, col: nu
   await wait(scene, 260 / s);
 }
 
-/** Animazione del Risveglio (ricompensa): il frutto si illumina e sale di livello. */
-export async function awakenFx(scene: Phaser.Scene, fruitId: string, level: number): Promise<void> {
+/**
+ * Animazione del Risveglio (ricompensa): il frutto si illumina e sale di livello.
+ * Con `heroId` sotto al frutto compare l'eroe, che al lampo si trasforma nel nuovo aspetto.
+ */
+export async function awakenFx(scene: Phaser.Scene, fruitId: string, level: number, heroId?: HeroId): Promise<void> {
   const f = FRUIT_BY_ID.get(fruitId)!;
   const col = hex(f.color);
-  const cx = GAME_WIDTH / 2, cy = 560;
+  const withHero = !!heroId;
+  const cx = GAME_WIDTH / 2, cy = withHero ? 380 : 560, size = withHero ? 170 : 220;
   const shade = scene.add.rectangle(-400, -800, GAME_WIDTH + 800, 2880, COLORS.background, 0.85).setOrigin(0).setDepth(700).setInteractive();
-  const ic = icon(scene, cx, cy, iconKey('fruitbig', fruitId), 220).setDepth(702).setScale(0);
-  await tw(scene, { targets: ic, scale: 220 / 256, duration: 300, ease: 'Back.easeOut' });
+  const ic = icon(scene, cx, cy, iconKey('fruitbig', fruitId), size).setDepth(702).setScale(0);
+  const hero = heroId ? new HeroRig(scene, cx, 930, heroId, 0.78, { fruitId, level: level - 1 }).idle().setDepth(702).setAlpha(0) : undefined;
+  if (hero) void tw(scene, { targets: hero, alpha: 1, duration: 300 });
+  await tw(scene, { targets: ic, scale: size / 256, duration: 300, ease: 'Back.easeOut' });
   const pulses = level >= 4 ? 4 : 3;
   for (let i = 0; i < pulses; i++) {
     for (let k = 0; k < 14 + (level - 1) * 3; k++) {
@@ -544,20 +551,30 @@ export async function awakenFx(scene: Phaser.Scene, fruitId: string, level: numb
       const p = scene.add.rectangle(cx + Math.cos(a) * d, cy + Math.sin(a) * d, 12, 12, k % 2 ? col : 0xffffff).setDepth(701);
       scene.tweens.add({ targets: p, x: cx, y: cy, duration: 400, ease: 'Quad.easeIn', onComplete: () => p.destroy() });
     }
-    void tw(scene, { targets: ic, scale: (220 / 256) * 1.12, duration: 120, yoyo: true, delay: 300 });
+    void tw(scene, { targets: ic, scale: (size / 256) * 1.12, duration: 120, yoyo: true, delay: 300 });
     await wait(scene, 420);
+  }
+  // raggio dal frutto all'eroe
+  if (hero) {
+    const beam = scene.add.rectangle(cx, cy, 40, 10, col, 0.85).setOrigin(0.5, 0).setDepth(701).setBlendMode(Phaser.BlendModes.ADD);
+    await tw(scene, { targets: beam, height: 930 - cy - 180, duration: 180, ease: 'Quad.easeIn' });
+    scene.tweens.add({ targets: beam, alpha: 0, scaleX: 3, duration: 300, onComplete: () => beam.destroy() });
   }
   const fl = scene.add.rectangle(-400, -800, GAME_WIDTH + 800, 2880, 0xffffff, 0.8).setOrigin(0).setDepth(703);
   scene.tweens.add({ targets: fl, alpha: 0, duration: 500, onComplete: () => fl.destroy() });
   for (let i = 0; i < 3; i++) {
     void ring(scene, cx, cy, col, 700, 700 + i * 200, 10, 701);
   }
+  hero?.setLook({ fruitId, level }, true);
   scene.cameras.main.shake(250, 0.01);
   const a = fruitAbility(f, level);
-  const t1 = addTitle(scene, cx, cy - 210, `RISVEGLIO ${ROMAN[level]}!`, 72).setColor(level >= 5 ? '#ffffff' : '#ffcf3a').setDepth(704);
-  const t2 = addTitle(scene, cx, cy + 180, a.name, 44).setDepth(704);
-  const t3 = addBody(scene, cx, cy + 250, `${a.cost}⚡ · ${a.description}`, 24, '#fbe9c8').setWordWrapWidth(600).setDepth(704);
-  await wait(scene, 1700);
-  await tw(scene, { targets: [shade, ic, t1, t2, t3], alpha: 0, duration: 300 });
-  [shade, ic, t1, t2, t3].forEach((o) => o.destroy());
+  const tY = withHero ? 190 : cy - 210;
+  const t1 = addTitle(scene, cx, tY, `RISVEGLIO ${ROMAN[level]}!`, 72).setColor(level >= 5 ? '#ffffff' : '#ffcf3a').setDepth(704);
+  const t2 = addTitle(scene, cx, withHero ? 1000 : cy + 180, a.name, 44).setDepth(704);
+  const t3 = addBody(scene, cx, withHero ? 1070 : cy + 250, `${a.cost}⚡ · ${a.description}`, 24, '#fbe9c8').setWordWrapWidth(600).setDepth(704);
+  const t4 = level >= 5 && hero ? addBody(scene, cx, 1150, 'TRASFORMAZIONE COMPLETA!', 30, '#ffe14a').setDepth(704) : undefined;
+  await wait(scene, hero ? 2600 : 1700);
+  const all = [shade, ic, t1, t2, t3, ...(hero ? [hero] : []), ...(t4 ? [t4] : [])];
+  await tw(scene, { targets: all, alpha: 0, duration: 300 });
+  all.forEach((o) => o.destroy());
 }

@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { runLook } from '../data/fruitLooks';
 import { COLORS, GAME_WIDTH } from '../app/config';
 import { iconKey } from '../pixel/keys';
 import { AREAS, NODE_LABELS, type NodeType } from '../data/areas';
@@ -39,7 +40,7 @@ export class ExplorationScene extends BaseScene {
     this.walking = true; this.paused = false; this.arrived = false;
 
     this.backdrop = new BiomeBackdrop(this, { groundTop: 760, withForeground: true, tint: GameSession.ctl.area.tint, theme: GameSession.ctl.area.backdrop });
-    this.hero = new HeroRig(this, 250, this.backdrop.groundY, run.avatar === 'a' ? 'm' : 'f', 0.95).walk();
+    this.hero = new HeroRig(this, 250, this.backdrop.groundY, run.avatar === 'a' ? 'm' : 'f', 0.95, runLook(run)).walk();
     this.backdrop.addForeground();
 
     new RunHud(this, run);

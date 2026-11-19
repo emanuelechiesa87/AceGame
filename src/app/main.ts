@@ -14,6 +14,7 @@ import { NewSeaScene } from '../scenes/NewSeaScene';
 import { CollectionScene } from '../scenes/CollectionScene';
 import { RecordsScene } from '../scenes/RecordsScene';
 import { GameSession } from '../state/GameSession';
+import { HeroRig } from '../ui/HeroRig';
 
 async function start(): Promise<void> {
   // I testi Phaser vengono disegnati subito: i font devono essere pronti prima.
@@ -39,6 +40,7 @@ async function start(): Promise<void> {
   // Esposto solo per il debug da console (es. chrome://inspect sull'S23).
   (window as unknown as { __game: Phaser.Game; __session: typeof GameSession }).__game = game;
   (window as unknown as { __session: typeof GameSession }).__session = GameSession;
+  (window as unknown as { __HeroRig: typeof HeroRig }).__HeroRig = HeroRig;
 }
 
 void start();

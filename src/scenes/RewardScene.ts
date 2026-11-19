@@ -94,7 +94,7 @@ export class RewardScene extends BaseScene {
     switch (r.kind) {
       case 'awaken': {
         ctl.awaken();
-        void awakenFx(this, GameSession.run!.activeFruitIds[0], ctl.fruitLevel).then(() => this.finish());
+        void awakenFx(this, GameSession.run!.activeFruitIds[0], ctl.fruitLevel, GameSession.run!.avatar === 'a' ? 'm' : 'f').then(() => this.finish());
         return;
       }
       case 'artifact': offerArtifact(r.id); break;

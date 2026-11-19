@@ -1,4 +1,5 @@
 import { COLORS, GAME_WIDTH, TEXTURE_SCALE } from '../app/config';
+import { runLook } from '../data/fruitLooks';
 import { CREATURE_SCALE } from '../pixel/creatures';
 import { creatureKey, iconKey } from '../pixel/keys';
 import type { NodeType } from '../data/areas';
@@ -32,7 +33,7 @@ export class EventScene extends BaseScene {
     if (!run) { this.scene.start('Menu'); return; }
     this.buttons = [];
     new BiomeBackdrop(this, { groundTop: 700 });
-    this.hero = new HeroRig(this, 200, 756, run.avatar === 'a' ? 'm' : 'f', 0.8).idle();
+    this.hero = new HeroRig(this, 200, 756, run.avatar === 'a' ? 'm' : 'f', 0.8, runLook(run)).idle();
     panel(this, 30, 800, 660, 450, COLORS.panel, 0.96);
 
     if (data.node === 'rest') this.rest();
@@ -89,7 +90,7 @@ export class EventScene extends BaseScene {
       label: c.label.toUpperCase(),
       act: () => {
         const out = resolveEvent(ctl, c.outcome);
-        if (out.awakened) this.done(out.text, 'good');
+        if (out.awakened) { this.hero.setLook(runLook(GameSession.run), true); this.done(out.text, 'good'); }
         else if (out.artifactOffer) { offerArtifact(out.artifactOffer); this.done(`${out.text} Trovi: ${artifactName(out.artifactOffer)}!`, 'good'); }
         else this.done(out.text, out.text.includes('-') ? 'bad' : 'neutral');
       },
