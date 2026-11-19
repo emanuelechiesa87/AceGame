@@ -41,6 +41,12 @@ export const BALANCE = {
   enemies: {
     hpMult: 1.2,
     atkMult: 1.1,
+    /** Ritocchi per grado: scontri normali che logorano, boss meno "muro" (fase 6). */
+    tier: {
+      normal: { hp: 1.1, atk: 1.4 },
+      elite: { hp: 1, atk: 1.2 },
+      boss: { hp: 0.85, atk: 0.9 },
+    },
   },
   rewards: {
     restHealPct: 0.35,

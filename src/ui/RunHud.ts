@@ -40,7 +40,7 @@ export class RunHud {
       }
       addBody(scene, 309, y + 138, `Lv ${ROMAN[lvl]}`, 18, '#ffcf3a');
     }
-    addBody(scene, 430, y + 96, 'SQUADRA', 20, '#f1d7a8').setOrigin(0, 0.5);
+    addBody(scene, 438, y + 70, 'SQUADRA', 20, '#f1d7a8').setOrigin(0, 0.5);
     for (let i = 0; i < BALANCE.limits.maxCompanions; i++) {
       const x = 470 + i * 78, cy = y + 116;
       scene.add.graphics().lineStyle(4, 0x8a5232, 1).strokeRect(x - 32, cy - 32, 64, 64);

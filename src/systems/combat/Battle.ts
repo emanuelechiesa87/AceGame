@@ -470,7 +470,8 @@ export function makeEnemyUnit(enemyId: string, uid: string, scale: { hp: number;
   const d = ENEMY_BY_ID.get(enemyId);
   if (!d) throw new Error(`Nemico sconosciuto: ${enemyId}`);
   const E = BALANCE.enemies;
-  return baseUnit({ uid, defId: d.id, name: d.name, side: 'enemy', kind: 'enemy', maxHp: Math.round(d.stats.maxHp * E.hpMult * scale.hp), atk: Math.round(d.stats.atk * E.atkMult * scale.atk), def: d.stats.def, spd: d.stats.spd });
+  const T = E.tier[d.tier];
+  return baseUnit({ uid, defId: d.id, name: d.name, side: 'enemy', kind: 'enemy', maxHp: Math.round(d.stats.maxHp * E.hpMult * T.hp * scale.hp), atk: Math.round(d.stats.atk * E.atkMult * T.atk * scale.atk), def: d.stats.def, spd: d.stats.spd });
 }
 
 /** `scale` = crescita del compagno nel mare corrente (vedi `companionScale`). */

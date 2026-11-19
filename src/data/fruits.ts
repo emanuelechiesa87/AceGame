@@ -64,13 +64,13 @@ export const FRUITS: FruitDef[] = [
   {
     id: 'fruit_life', name: 'Lampone Linfa', rarity: 'rare', element: 'life', color: '#6fe08a',
     description: 'Profuma di bosco dopo la pioggia.',
-    passive: { maxHp: 6 }, startsUnlocked: false,
+    passive: { def: 1 }, startsUnlocked: false,
     abilities: [
-      lv('pw_life', 'Rugiada Viva', 'Cura il 15% a tutta la squadra e +30% ATT per 2 turni.', 3, 'allAllies', [{ kind: 'heal', pctMaxHp: 0.15 }, { kind: 'status', status: 'atkUp', turns: 2, value: 0.3 }]),
-      lv('pw_life_2', 'Rugiada Viva II', 'Cura il 17%, scudo 10 e furia (+35% ATT) per 2 turni a tutti.', 3, 'allAllies', [{ kind: 'heal', pctMaxHp: 0.17 }, { kind: 'shield', amount: 10 }, { kind: 'status', status: 'atkUp', turns: 2, value: 0.35 }]),
-      lv('pw_life_3', 'Fioritura', 'Cura il 20%, scudo 12, furia (+50% ATT) e rimuove i malus a tutti.', 3, 'allAllies', [{ kind: 'cleanse' }, { kind: 'heal', pctMaxHp: 0.2 }, { kind: 'shield', amount: 12 }, { kind: 'status', status: 'atkUp', turns: 3, value: 0.5 }]),
-      lv('pw_life_4', 'Fioritura II', 'Cura il 23%, scudo 18, furia (+65% ATT) e rimuove i malus a tutti.', 3, 'allAllies', [{ kind: 'cleanse' }, { kind: 'heal', pctMaxHp: 0.23 }, { kind: 'shield', amount: 18 }, { kind: 'status', status: 'atkUp', turns: 3, value: 0.65 }]),
-      lv('pw_life_5', 'Primavera Eterna', 'Cura il 27%, scudo 25, furia (+80% ATT) e rimuove i malus a tutti.', 3, 'allAllies', [{ kind: 'cleanse' }, { kind: 'heal', pctMaxHp: 0.27 }, { kind: 'shield', amount: 25 }, { kind: 'status', status: 'atkUp', turns: 3, value: 0.8 }]),
+      lv('pw_life', 'Rugiada Viva', 'Cura il 14% a tutta la squadra e +30% ATT per 2 turni.', 3, 'allAllies', [{ kind: 'heal', pctMaxHp: 0.14 }, { kind: 'status', status: 'atkUp', turns: 2, value: 0.3 }]),
+      lv('pw_life_2', 'Rugiada Viva II', 'Cura il 16%, scudo 8 e furia (+35% ATT) per 2 turni a tutti.', 3, 'allAllies', [{ kind: 'heal', pctMaxHp: 0.16 }, { kind: 'shield', amount: 8 }, { kind: 'status', status: 'atkUp', turns: 2, value: 0.35 }]),
+      lv('pw_life_3', 'Fioritura', 'Cura il 18%, scudo 9, furia (+50% ATT) e rimuove i malus a tutti.', 3, 'allAllies', [{ kind: 'cleanse' }, { kind: 'heal', pctMaxHp: 0.18 }, { kind: 'shield', amount: 9 }, { kind: 'status', status: 'atkUp', turns: 3, value: 0.5 }]),
+      lv('pw_life_4', 'Fioritura II', 'Cura il 20%, scudo 13, furia (+50% ATT) e rimuove i malus a tutti.', 3, 'allAllies', [{ kind: 'cleanse' }, { kind: 'heal', pctMaxHp: 0.2 }, { kind: 'shield', amount: 13 }, { kind: 'status', status: 'atkUp', turns: 3, value: 0.5 }]),
+      lv('pw_life_5', 'Primavera Eterna', 'Cura il 22%, scudo 18, furia (+60% ATT) e rimuove i malus a tutti.', 3, 'allAllies', [{ kind: 'cleanse' }, { kind: 'heal', pctMaxHp: 0.22 }, { kind: 'shield', amount: 18 }, { kind: 'status', status: 'atkUp', turns: 3, value: 0.6 }]),
     ],
   },
   {
@@ -88,7 +88,7 @@ export const FRUITS: FruitDef[] = [
   {
     id: 'fruit_spring', name: 'Gelso Molla', rarity: 'common', element: 'elastic', color: '#ff7fb0',
     description: 'Rimbalza se lo lasci cadere. Anche chi lo mangia.',
-    passive: { spd: 2 }, startsUnlocked: true,
+    passive: { spd: 2, atk: 1, maxHp: 8 }, startsUnlocked: true,
     abilities: [
       lv('pw_spring', 'Raffica Molleggiata', '5 colpi rapidi da 72% ciascuno.', 2, 'enemy', [{ kind: 'damage', mult: 0.72, hits: 5 }]),
       lv('pw_spring_2', 'Raffica Molleggiata II', '6 colpi rapidi da 75% ciascuno.', 2, 'enemy', [{ kind: 'damage', mult: 0.75, hits: 6 }]),
@@ -100,19 +100,19 @@ export const FRUITS: FruitDef[] = [
   {
     id: 'fruit_mist', name: 'Nespola Nebbia', rarity: 'rare', element: 'mist', color: '#c9d6e8',
     description: 'Si sbuccia da sola e si dissolve in vapore.',
-    passive: { spd: 1, def: 1 }, startsUnlocked: false,
+    passive: { spd: 1, def: 2, atk: 2, maxHp: 6 }, startsUnlocked: false,
     abilities: [
       lv('pw_mist', 'Corpo di Nebbia', 'Per 2 turni schivi il 60% dei colpi e +40% ATT.', 2, 'self', [{ kind: 'status', status: 'evade', turns: 2, value: 0.6 }, { kind: 'status', status: 'atkUp', turns: 2, value: 0.4 }]),
       lv('pw_mist_2', 'Corpo di Nebbia II', 'Per 3 turni schivi il 65% dei colpi e +60% ATT.', 2, 'self', [{ kind: 'status', status: 'evade', turns: 3, value: 0.65 }, { kind: 'status', status: 'atkUp', turns: 3, value: 0.6 }]),
-      lv('pw_mist_3', 'Spettro del Porto', 'Per 3 turni schivi il 75% dei colpi e +90% ATT.', 2, 'self', [{ kind: 'status', status: 'evade', turns: 3, value: 0.75 }, { kind: 'status', status: 'atkUp', turns: 3, value: 0.9 }]),
-      lv('pw_mist_4', 'Spettro del Porto II', 'Per 4 turni schivi il 78% dei colpi e +115% ATT.', 2, 'self', [{ kind: 'status', status: 'evade', turns: 4, value: 0.78 }, { kind: 'status', status: 'atkUp', turns: 4, value: 1.15 }]),
-      lv('pw_mist_5', 'Fantasma dell\'Abisso', 'Per 4 turni schivi l\'80% dei colpi e +145% ATT.', 2, 'self', [{ kind: 'status', status: 'evade', turns: 4, value: 0.8 }, { kind: 'status', status: 'atkUp', turns: 4, value: 1.45 }]),
+      lv('pw_mist_3', 'Spettro del Porto', 'Per 3 turni schivi il 75% dei colpi e +100% ATT.', 2, 'self', [{ kind: 'status', status: 'evade', turns: 3, value: 0.75 }, { kind: 'status', status: 'atkUp', turns: 3, value: 1 }]),
+      lv('pw_mist_4', 'Spettro del Porto II', 'Per 4 turni schivi il 78% dei colpi e +135% ATT.', 2, 'self', [{ kind: 'status', status: 'evade', turns: 4, value: 0.78 }, { kind: 'status', status: 'atkUp', turns: 4, value: 1.35 }]),
+      lv('pw_mist_5', 'Fantasma dell\'Abisso', 'Per 4 turni schivi l\'80% dei colpi e +170% ATT.', 2, 'self', [{ kind: 'status', status: 'evade', turns: 4, value: 0.8 }, { kind: 'status', status: 'atkUp', turns: 4, value: 1.7 }]),
     ],
   },
   {
     id: 'fruit_fang', name: 'Cocco Zanna', rarity: 'rare', element: 'beast', color: '#b07b4a',
     description: 'Ha il pelo. E ringhia, se lo scuoti.',
-    passive: { maxHp: 8 }, startsUnlocked: false,
+    passive: { maxHp: 15, def: 2 }, startsUnlocked: false,
     abilities: [
       lv('pw_fang', 'Risveglio Bestiale', 'Per 3 turni: +120% ATT e +60% DIF.', 2, 'self', [{ kind: 'status', status: 'atkUp', turns: 3, value: 1.2 }, { kind: 'status', status: 'defUp', turns: 3, value: 0.6 }]),
       lv('pw_fang_2', 'Risveglio Bestiale II', 'Per 3 turni: +150% ATT e +70% DIF.', 2, 'self', [{ kind: 'status', status: 'atkUp', turns: 3, value: 1.5 }, { kind: 'status', status: 'defUp', turns: 3, value: 0.7 }]),
@@ -124,7 +124,7 @@ export const FRUITS: FruitDef[] = [
   {
     id: 'fruit_glue', name: 'Kiwi Colla', rarity: 'common', element: 'glue', color: '#a8d84a',
     description: 'Appiccica tutto. Soprattutto le dita.',
-    passive: { def: 1, maxHp: 4 }, startsUnlocked: true,
+    passive: { def: 1 }, startsUnlocked: true,
     abilities: [
       lv('pw_glue', 'Rete Appiccicosa', 'Danno 120% a tutti, -50% VEL e vulnerabili per 2 turni.', 2, 'allEnemies', [{ kind: 'damage', mult: 1.2 }, { kind: 'status', status: 'slow', turns: 2, value: 0.5 }, { kind: 'status', status: 'vulnerable', turns: 2 }]),
       lv('pw_glue_2', 'Rete Appiccicosa II', 'Danno 150% a tutti, -50% VEL e vulnerabili per 3 turni.', 2, 'allEnemies', [{ kind: 'damage', mult: 1.5 }, { kind: 'status', status: 'slow', turns: 3, value: 0.5 }, { kind: 'status', status: 'vulnerable', turns: 3 }]),
@@ -136,7 +136,7 @@ export const FRUITS: FruitDef[] = [
   {
     id: 'fruit_mirror', name: 'Prugna Specchio', rarity: 'rare', element: 'mirror', color: '#9fe8ff',
     description: 'Lucida come vetro. Ci vedi la tua faccia stupita.',
-    passive: { def: 2 }, startsUnlocked: false,
+    passive: { def: 3, maxHp: 8 }, startsUnlocked: false,
     abilities: [
       lv('pw_mirror', 'Specchio Riflesso', 'Scudo 15 e per 2 turni chi ti colpisce subisce il 60% del colpo.', 2, 'self', [{ kind: 'shield', amount: 15 }, { kind: 'status', status: 'reflect', turns: 2, value: 0.6 }]),
       lv('pw_mirror_2', 'Specchio Riflesso II', 'Scudo 22 e per 3 turni riflette l\'80% del colpo.', 2, 'self', [{ kind: 'shield', amount: 22 }, { kind: 'status', status: 'reflect', turns: 3, value: 0.8 }]),
@@ -148,7 +148,7 @@ export const FRUITS: FruitDef[] = [
   {
     id: 'fruit_clock', name: 'Ananas Orologio', rarity: 'epic', element: 'time', color: '#ffcf3a',
     description: 'Ticchetta. Nessuno ha il coraggio di aprirlo.',
-    passive: { spd: 2 }, startsUnlocked: false,
+    passive: { spd: 2, maxHp: 10 }, startsUnlocked: false,
     abilities: [
       lv('pw_clock', 'Secondo Rintocco', 'Danno 190% e agisci subito di nuovo.', 2, 'enemy', [{ kind: 'damage', mult: 1.9 }, { kind: 'extraAction' }]),
       lv('pw_clock_2', 'Secondo Rintocco II', 'Danno 230% e agisci subito di nuovo.', 2, 'enemy', [{ kind: 'damage', mult: 2.3 }, { kind: 'extraAction' }]),
@@ -160,7 +160,7 @@ export const FRUITS: FruitDef[] = [
   {
     id: 'fruit_magnet', name: 'Melagrana Magnete', rarity: 'common', element: 'magnet', color: '#e4342f',
     description: 'Le posate le volano addosso. Sempre.',
-    passive: { atk: 1, def: 1 }, startsUnlocked: true,
+    passive: { atk: 2, def: 1, maxHp: 6 }, startsUnlocked: true,
     abilities: [
       lv('pw_magnet', 'Strappo Magnetico', 'Ruba lo scudo, danno 190% e vulnerabile per 2 turni.', 2, 'enemy', [{ kind: 'stealShield' }, { kind: 'damage', mult: 1.9 }, { kind: 'status', status: 'vulnerable', turns: 2 }]),
       lv('pw_magnet_2', 'Strappo Magnetico II', 'Ruba lo scudo, danno 240% e vulnerabile per 3 turni.', 2, 'enemy', [{ kind: 'stealShield' }, { kind: 'damage', mult: 2.4 }, { kind: 'status', status: 'vulnerable', turns: 3 }]),
@@ -173,7 +173,7 @@ export const FRUITS: FruitDef[] = [
   {
     id: 'fruit_blood', name: 'Fragola Vampira', rarity: 'common', element: 'blood', color: '#e8304f',
     description: 'Ha due semi più lunghi degli altri. Sembrano canini.',
-    passive: { atk: 1, maxHp: 5 }, startsUnlocked: false,
+    passive: { atk: 2, maxHp: 12 }, startsUnlocked: false,
     abilities: [
       lv('pw_blood', 'Morso Vampiro', 'Danno 190% e ti curi del 60% del danno inflitto.', 2, 'enemy', [{ kind: 'damage', mult: 1.9, lifesteal: 0.6 }]),
       lv('pw_blood_2', 'Morso Vampiro II', 'Danno 230% e ti curi del 70% del danno inflitto.', 2, 'enemy', [{ kind: 'damage', mult: 2.3, lifesteal: 0.7 }]),
@@ -185,13 +185,13 @@ export const FRUITS: FruitDef[] = [
   {
     id: 'fruit_stench', name: 'Durian Tanfo', rarity: 'common', element: 'stench', color: '#c9c23a',
     description: 'Si sente da tre isole di distanza. I gabbiani svengono.',
-    passive: { def: 1, maxHp: 6 }, startsUnlocked: false,
+    passive: { spd: 1 }, startsUnlocked: false,
     abilities: [
       lv('pw_stench', 'Nube Puzzolente', 'Danno 100% a TUTTI, veleno (4/turno) per 3 turni e -20% ATT per 2 turni.', 2, 'allEnemies', [{ kind: 'damage', mult: 1 }, { kind: 'status', status: 'poison', turns: 3, value: 4 }, { kind: 'status', status: 'weak', turns: 2, value: 0.2 }]),
       lv('pw_stench_2', 'Nube Puzzolente II', 'Danno 120% a TUTTI, veleno (6/turno) per 3 turni e -25% ATT per 3 turni.', 2, 'allEnemies', [{ kind: 'damage', mult: 1.2 }, { kind: 'status', status: 'poison', turns: 3, value: 6 }, { kind: 'status', status: 'weak', turns: 3, value: 0.25 }]),
-      lv('pw_stench_3', 'Miasma', 'Danno 150% a TUTTI, veleno (8/turno) per 3 turni e -30% ATT per 3 turni.', 3, 'allEnemies', [{ kind: 'damage', mult: 1.5 }, { kind: 'status', status: 'poison', turns: 3, value: 8 }, { kind: 'status', status: 'weak', turns: 3, value: 0.3 }]),
-      lv('pw_stench_4', 'Miasma II', 'Danno 180% a TUTTI, veleno (10/turno) per 3 turni e -35% ATT per 3 turni.', 3, 'allEnemies', [{ kind: 'damage', mult: 1.8 }, { kind: 'status', status: 'poison', turns: 3, value: 10 }, { kind: 'status', status: 'weak', turns: 3, value: 0.35 }]),
-      lv('pw_stench_5', 'Tanfo Leggendario', 'Danno 220% a TUTTI, veleno (13/turno) per 4 turni, -40% ATT per 3 turni e -30% VEL.', 3, 'allEnemies', [{ kind: 'damage', mult: 2.2 }, { kind: 'status', status: 'poison', turns: 4, value: 13 }, { kind: 'status', status: 'weak', turns: 3, value: 0.4 }, { kind: 'status', status: 'slow', turns: 2, value: 0.3 }]),
+      lv('pw_stench_3', 'Miasma', 'Danno 150% a TUTTI, veleno (7/turno) per 3 turni e -30% ATT per 3 turni.', 3, 'allEnemies', [{ kind: 'damage', mult: 1.5 }, { kind: 'status', status: 'poison', turns: 3, value: 7 }, { kind: 'status', status: 'weak', turns: 3, value: 0.3 }]),
+      lv('pw_stench_4', 'Miasma II', 'Danno 180% a TUTTI, veleno (8/turno) per 3 turni e -35% ATT per 3 turni.', 3, 'allEnemies', [{ kind: 'damage', mult: 1.8 }, { kind: 'status', status: 'poison', turns: 3, value: 8 }, { kind: 'status', status: 'weak', turns: 3, value: 0.35 }]),
+      lv('pw_stench_5', 'Tanfo Leggendario', 'Danno 220% a TUTTI, veleno (10/turno) per 4 turni, -40% ATT per 3 turni e -30% VEL.', 3, 'allEnemies', [{ kind: 'damage', mult: 2.2 }, { kind: 'status', status: 'poison', turns: 4, value: 10 }, { kind: 'status', status: 'weak', turns: 3, value: 0.4 }, { kind: 'status', status: 'slow', turns: 2, value: 0.3 }]),
     ],
   },
   {
@@ -202,32 +202,32 @@ export const FRUITS: FruitDef[] = [
       lv('pw_acid', 'Spruzzo Acido', 'Scioglie lo scudo, danno 170% e acido per 3 turni: 6 danni che crescono ogni turno, DIF annullata.', 2, 'enemy', [{ kind: 'meltShield' }, { kind: 'damage', mult: 1.7 }, { kind: 'status', status: 'acid', turns: 3, value: 6 }]),
       lv('pw_acid_2', 'Spruzzo Acido II', 'Scioglie lo scudo, danno 210% e acido (9, cresce ogni turno) per 3 turni.', 2, 'enemy', [{ kind: 'meltShield' }, { kind: 'damage', mult: 2.1 }, { kind: 'status', status: 'acid', turns: 3, value: 9 }]),
       lv('pw_acid_3', 'Pioggia Acida', 'Scioglie gli scudi, danno 150% a TUTTI e acido (9, cresce) per 3 turni.', 3, 'allEnemies', [{ kind: 'meltShield' }, { kind: 'damage', mult: 1.5 }, { kind: 'status', status: 'acid', turns: 3, value: 9 }]),
-      lv('pw_acid_4', 'Pioggia Acida II', 'Scioglie gli scudi, danno 185% a TUTTI e acido (12, cresce) per 3 turni.', 3, 'allEnemies', [{ kind: 'meltShield' }, { kind: 'damage', mult: 1.85 }, { kind: 'status', status: 'acid', turns: 3, value: 12 }]),
-      lv('pw_acid_5', 'Diluvio Corrosivo', 'Scioglie gli scudi, danno 220% a TUTTI, acido (15, cresce) per 4 turni e vulnerabili per 2 turni.', 3, 'allEnemies', [{ kind: 'meltShield' }, { kind: 'damage', mult: 2.2 }, { kind: 'status', status: 'acid', turns: 4, value: 15 }, { kind: 'status', status: 'vulnerable', turns: 2 }]),
+      lv('pw_acid_4', 'Pioggia Acida II', 'Scioglie gli scudi, danno 185% a TUTTI e acido (10, cresce) per 3 turni.', 3, 'allEnemies', [{ kind: 'meltShield' }, { kind: 'damage', mult: 1.85 }, { kind: 'status', status: 'acid', turns: 3, value: 10 }]),
+      lv('pw_acid_5', 'Diluvio Corrosivo', 'Scioglie gli scudi, danno 220% a TUTTI, acido (12, cresce) per 4 turni e vulnerabili per 2 turni.', 3, 'allEnemies', [{ kind: 'meltShield' }, { kind: 'damage', mult: 2.2 }, { kind: 'status', status: 'acid', turns: 4, value: 12 }, { kind: 'status', status: 'vulnerable', turns: 2 }]),
     ],
   },
   {
     id: 'fruit_bubble', name: 'Arancia Bolla', rarity: 'rare', element: 'bubble', color: '#ff9a2a',
     description: 'Se la sbucci, ne escono bolle. Tante. Troppe.',
-    passive: { spd: 2, def: 1 }, startsUnlocked: false,
+    passive: { spd: 1 }, startsUnlocked: false,
     abilities: [
-      lv('pw_bubble', 'Bolla Prigione', 'Danno 130% e chiude il nemico in una bolla per 1 turno; poi scoppia (100%).', 2, 'enemy', [{ kind: 'damage', mult: 1.3 }, { kind: 'bubble', turns: 1, popMult: 1 }]),
-      lv('pw_bubble_2', 'Bolla Prigione II', 'Danno 160%, bolla per 2 turni, poi scoppia (130%). I boss restano nella bolla 1 turno.', 2, 'enemy', [{ kind: 'damage', mult: 1.6 }, { kind: 'bubble', turns: 2, popMult: 1.3 }]),
-      lv('pw_bubble_3', 'Mare di Bolle', 'Danno 110% a TUTTI e li chiude in bolle per 1 turno; poi scoppiano (100%).', 3, 'allEnemies', [{ kind: 'damage', mult: 1.1 }, { kind: 'bubble', turns: 1, popMult: 1 }]),
-      lv('pw_bubble_4', 'Mare di Bolle II', 'Danno 140% a TUTTI, bolle per 1 turno, poi scoppiano (130%).', 3, 'allEnemies', [{ kind: 'damage', mult: 1.4 }, { kind: 'bubble', turns: 1, popMult: 1.3 }]),
-      lv('pw_bubble_5', 'Bolla Oceanica', 'Danno 170% a TUTTI, bolle per 2 turni (boss 1), poi scoppiano (180%).', 3, 'allEnemies', [{ kind: 'damage', mult: 1.7 }, { kind: 'bubble', turns: 2, popMult: 1.8 }]),
+      lv('pw_bubble', 'Bolla Prigione', 'Danno 120% e chiude il nemico in una bolla per 1 turno; poi scoppia (100%).', 2, 'enemy', [{ kind: 'damage', mult: 1.2 }, { kind: 'bubble', turns: 1, popMult: 1 }]),
+      lv('pw_bubble_2', 'Bolla Prigione II', 'Danno 145%, bolla per 2 turni, poi scoppia (110%). I boss restano nella bolla 1 turno.', 2, 'enemy', [{ kind: 'damage', mult: 1.45 }, { kind: 'bubble', turns: 2, popMult: 1.1 }]),
+      lv('pw_bubble_3', 'Mare di Bolle', 'Danno 110% a TUTTI e li chiude in bolle per 1 turno; poi scoppiano (80%).', 3, 'allEnemies', [{ kind: 'damage', mult: 1.1 }, { kind: 'bubble', turns: 1, popMult: 0.8 }]),
+      lv('pw_bubble_4', 'Mare di Bolle II', 'Danno 140% a TUTTI, bolle per 1 turno, poi scoppiano (105%).', 3, 'allEnemies', [{ kind: 'damage', mult: 1.4 }, { kind: 'bubble', turns: 1, popMult: 1.05 }]),
+      lv('pw_bubble_5', 'Bolla Oceanica', 'Danno 160% a TUTTI, bolle per 2 turni (boss 1), poi scoppiano (120%).', 3, 'allEnemies', [{ kind: 'damage', mult: 1.6 }, { kind: 'bubble', turns: 2, popMult: 1.2 }]),
     ],
   },
   {
     id: 'fruit_mine', name: 'Anguria Mina', rarity: 'rare', element: 'mine', color: '#3fae4a',
     description: 'I semi ticchettano. Meglio non sputarli vicino a qualcuno.',
-    passive: { maxHp: 8 }, startsUnlocked: false,
+    passive: { maxHp: 14, def: 1 }, startsUnlocked: false,
     abilities: [
       lv('pw_mine', 'Seme-Mina', 'Pianta una mina: all\'inizio del suo prossimo turno il nemico esplode (danno 320%).', 2, 'enemy', [{ kind: 'mine', mult: 3.2 }]),
       lv('pw_mine_2', 'Seme-Mina II', 'Mina da 400% sul nemico: esplode all\'inizio del suo prossimo turno.', 2, 'enemy', [{ kind: 'mine', mult: 4 }]),
-      lv('pw_mine_3', 'Campo Minato', 'Una mina da 260% sotto OGNI nemico.', 3, 'allEnemies', [{ kind: 'mine', mult: 2.6 }]),
-      lv('pw_mine_4', 'Campo Minato II', 'Una mina da 320% sotto OGNI nemico.', 3, 'allEnemies', [{ kind: 'mine', mult: 3.2 }]),
-      lv('pw_mine_5', 'Anguria Atomica', 'Una mina da 400% sotto OGNI nemico, che intanto rallenta (-30% VEL).', 3, 'allEnemies', [{ kind: 'mine', mult: 4 }, { kind: 'status', status: 'slow', turns: 2, value: 0.3 }]),
+      lv('pw_mine_3', 'Campo Minato', 'Una mina da 290% sotto OGNI nemico.', 3, 'allEnemies', [{ kind: 'mine', mult: 2.9 }]),
+      lv('pw_mine_4', 'Campo Minato II', 'Una mina da 360% sotto OGNI nemico.', 3, 'allEnemies', [{ kind: 'mine', mult: 3.6 }]),
+      lv('pw_mine_5', 'Anguria Atomica', 'Una mina da 450% sotto OGNI nemico, che intanto rallenta (-30% VEL).', 3, 'allEnemies', [{ kind: 'mine', mult: 4.5 }, { kind: 'status', status: 'slow', turns: 2, value: 0.3 }]),
     ],
   },
   {
@@ -245,7 +245,7 @@ export const FRUITS: FruitDef[] = [
   {
     id: 'fruit_twin', name: 'Ciliegia Gemella', rarity: 'epic', element: 'twin', color: '#e8264a',
     description: 'Due ciliegie, un picciolo. Chi la mangia non è più solo.',
-    passive: { atk: 2, def: 1 }, startsUnlocked: false,
+    passive: { atk: 3, def: 1, maxHp: 8 }, startsUnlocked: false,
     abilities: [
       lv('pw_twin', 'Doppio', 'Danno 140% e una gemella ti affianca per 3 turni: ripete attacchi e poteri al 50%.', 2, 'enemy', [{ kind: 'twin', turns: 3, ratio: 0.5 }, { kind: 'damage', mult: 1.4 }]),
       lv('pw_twin_2', 'Doppio II', 'Danno 170% e gemella per 3 turni al 60%.', 2, 'enemy', [{ kind: 'twin', turns: 3, ratio: 0.6 }, { kind: 'damage', mult: 1.7 }]),

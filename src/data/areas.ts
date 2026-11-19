@@ -56,19 +56,19 @@ const WEIGHTS: AreaDef['nodeWeights'] = { battle: 40, event: 16, chest: 14, rest
 export const AREAS: AreaDef[] = [
   {
     id: 'area_sunset_plains', name: 'Porto delle Gemme', tagline: 'Dove tutto comincia', steps: 6,
-    nodeWeights: WEIGHTS, groups: PORT_GROUPS, scale: { hp: 1, atk: 1 }, maxFruitLevel: 3, backdrop: 'port',
+    nodeWeights: WEIGHTS, groups: PORT_GROUPS, scale: { hp: 0.95, atk: 0.85 }, maxFruitLevel: 3, backdrop: 'port',
   },
   {
     id: 'area_coral_reef', name: 'Scogliera dei Coralli', tagline: 'Acque basse, guai profondi', steps: 6,
-    nodeWeights: WEIGHTS, groups: REEF_GROUPS, scale: { hp: 1.15, atk: 1.05 }, maxFruitLevel: 4, backdrop: 'reef',
+    nodeWeights: WEIGHTS, groups: REEF_GROUPS, scale: { hp: 1.03, atk: 0.88 }, maxFruitLevel: 4, backdrop: 'reef',
   },
   {
     id: 'area_glow_abyss', name: 'Abisso Luminoso', tagline: 'Laggiù qualcosa si accende', steps: 6,
-    nodeWeights: WEIGHTS, groups: ABYSS_GROUPS, scale: { hp: 2.2, atk: 1.6 }, maxFruitLevel: 5, backdrop: 'abyss', tint: 0x8e9ad8,
+    nodeWeights: WEIGHTS, groups: ABYSS_GROUPS, scale: { hp: 2.0, atk: 1.45 }, maxFruitLevel: 5, backdrop: 'abyss', tint: 0x8e9ad8,
   },
   {
     id: 'area_ship_graveyard', name: 'Cimitero delle Navi', tagline: 'L\'ultimo mare', steps: 6,
-    nodeWeights: WEIGHTS, groups: GRAVE_GROUPS, scale: { hp: 2.9, atk: 1.9 }, maxFruitLevel: 5, backdrop: 'graveyard', tint: 0xb4a8b8,
+    nodeWeights: WEIGHTS, groups: GRAVE_GROUPS, scale: { hp: 3.5, atk: 2.32 }, maxFruitLevel: 5, backdrop: 'graveyard', tint: 0xb4a8b8,
   },
 ];
 

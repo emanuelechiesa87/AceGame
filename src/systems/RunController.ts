@@ -34,6 +34,29 @@ export class RunController {
     for (let i = 0; i < run.rngCursor; i++) this.rng.next();
     const next = this.rng.next.bind(this.rng);
     this.rng.next = () => { run.rngCursor++; return next(); };
+    // salvataggi vecchi: squadra già al completo ma incontri ancora in mappa
+    if (run.map.length) this.pruneRecruitNodes();
+  }
+
+  /** Squadra al completo: non ci sono più compagni da incontrare. */
+  get teamFull(): boolean {
+    return this.run.companions.length >= L.maxCompanions || !COMPANIONS.some((c) => !this.run.companions.some((x) => x.id === c.id));
+  }
+
+  /**
+   * Con la squadra al completo l'incontro con un compagno non ha senso: nelle
+   * tappe ancora da giocare lo sostituisce con un altro tipo di tappa.
+   * Non consuma il generatore casuale (sostituzione fissa), così la run resta riproducibile.
+   */
+  pruneRecruitNodes(): void {
+    if (!this.teamFull) return;
+    const fallback: NodeType[] = ['event', 'chest', 'battle', 'rest'];
+    for (let i = this.run.stepIndex; i < this.run.map.length; i++) {
+      const step = this.run.map[i];
+      if (step.chosen || !step.options.includes('recruit')) continue;
+      const alt = fallback.find((t) => !step.options.includes(t))!;
+      step.options = step.options.map((t) => (t === 'recruit' ? alt : t));
+    }
   }
 
   get area() { return AREAS[Math.min(this.run.areaIndex, LAST_AREA_INDEX)]; }
@@ -87,14 +110,15 @@ export class RunController {
   generateMap(): MapStep[] {
     const a = this.area;
     const steps: MapStep[] = [{ options: ['battle'] }];
+    const full = this.teamFull;
     for (let i = 1; i < a.steps; i++) {
-      const weights = Object.entries(a.nodeWeights).filter(([t]) => !(t === 'elite' && i < 2)) as [NodeType, number][];
+      const weights = Object.entries(a.nodeWeights).filter(([t]) => !(t === 'elite' && i < 2) && !(t === 'recruit' && full)) as [NodeType, number][];
       const first = this.rng.weightedPick(weights.map(([item, weight]) => ({ item, weight })));
       let second = first;
       for (let k = 0; k < 10 && second === first; k++) second = this.rng.weightedPick(weights.map(([item, weight]) => ({ item, weight })));
       const opts: NodeType[] = second === first ? [first] : [first, second];
-      // garanzia: un incontro con un compagno nei primi passi
-      if (i === 1 && !opts.includes('recruit')) opts[opts.length - 1] = 'recruit';
+      // garanzia: un incontro con un compagno nei primi passi (se c'è ancora qualcuno da incontrare)
+      if (i === 1 && !full && !opts.includes('recruit')) opts[opts.length - 1] = 'recruit';
       // prima del boss si può sempre riposare
       if (i === a.steps - 1 && !opts.includes('rest')) opts[0] = 'rest';
       steps.push({ options: opts });
@@ -237,6 +261,7 @@ export class RunController {
       if (idx < 0) throw new Error('Compagno da sostituire non presente');
       cs[idx] = fresh;
     } else cs.push(fresh);
+    this.pruneRecruitNodes();
     return 'added';
   }
 
