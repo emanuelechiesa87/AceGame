@@ -3,6 +3,8 @@ import { COLORS, GAME_WIDTH } from '../app/config';
 import { iconKey } from '../pixel/keys';
 import { BALANCE } from '../data/balance';
 import { FRUIT_BY_ID } from '../data/fruits';
+import { AREAS } from '../data/areas';
+import { ROMAN } from '../ui/fruitFx';
 import { GameSession } from '../state/GameSession';
 import { BiomeBackdrop } from '../ui/BiomeBackdrop';
 import { Button } from '../ui/Button';
@@ -44,20 +46,21 @@ export class SummaryScene extends BaseScene {
     }
     const dur = res ? `${Math.floor(res.entry.durationSec / 60)}m ${res.entry.durationSec % 60}s` : '-';
     const rows = [
+      ['Mari superati', `${snapshot.bossesDefeated} / ${AREAS.length}`],
       ['Nemici sconfitti', String(snapshot.enemiesDefeated)],
       ['Élite / Boss', `${snapshot.elitesDefeated} / ${snapshot.bossesDefeated}`],
       ['Eventi completati', String(snapshot.eventsCompleted)],
       ['Durata', dur],
     ];
     rows.forEach(([k, v], i) => {
-      addBody(this, 110, 710 + i * 44, k, 26, '#fbe9c8').setOrigin(0, 0.5);
-      addBody(this, 610, 710 + i * 44, v, 26, '#ffffff').setOrigin(1, 0.5);
+      addBody(this, 110, 700 + i * 40, k, 26, '#fbe9c8').setOrigin(0, 0.5);
+      addBody(this, 610, 700 + i * 40, v, 26, '#ffffff').setOrigin(1, 0.5);
     });
     const fid = snapshot.activeFruitIds[0];
     addBody(this, 110, 905, 'Frutto:', 24, '#fbe9c8').setOrigin(0, 0.5);
     if (fid) {
       icon(this, 230, 905, iconKey('fruit', fid), 50);
-      addBody(this, 266, 905, `${FRUIT_BY_ID.get(fid)!.name} · Lv ${['', 'I', 'II', 'III'][snapshot.fruitLevel ?? 1]}`, 22, '#ffffff').setOrigin(0, 0.5);
+      addBody(this, 266, 905, `${FRUIT_BY_ID.get(fid)!.name} · Lv ${ROMAN[snapshot.fruitLevel ?? 1]}`, 22, '#ffffff').setOrigin(0, 0.5);
     }
 
     // sblocchi tra una run e l'altra: nuovi frutti nel pool iniziale

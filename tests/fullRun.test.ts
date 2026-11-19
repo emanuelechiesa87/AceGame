@@ -13,7 +13,8 @@ function playRun(seed: number, forceFruit?: string) {
   ctl.start([]);
   const run = ctl.run;
   if (forceFruit) { run.activeFruitIds = [forceFruit]; run.usedFruitIds = [forceFruit]; }
-  while (run.stepIndex < run.map.length) {
+  for (;;) {
+    if (run.stepIndex >= run.map.length) { if (!ctl.nextArea()) break; }
     const node = ctl.currentStep.options[0];
     ctl.choose(node);
     if (node === 'battle' || node === 'elite' || node === 'boss') {
@@ -23,10 +24,10 @@ function playRun(seed: number, forceFruit?: string) {
       const b = new Battle({
         hero: makeHeroUnit('Kai', stats, run.currentHp),
         companions: run.companions.map((c, i) => makeCompanionUnit(c.id, `c${i}`, c.hp, c.charge)),
-        enemies: enemies.map((id, i) => makeEnemyUnit(id, `e${i}`)),
+        enemies: enemies.map((id, i) => makeEnemyUnit(id, `e${i}`, ctl.enemyScale)),
         powers: run.activeFruitIds.map((id) => fruitAbility(FRUIT_BY_ID.get(id)!, ctl.fruitLevel)),
         potions: run.potions,
-        mods: { powerDamageMult: arts.reduce((m, a) => m * (a.powerDamageMult ?? 1), 1), surviveLethalOnce: arts.some((a) => a.surviveLethalOncePerBattle) },
+        mods: { powerDamageMult: arts.reduce((m, a) => m * (a.powerDamageMult ?? 1), 1), surviveLethalOnce: arts.some((a) => a.surviveLethalOncePerBattle), enemyScale: ctl.enemyScale },
       }, ctl.rng);
       b.start();
       let turns = 0;
@@ -46,7 +47,7 @@ function playRun(seed: number, forceFruit?: string) {
         else if (power) b.act({ type: 'power', abilityId: power.id, targetUid: target });
         else b.act({ type: 'attack', targetUid: target });
       }
-      if (b.phase !== 'victory') return { won: false, step: run.stepIndex, score: run.score, turns };
+      if (b.phase !== 'victory') return { won: false, step: run.stepIndex, area: run.areaIndex, score: run.score, turns, level: ctl.fruitLevel };
       run.potions = b.potions;
       ctl.onVictory(enemies, b.hero.hp, b.units.filter((u) => u.kind === 'companion').map((u) => ({ id: u.defId, hp: u.hp, charge: u.charge })));
       if (node === 'boss') ctl.onAreaCleared();
@@ -61,15 +62,17 @@ function playRun(seed: number, forceFruit?: string) {
     else if (node === 'event') { const ev = ctl.rng.pick(EVENTS); const out = resolveEvent(ctl, ev.choices[0].outcome); if (out.artifactOffer) ctl.gainArtifact(out.artifactOffer); }
     ctl.advance();
   }
-  return { won: true, step: run.stepIndex, score: run.score, turns: 0 };
+  return { won: true, step: run.stepIndex, area: run.areaIndex, score: run.score, turns: 0, level: ctl.fruitLevel };
 }
 
 describe('Run completa (simulazione senza grafica)', () => {
-  it('una run si può completare dall\'inizio al boss', () => {
+  it('una run di 4 mari si può completare', () => {
     const results = Array.from({ length: 300 }, (_, i) => playRun(i + 1));
     const wins = results.filter((r) => r.won).length;
     const rate = wins / results.length;
-    const deaths = results.filter((r) => !r.won).reduce<Record<number, number>>((m, r) => ((m[r.step] = (m[r.step] ?? 0) + 1), m), {});
+    const deaths = results.filter((r) => !r.won).reduce<Record<string, number>>((m, r) => { const k = `${r.area + 1}.${r.step}`; m[k] = (m[k] ?? 0) + 1; return m; }, {});
+    const reached = [0, 1, 2, 3].map((a) => results.filter((r) => r.area >= a).length);
+    console.log(`Arrivano al mare 1/2/3/4: ${reached.join(' / ')} · livello medio del frutto a fine run: ${(results.reduce((s, r) => s + r.level, 0) / results.length).toFixed(1)}`);
     console.log(`Vittorie: ${(rate * 100).toFixed(0)}% · morti per passo: ${JSON.stringify(deaths)} · punteggio medio vittorie: ${Math.round(results.filter((r) => r.won).reduce((s, r) => s + r.score, 0) / Math.max(1, wins))}`);
     expect(wins).toBeGreaterThan(0);
     // bilanciamento del prototipo: né banale né impossibile per un giocatore medio
@@ -83,6 +86,7 @@ describe('Run completa (simulazione senza grafica)', () => {
       return { id: f.id, rate: res.filter((r) => r.won).length / res.length };
     });
     console.log('Vittorie per frutto: ' + rates.map((r) => `${r.id.replace('fruit_', '')} ${(r.rate * 100).toFixed(0)}%`).join(' · '));
-    for (const r of rates) { expect(r.rate).toBeGreaterThan(0.4); expect(r.rate).toBeLessThan(0.99); }
+    // run di 4 mari: soglia minima più bassa (bilanciamento fine nella fase 6 della 0.6)
+    for (const r of rates) { expect(r.rate).toBeGreaterThan(0.3); expect(r.rate).toBeLessThan(0.99); }
   });
 });

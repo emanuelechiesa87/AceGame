@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FRUIT_BY_ID, FRUITS, fruitAbility } from '../src/data/fruits';
+import { FRUIT_BY_ID, FRUITS, fruitAbility, MAX_FRUIT_LEVEL } from '../src/data/fruits';
 import { Battle, makeEnemyUnit, makeHeroUnit } from '../src/systems/combat/Battle';
 import { Rng } from '../src/systems/Rng';
 
@@ -19,13 +19,16 @@ function setup(fruit: string, enemies = ['en_pudding_king'], seed = 1) {
 const use = (b: Battle, fruit: string) => b.act({ type: 'power', abilityId: FRUIT_BY_ID.get(fruit)!.abilities[0].id, targetUid: 'e0' });
 
 describe('Poteri dei frutti', () => {
-  it('ogni frutto ha 3 livelli di risveglio con ID unici e il III è più forte del I', () => {
+  it('ogni frutto ha 5 livelli di risveglio con ID unici e il danno cresce dal III al V', () => {
     const ids = FRUITS.flatMap((f) => f.abilities.map((a) => a.id));
-    expect(new Set(ids).size).toBe(FRUITS.length * 3);
+    expect(new Set(ids).size).toBe(FRUITS.length * MAX_FRUIT_LEVEL);
     for (const f of FRUITS) {
+      expect(f.abilities).toHaveLength(MAX_FRUIT_LEVEL);
       const dmg = (lvl: number) => f.abilities[lvl].effects.reduce((m, e) => m + (e.kind === 'damage' ? e.mult * (e.hits ?? 1) * (f.abilities[lvl].target === 'allEnemies' ? 1.5 : 1) : 0), 0);
+      // dal III in su ogni livello rafforza il precedente (II → III può scambiare bersaglio singolo con area)
       expect(dmg(2)).toBeGreaterThanOrEqual(dmg(0));
-      expect(fruitAbility(f, 9).id).toBe(f.abilities[2].id); // livello limitato a III
+      for (let l = 3; l < MAX_FRUIT_LEVEL; l++) expect(dmg(l)).toBeGreaterThanOrEqual(dmg(l - 1));
+      expect(fruitAbility(f, 9).id).toBe(f.abilities[MAX_FRUIT_LEVEL - 1].id); // livello limitato a V
     }
   });
 

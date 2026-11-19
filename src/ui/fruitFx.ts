@@ -8,13 +8,14 @@ import { icon } from './widgets';
 /**
  * Animazioni dedicate ai poteri dei frutti, in pixel art (solo quadrati e
  * linee squadrate). Ogni frutto ha la sua coreografia; il livello di
- * risveglio (1..3) ne aumenta intensità e spettacolarità.
+ * risveglio (1..5) ne aumenta intensità e spettacolarità; dal IV si aggiungono
+ * un lampo e anelli dorati, al V una pioggia di scintille sullo schermo.
  * Solo cosmetiche: usano il random di Phaser, mai l'Rng di gioco.
  */
 export interface FxUnit { x: number; y: number; top: number; root: Phaser.GameObjects.Container }
 export interface FxCtx { scene: Phaser.Scene; caster: FxUnit; targets: FxUnit[]; level: number; speed: number }
 
-export const ROMAN = ['', 'I', 'II', 'III'];
+export const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V'];
 const DEPTH = 300;
 const R = Phaser.Math.Between;
 const hex = (c: string) => Phaser.Display.Color.HexStringToColor(c).color;
@@ -382,7 +383,23 @@ export async function playFruitFx(fruitId: string, ctx: FxCtx): Promise<void> {
   // aura del frutto sotto l'eroe: si capisce subito chi usa il potere
   const col = hex(FRUIT_BY_ID.get(fruitId)?.color ?? '#ffffff');
   void ring(ctx.scene, ctx.caster.x, ctx.caster.y + 60, col, 200 + ctx.level * 40, 500 / ctx.speed, 8);
+  if (ctx.level >= 4) await highLevelIntro(ctx, col);
   await fx(ctx);
+}
+
+/** Livelli IV-V: il potere "carica" lo schermo prima della coreografia del frutto. */
+async function highLevelIntro({ scene, caster, level, speed: s }: FxCtx, col: number): Promise<void> {
+  const fl = scene.add.rectangle(-400, -800, GAME_WIDTH + 800, 2880, col, 0.35).setOrigin(0).setDepth(DEPTH - 1);
+  scene.tweens.add({ targets: fl, alpha: 0, duration: 420 / s, onComplete: () => fl.destroy() });
+  for (let i = 0; i < level - 2; i++) void ring(scene, caster.x, caster.y, i % 2 ? 0xffcf3a : col, 420 + i * 90, (380 + i * 120) / s, 8);
+  if (level >= 5) {
+    for (let i = 0; i < 26; i++) {
+      const p = scene.add.rectangle(R(0, GAME_WIDTH), R(-200, 300), 10, 10, i % 3 ? 0xffcf3a : 0xffffff).setDepth(DEPTH + 5);
+      scene.tweens.add({ targets: p, y: p.y + R(500, 900), alpha: 0, duration: R(600, 900) / s, onComplete: () => p.destroy() });
+    }
+  }
+  scene.cameras.main.shake(160 / s, 0.006 * (level - 2));
+  await wait(scene, 260 / s);
 }
 
 /** Animazione del Risveglio (ricompensa): il frutto si illumina e sale di livello. */
@@ -393,8 +410,9 @@ export async function awakenFx(scene: Phaser.Scene, fruitId: string, level: numb
   const shade = scene.add.rectangle(-400, -800, GAME_WIDTH + 800, 2880, COLORS.background, 0.85).setOrigin(0).setDepth(700).setInteractive();
   const ic = icon(scene, cx, cy, iconKey('fruitbig', fruitId), 220).setDepth(702).setScale(0);
   await tw(scene, { targets: ic, scale: 220 / 256, duration: 300, ease: 'Back.easeOut' });
-  for (let i = 0; i < 3; i++) {
-    for (let k = 0; k < 14; k++) {
+  const pulses = level >= 4 ? 4 : 3;
+  for (let i = 0; i < pulses; i++) {
+    for (let k = 0; k < 14 + (level - 1) * 3; k++) {
       const a = Math.random() * Math.PI * 2, d = 220;
       const p = scene.add.rectangle(cx + Math.cos(a) * d, cy + Math.sin(a) * d, 12, 12, k % 2 ? col : 0xffffff).setDepth(701);
       scene.tweens.add({ targets: p, x: cx, y: cy, duration: 400, ease: 'Quad.easeIn', onComplete: () => p.destroy() });
@@ -409,7 +427,7 @@ export async function awakenFx(scene: Phaser.Scene, fruitId: string, level: numb
   }
   scene.cameras.main.shake(250, 0.01);
   const a = fruitAbility(f, level);
-  const t1 = addTitle(scene, cx, cy - 210, `RISVEGLIO ${ROMAN[level]}!`, 72).setColor('#ffcf3a').setDepth(704);
+  const t1 = addTitle(scene, cx, cy - 210, `RISVEGLIO ${ROMAN[level]}!`, 72).setColor(level >= 5 ? '#ffffff' : '#ffcf3a').setDepth(704);
   const t2 = addTitle(scene, cx, cy + 180, a.name, 44).setDepth(704);
   const t3 = addBody(scene, cx, cy + 250, `${a.cost}⚡ · ${a.description}`, 24, '#fbe9c8').setWordWrapWidth(600).setDepth(704);
   await wait(scene, 1700);

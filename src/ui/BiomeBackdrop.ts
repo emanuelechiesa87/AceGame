@@ -4,6 +4,13 @@ import { CLOUDS_H, FRONT_H, GROUND_H, ISLAND_H, PX, RAIL_H, SEA_H, SKY_H, SKY_TO
 
 const EXTRA = 400;
 
+/** Colore moltiplicato per la tinta dell'area (come fa setTint sulle texture). */
+function mulColor(c: number, tint?: number): number {
+  if (tint === undefined) return c;
+  const ch = (v: number, s: number) => Math.round((((v >> s) & 255) * ((tint >> s) & 255)) / 255) << s;
+  return ch(c, 16) | ch(c, 8) | ch(c, 0);
+}
+
 /**
  * Scenario piratesco in pixel art con parallasse: cielo, nuvole, isole e nave
  * all'orizzonte, mare, e in basso il pontile del porto (esplorazione) oppure il
@@ -14,35 +21,40 @@ export class BiomeBackdrop {
   readonly groundY: number;
   private readonly foregroundY: number;
   private readonly withForeground: boolean;
+  private readonly tint?: number;
 
-  constructor(private readonly scene: Phaser.Scene, opts: { groundTop?: number; withForeground?: boolean; deck?: boolean } = {}) {
+  constructor(private readonly scene: Phaser.Scene, opts: { groundTop?: number; withForeground?: boolean; deck?: boolean; tint?: number } = {}) {
     const groundTop = opts.groundTop ?? 880;
     this.groundY = groundTop + 56; // linea dei piedi
     this.withForeground = opts.withForeground ?? false;
     this.foregroundY = groundTop + 300;
     const horizon = groundTop - (opts.deck ? 150 : 210);
     const full = GAME_WIDTH + EXTRA * 2;
+    this.tint = opts.tint;
+    const fill = (hex: number) => mulColor(hex, this.tint);
 
     // sopra il cielo (schermi molto alti): colore pieno
-    scene.add.rectangle(-EXTRA, horizon - SKY_H * PX - 2000, full, 2002, Phaser.Display.Color.HexStringToColor(SKY_TOP).color).setOrigin(0);
+    scene.add.rectangle(-EXTRA, horizon - SKY_H * PX - 2000, full, 2002, fill(Phaser.Display.Color.HexStringToColor(SKY_TOP).color)).setOrigin(0);
     const tile = (key: string, y: number, artH: number, factor: number, h = artH * PX) => {
       const s = scene.add.tileSprite(-EXTRA, y, full, h, key).setOrigin(0).setTileScale(PX);
       s.setTilePosition(EXTRA / PX, 0);
+      if (this.tint !== undefined) s.setTint(this.tint);
       this.layers.push({ sprite: s, factor });
       return s;
     };
     tile('px-sky', horizon - SKY_H * PX, SKY_H, 0);
-    scene.add.image(560, horizon - 300, 'px-sun').setScale(PX);
+    const sun = scene.add.image(560, horizon - 300, 'px-sun').setScale(PX);
+    if (this.tint !== undefined) sun.setTint(this.tint);
     tile('px-clouds', horizon - 640, CLOUDS_H, 0.05);
     tile('px-island', horizon - ISLAND_H * PX + 4, ISLAND_H, 0.15);
     tile('px-sea', horizon, SEA_H, 0.35, groundTop - horizon + 8);
     if (opts.deck) {
       tile('px-rail', groundTop - 44 * PX, RAIL_H, 1);
       tile('px-deck', groundTop, GROUND_H, 1);
-      scene.add.rectangle(-EXTRA, groundTop + GROUND_H * PX, full, 2000, 0x6b3a1e).setOrigin(0);
+      scene.add.rectangle(-EXTRA, groundTop + GROUND_H * PX, full, 2000, fill(0x6b3a1e)).setOrigin(0);
     } else {
       tile('px-dock', groundTop, GROUND_H, 1);
-      scene.add.rectangle(-EXTRA, groundTop + GROUND_H * PX, full, 2000, 0x5f3520).setOrigin(0);
+      scene.add.rectangle(-EXTRA, groundTop + GROUND_H * PX, full, 2000, fill(0x5f3520)).setOrigin(0);
     }
   }
 
@@ -50,6 +62,7 @@ export class BiomeBackdrop {
   addForeground(): void {
     if (!this.withForeground) return;
     const s = this.scene.add.tileSprite(-EXTRA, this.foregroundY, GAME_WIDTH + EXTRA * 2, FRONT_H * PX, 'px-front').setOrigin(0).setTileScale(PX);
+    if (this.tint !== undefined) s.setTint(this.tint);
     this.layers.push({ sprite: s, factor: 1.4 });
   }
 

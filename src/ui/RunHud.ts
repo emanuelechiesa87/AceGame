@@ -1,8 +1,9 @@
 import Phaser from 'phaser';
 import { COLORS } from '../app/config';
-import { NODE_LABELS } from '../data/areas';
+import { AREAS, NODE_LABELS } from '../data/areas';
 import { BALANCE } from '../data/balance';
 import { MAX_FRUIT_LEVEL } from '../data/fruits';
+import { ROMAN } from './fruitFx';
 import { creatureKey, iconKey } from '../pixel/keys';
 import { CREATURE_SCALE } from '../pixel/creatures';
 import { effectiveStats } from '../state/RunState';
@@ -22,18 +23,22 @@ export class RunHud {
     addBody(scene, 504, y + 30, `×${run.potions}`, 28, '#ffffff').setOrigin(0, 0.5);
     addBody(scene, 690, y + 30, `${run.score} pt`, 26, '#ffcf3a').setOrigin(1, 0.5);
 
-    // il frutto della run con il suo livello di risveglio (I-III)
+    // il frutto della run con il suo livello di risveglio (I-V); i livelli
+    // non ancora raggiungibili in quest'area sono sbarrati
     addBody(scene, 50, y + 96, 'FRUTTO', 20, '#f1d7a8').setOrigin(0, 0.5);
     const id = run.activeFruitIds[0];
     if (id) {
       icon(scene, 190, y + 110, iconKey('fruit', id), 72);
       const lvl = run.fruitLevel ?? 1;
       const g = scene.add.graphics();
+      const cap = Math.min(MAX_FRUIT_LEVEL, AREAS[Math.min(run.areaIndex, AREAS.length - 1)].maxFruitLevel);
       for (let i = 0; i < MAX_FRUIT_LEVEL; i++) {
-        g.fillStyle(COLORS.ink, 1).fillRect(244 + i * 30, y + 100, 24, 24);
-        g.fillStyle(i < lvl ? 0xffcf3a : 0x4a2a14, 1).fillRect(248 + i * 30, y + 104, 16, 16);
+        const x = 240 + i * 28;
+        g.fillStyle(COLORS.ink, 1).fillRect(x, y + 100, 22, 22);
+        g.fillStyle(i < lvl ? 0xffcf3a : 0x4a2a14, 1).fillRect(x + 4, y + 104, 14, 14);
+        if (i >= cap) g.lineStyle(3, 0x1f1633, 1).lineBetween(x + 4, y + 118, x + 18, y + 104);
       }
-      addBody(scene, 290, y + 138, `Lv ${['', 'I', 'II', 'III'][lvl]}`, 18, '#ffcf3a');
+      addBody(scene, 309, y + 138, `Lv ${ROMAN[lvl]}`, 18, '#ffcf3a');
     }
     addBody(scene, 430, y + 96, 'SQUADRA', 20, '#f1d7a8').setOrigin(0, 0.5);
     for (let i = 0; i < BALANCE.limits.maxCompanions; i++) {

@@ -1,4 +1,4 @@
-import { AREAS, type NodeType } from '../data/areas';
+import { AREAS, LAST_AREA_INDEX, type NodeType } from '../data/areas';
 import { ARTIFACTS, ARTIFACT_BY_ID } from '../data/artifacts';
 import { BALANCE } from '../data/balance';
 import { COMPANIONS } from '../data/companions';
@@ -36,7 +36,30 @@ export class RunController {
     this.rng.next = () => { run.rngCursor++; return next(); };
   }
 
-  get area() { return AREAS[this.run.areaIndex]; }
+  get area() { return AREAS[Math.min(this.run.areaIndex, LAST_AREA_INDEX)]; }
+  /** Numero dell'area per l'interfaccia (1..4). */
+  get areaNumber(): number { return this.run.areaIndex + 1; }
+  get hasNextArea(): boolean { return this.run.areaIndex < LAST_AREA_INDEX; }
+  /** Rinforzo dei nemici dell'area corrente (da passare alla battaglia). */
+  get enemyScale(): { hp: number; atk: number } { return { ...this.area.scale }; }
+
+  /**
+   * Dopo il boss di un'area si salpa verso la successiva con lo stesso eroe:
+   * nuova mappa, cura parziale di eroe e compagni. Ritorna false se era l'ultima.
+   */
+  nextArea(): boolean {
+    if (!this.hasNextArea) return false;
+    this.run.areaIndex++;
+    this.run.stepIndex = 0;
+    this.run.map = this.generateMap();
+    const pct = BALANCE.rewards.areaHealPct;
+    this.healPct(pct);
+    this.run.companions = this.run.companions.map((c) => {
+      const max = COMPANIONS.find((d) => d.id === c.id)!.stats.maxHp;
+      return { ...c, hp: Math.min(max, c.hp + Math.round(max * pct)) };
+    });
+    return true;
+  }
 
   // --- avvio -------------------------------------------------------------------
   /** Frutto iniziale casuale dal pool sbloccato, pesato per rarità. */
@@ -120,7 +143,9 @@ export class RunController {
   // --- ricompense ------------------------------------------------------------------
   /** Livello di risveglio del frutto (le run salvate prima del risveglio valgono 1). */
   get fruitLevel(): number { return this.run.fruitLevel ?? 1; }
-  get canAwaken(): boolean { return this.fruitLevel < MAX_FRUIT_LEVEL; }
+  /** Tetto del Risveglio nell'area corrente (III nel primo mare, poi IV e V). */
+  get fruitLevelCap(): number { return Math.min(MAX_FRUIT_LEVEL, this.area.maxFruitLevel); }
+  get canAwaken(): boolean { return this.fruitLevel < this.fruitLevelCap; }
 
   /**
    * Ricompense dopo ogni scontro: mai frutti nuovi (se ne mangia uno solo).
@@ -147,7 +172,7 @@ export class RunController {
     return out;
   }
 
-  /** Risveglio: il potere del frutto sale di livello (max III). */
+  /** Risveglio: il potere del frutto sale di livello (tetto dato dall'area, max V). */
   awaken(): boolean {
     if (!this.canAwaken) return false;
     this.run.fruitLevel = this.fruitLevel + 1;

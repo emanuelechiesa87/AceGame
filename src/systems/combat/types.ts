@@ -30,6 +30,8 @@ export interface Unit {
 export interface BattleMods {
   powerDamageMult: number;
   surviveLethalOnce: boolean;
+  /** Rinforzo dei nemici dell'area (anche quelli evocati). */
+  enemyScale?: { hp: number; atk: number };
 }
 
 export type PlayerAction =

@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { COLORS, GAME_WIDTH } from '../app/config';
 import { iconKey } from '../pixel/keys';
-import { NODE_LABELS, type NodeType } from '../data/areas';
+import { AREAS, NODE_LABELS, type NodeType } from '../data/areas';
 import { BALANCE } from '../data/balance';
 import { GameSession } from '../state/GameSession';
 import { BiomeBackdrop } from '../ui/BiomeBackdrop';
@@ -38,14 +38,15 @@ export class ExplorationScene extends BaseScene {
     if (!run || !GameSession.ctl) { this.scene.start('Menu'); return; }
     this.walking = true; this.paused = false; this.arrived = false;
 
-    this.backdrop = new BiomeBackdrop(this, { groundTop: 760, withForeground: true });
+    this.backdrop = new BiomeBackdrop(this, { groundTop: 760, withForeground: true, tint: GameSession.ctl.area.tint });
     this.hero = new HeroRig(this, 250, this.backdrop.groundY, run.avatar === 'a' ? 'm' : 'f', 0.95).walk();
     this.backdrop.addForeground();
 
     new RunHud(this, run);
     const area = GameSession.ctl.area;
-    addTitle(this, GAME_WIDTH / 2, 236, area.name.toUpperCase(), 40).setAngle(-2);
-    mapProgress(this, run, 300);
+    addBody(this, GAME_WIDTH / 2, 214, `MARE ${GameSession.ctl.areaNumber} DI ${AREAS.length}`, 20, '#f1d7a8');
+    addTitle(this, GAME_WIDTH / 2, 246, area.name.toUpperCase(), 40).setAngle(-2);
+    mapProgress(this, run, 306);
 
     const hint = addBody(this, GAME_WIDTH / 2, 1020, 'In cammino... (tocca per affrettarti)', 26, '#fff7e6');
     this.tweens.add({ targets: hint, alpha: 0.4, duration: 600, yoyo: true, repeat: -1 });

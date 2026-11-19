@@ -288,7 +288,7 @@ export class Battle {
       case 'extraAction': break; // gestita in act()
       case 'summon': {
         if (this.alive(actor.side).length >= eff.maxEnemies) break;
-        const u = makeEnemyUnit(eff.enemyId, `e${this.nextUid++}`);
+        const u = makeEnemyUnit(eff.enemyId, `e${this.nextUid++}`, this.mods.enemyScale);
         u.order = this.units.length;
         this.units.push(u);
         this.planNext(u, []);
@@ -358,11 +358,12 @@ function baseUnit(partial: Partial<Unit> & Pick<Unit, 'uid' | 'defId' | 'name' |
   return { hp: partial.maxHp, statuses: [], order: 0, charge: 0, chargeMax: 0, patternIndex: 0, enraged: false, ...partial };
 }
 
-export function makeEnemyUnit(enemyId: string, uid: string): Unit {
+/** `scale` = rinforzo dell'area (1 nella prima). */
+export function makeEnemyUnit(enemyId: string, uid: string, scale: { hp: number; atk: number } = { hp: 1, atk: 1 }): Unit {
   const d = ENEMY_BY_ID.get(enemyId);
   if (!d) throw new Error(`Nemico sconosciuto: ${enemyId}`);
   const E = BALANCE.enemies;
-  return baseUnit({ uid, defId: d.id, name: d.name, side: 'enemy', kind: 'enemy', maxHp: Math.round(d.stats.maxHp * E.hpMult), atk: Math.round(d.stats.atk * E.atkMult), def: d.stats.def, spd: d.stats.spd });
+  return baseUnit({ uid, defId: d.id, name: d.name, side: 'enemy', kind: 'enemy', maxHp: Math.round(d.stats.maxHp * E.hpMult * scale.hp), atk: Math.round(d.stats.atk * E.atkMult * scale.atk), def: d.stats.def, spd: d.stats.spd });
 }
 
 export function makeCompanionUnit(companionId: string, uid: string, hp?: number, charge = 0): Unit {

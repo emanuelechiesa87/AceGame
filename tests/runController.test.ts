@@ -42,7 +42,7 @@ describe('RunController', () => {
     expect(map.at(-2)!.options).toContain('rest');
   });
 
-  it('un solo frutto per run: il Risveglio lo porta fino al livello III', () => {
+  it('un solo frutto per run: nel primo mare il Risveglio arriva al livello III', () => {
     const ctl = fresh();
     expect(ctl.run.activeFruitIds).toHaveLength(1);
     expect(ctl.fruitLevel).toBe(1);
@@ -101,5 +101,36 @@ describe('RunController', () => {
     const nextA = a.rewardOptions('battle');
     const b = new RunController(snapshot);
     expect(b.rewardOptions('battle')).toEqual(nextA);
+  });
+
+  it('dopo il boss si salpa verso il mare successivo: nuova mappa, cura, tetto del Risveglio più alto', () => {
+    const ctl = fresh();
+    ctl.awaken(); ctl.awaken();
+    expect(ctl.canAwaken).toBe(false);
+    ctl.run.currentHp = 10;
+    ctl.run.stepIndex = ctl.run.map.length;
+    expect(ctl.nextArea()).toBe(true);
+    expect(ctl.run.areaIndex).toBe(1);
+    expect(ctl.run.stepIndex).toBe(0);
+    expect(ctl.run.map.at(-1)!.options).toEqual(['boss']);
+    expect(ctl.run.currentHp).toBeGreaterThan(10);
+    expect(ctl.enemyScale.hp).toBeGreaterThan(1);
+    expect(ctl.awaken()).toBe(true);
+    expect(ctl.fruitLevel).toBe(4);
+    expect(ctl.canAwaken).toBe(false);
+    expect(ctl.nextArea()).toBe(true);
+    expect(ctl.awaken()).toBe(true);
+    expect(ctl.fruitLevel).toBe(5);
+    expect(ctl.nextArea()).toBe(true);
+    expect(ctl.run.areaIndex).toBe(AREAS.length - 1);
+    expect(ctl.nextArea()).toBe(false); // ultimo mare: la run finisce qui
+  });
+
+  it('le aree diventano via via più dure', () => {
+    for (let i = 1; i < AREAS.length; i++) {
+      expect(AREAS[i].scale.hp).toBeGreaterThan(AREAS[i - 1].scale.hp);
+      expect(AREAS[i].maxFruitLevel).toBeGreaterThanOrEqual(AREAS[i - 1].maxFruitLevel);
+    }
+    expect(AREAS).toHaveLength(4);
   });
 });

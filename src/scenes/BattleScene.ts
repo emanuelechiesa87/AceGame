@@ -54,7 +54,7 @@ export class BattleScene extends BaseScene {
     this.busy = true; this.speed = GameSession.save.data.settings.fastAnimations ? 2 : 1; this.targetUid = undefined;
     this.node = data.node;
 
-    new BiomeBackdrop(this, { groundTop: 560, deck: true });
+    new BiomeBackdrop(this, { groundTop: 560, deck: true, tint: ctl.area.tint });
     this.fullRect(0x14233f, 0.15);
 
     // --- setup motore -----------------------------------------------------------
@@ -65,12 +65,13 @@ export class BattleScene extends BaseScene {
       {
         hero: makeHeroUnit(run.heroName, stats, Math.min(run.currentHp, stats.maxHp)),
         companions: run.companions.map((c, i) => makeCompanionUnit(c.id, `c${i}`, c.hp, c.charge)),
-        enemies: this.enemyIds.map((id, i) => makeEnemyUnit(id, `e${i}`)),
+        enemies: this.enemyIds.map((id, i) => makeEnemyUnit(id, `e${i}`, ctl.enemyScale)),
         powers: run.activeFruitIds.slice(0, 1).map((id) => fruitAbility(FRUIT_BY_ID.get(id)!, ctl.fruitLevel)),
         potions: run.potions,
         mods: {
           powerDamageMult: arts.reduce((m, a) => m * (a.powerDamageMult ?? 1), 1),
           surviveLethalOnce: arts.some((a) => a.surviveLethalOncePerBattle),
+          enemyScale: ctl.enemyScale,
         },
       },
       ctl.rng,

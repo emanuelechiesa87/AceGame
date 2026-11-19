@@ -10,6 +10,7 @@ import { BattleScene } from '../scenes/BattleScene';
 import { RewardScene } from '../scenes/RewardScene';
 import { EventScene } from '../scenes/EventScene';
 import { SummaryScene } from '../scenes/SummaryScene';
+import { NewSeaScene } from '../scenes/NewSeaScene';
 import { CollectionScene } from '../scenes/CollectionScene';
 import { RecordsScene } from '../scenes/RecordsScene';
 import { GameSession } from '../state/GameSession';
@@ -32,7 +33,7 @@ async function start(): Promise<void> {
     },
     input: { activePointers: 2 },
     render: { antialias: true, pixelArt: false },
-    scene: [BootScene, MenuScene, CharacterSelectScene, FruitRevealScene, ExplorationScene, BattleScene, RewardScene, EventScene, SummaryScene, CollectionScene, RecordsScene],
+    scene: [BootScene, MenuScene, CharacterSelectScene, FruitRevealScene, ExplorationScene, BattleScene, RewardScene, EventScene, NewSeaScene, SummaryScene, CollectionScene, RecordsScene],
   });
 
   // Esposto solo per il debug da console (es. chrome://inspect sull'S23).

@@ -40,6 +40,8 @@ export const BALANCE = {
     restHealPct: 0.35,
     maxHpUp: 8,
     healRewardPct: 0.25,
+    /** Cura (su HP max) di eroe e compagni quando si salpa verso un nuovo mare. */
+    areaHealPct: 0.5,
     weights: { awaken: 26, artifact: 22, potion: 20, heal: 18, maxHp: 16 },
   },
   unlocks: {

@@ -20,7 +20,10 @@ export function finishNode(go: Go): void {
   const ctl = GameSession.ctl!;
   ctl.advance();
   if (ctl.run.stepIndex >= ctl.run.map.length) {
-    go('Summary', { result: 'victory' });
+    // boss sconfitto: si salpa verso il mare successivo, oppure la run è vinta
+    if (!ctl.nextArea()) { go('Summary', { result: 'victory' }); return; }
+    GameSession.persistRun();
+    go('NewSea');
     return;
   }
   GameSession.persistRun();
