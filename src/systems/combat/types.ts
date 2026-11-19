@@ -25,6 +25,10 @@ export interface Unit {
   patternIndex: number;
   nextMove?: string;
   enraged: boolean;
+  /** Colpo caricato (F1): 'windup' = sta caricando, 'release' = al prossimo turno colpisce. */
+  chargeState?: 'windup' | 'release';
+  /** Bersaglio già scelto per la prossima mossa a bersaglio singolo (mostrato per i colpi caricati). */
+  aimUid?: string;
 }
 
 export interface BattleMods {
@@ -86,7 +90,16 @@ export type BattleEvent =
   | { t: 'survive'; uid: string; by?: 'pearl' }
   | { t: 'summon'; unit: Unit }
   | { t: 'enrage'; uid: string }
-  | { t: 'intent'; uid: string; intent: Intent; move: string }
+  /** `aim` = alleato preso di mira (solo colpi caricati); `label` = testo del fumetto se diverso dal nome della mossa. */
+  | { t: 'intent'; uid: string; intent: Intent; move: string; aim?: string; label?: string }
+  /** Il nemico carica il colpo (primo turno dei due). */
+  | { t: 'windup'; uid: string; aim?: string }
+  /** L'eroe in Difesa si mette davanti al compagno preso di mira dal colpo caricato. */
+  | { t: 'cover'; uid: string; ally: string }
+  /** Colpo caricato parato con la Difesa: danno molto ridotto ed energia extra. */
+  | { t: 'parry'; uid: string; energy: number }
+  /** Carica interrotta (nemico congelato o nella bolla). */
+  | { t: 'interrupt'; uid: string }
   | { t: 'energy'; value: number }
   | { t: 'charge'; uid: string; value: number }
   | { t: 'round'; n: number }

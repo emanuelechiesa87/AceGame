@@ -141,6 +141,9 @@ const INTENTS: Record<string, () => Cells> = {
   heavy: () => { const m = swords(); for (const [x, y] of [[13, 1], [13, 2], [13, 3], [13, 5]]) m.set(`${x},${y}`, '#ff5f6d'); return m; },
   defend: shield('#5fa8ff'),
   debuff: drop('#9be06a'),
+  charge: () => fromGrid([
+    '..RRRRR', '.RYYYYYR', '.RYYYYYR', '..RYYYR', '..RYYYR', '...RYR', '...RYR', '....R', '', '...RRR', '...RYR', '...RRR',
+  ], { R: '#e4342f', Y: '#ffcf3a' }, 4, 2),
   special: () => fromGrid(sym([
     '......Y', '.....YY', '.....YY', 'YYYYYYY', '.YYYYWY', '..YYYYY', '...YYYY', '...YYYY', '..YYY.Y', '..YY...', '.Y.....',
   ]), { Y: '#ffcf3a', W: '#fff3b0' }, 1, 2),

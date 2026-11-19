@@ -6,7 +6,8 @@ export type StatusId = 'burn' | 'poison' | 'stun' | 'shield' | 'atkUp' | 'vulner
   // dalla 0.5.5 (fase 4): tanfo (-ATT), acido (danno che cresce, DIF annullata), bolla, mina, sciame di acini, gemella
   | 'weak' | 'acid' | 'bubble' | 'mine' | 'swarm' | 'twin';
 export type TargetRule = 'enemy' | 'allEnemies' | 'self' | 'allAllies' | 'lowestAlly';
-export type Intent = 'attack' | 'heavy' | 'defend' | 'debuff' | 'special';
+/** `charge` = il nemico sta caricando un colpo forte (F1, 0.6.5): parte al suo turno successivo. */
+export type Intent = 'attack' | 'heavy' | 'defend' | 'debuff' | 'special' | 'charge';
 
 export type Effect =
   | { kind: 'damage'; mult: number; lifesteal?: number; hits?: number }

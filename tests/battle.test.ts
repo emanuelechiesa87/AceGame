@@ -126,7 +126,7 @@ describe('Battle', () => {
 
   it('la difesa dimezza i danni ricevuti', () => {
     const dmgTaken = (guard: boolean) => {
-      const b = battle({ enemies: ['en_shroom_boss'], seed: 7 });
+      const b = battle({ enemies: ['en_jelly'], seed: 7 }); // attacco normale (non caricato)
       b.start();
       const ev = b.act(guard ? { type: 'guard' } : { type: 'potion' });
       return ev.filter((e) => e.t === 'damage' && e.target === 'hero').reduce((s, e) => s + (e as { amount: number }).amount, 0);

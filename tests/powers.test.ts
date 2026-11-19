@@ -73,7 +73,7 @@ describe('Poteri dei frutti', () => {
   });
 
   it('Specchio Riflesso rimanda parte del danno a chi attacca', () => {
-    const b = setup('fruit_mirror', ['en_shroom_boss']);
+    const b = setup('fruit_mirror', ['en_jelly']);
     const ev = use(b, 'fruit_mirror');
     expect(ev.some((e) => e.t === 'damage' && e.kind === 'reflect' && e.target === 'e0')).toBe(true);
   });

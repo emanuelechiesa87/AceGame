@@ -23,7 +23,10 @@ describe('Run completa (simulazione senza grafica)', () => {
       return { id: f.id, rate: res.filter((r) => r.won).length / res.length };
     });
     console.log('Vittorie per frutto: ' + rates.map((r) => `${r.id.replace('fruit_', '')} ${(r.rate * 100).toFixed(0)}%`).join(' · '));
-    // run di 4 mari: soglia minima più bassa (bilanciamento fine nella fase 6 della 0.6)
-    for (const r of rates) { expect(r.rate).toBeGreaterThan(0.22); expect(r.rate).toBeLessThan(0.99); }
+    // Dalla F1 la difficoltà sale per fasi: le soglie assolute (giocatore attento 35-50%, ingenuo <10%)
+    // si misurano col rapporto di bilanciamento. Qui si controlla solo che nessun frutto sia
+    // molto peggiore o molto migliore della media.
+    const mean = rates.reduce((s, r) => s + r.rate, 0) / rates.length;
+    for (const r of rates) { expect(r.rate).toBeGreaterThan(mean * 0.45); expect(r.rate).toBeLessThan(Math.min(0.99, mean * 2.2)); }
   });
 });

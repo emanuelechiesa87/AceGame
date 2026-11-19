@@ -103,3 +103,33 @@ export function placeEnemy(f: BattleFrame, s: Size, occupied: Box[], first: bool
   }
   return { x: best.x, y: best.y };
 }
+
+/** Un nemico toccabile: riquadro (sprite + fumetto + barra HP) e centro del corpo. */
+export interface TapTarget { uid: string; box: Box; cx: number; cy: number }
+
+/** Tolleranza del tocco fuori dai riquadri (coordinate logiche, ~un polpastrello). */
+export const TAP_SLACK = 70;
+
+/**
+ * Sceglie il nemico toccato. Prima i riquadri che contengono il punto (se si
+ * sovrappongono vince il corpo più vicino al dito); altrimenti il nemico il cui
+ * riquadro dista meno di `TAP_SLACK`. Così un tocco un po' impreciso va comunque
+ * a segno, e tra due nemici vicini vince quello indicato davvero.
+ *
+ * Nota (bug corretto nella 0.6.5): prima ogni nemico aveva un'area di tocco
+ * Phaser su un Container, che Phaser sposta di metà larghezza e metà altezza:
+ * l'area finiva in alto a sinistra rispetto allo sprite.
+ */
+export function pickTapTarget(x: number, y: number, targets: TapTarget[]): string | undefined {
+  let best: string | undefined, bestScore = Infinity;
+  for (const t of targets) {
+    const dx = Math.max(t.box.x0 - x, 0, x - t.box.x1);
+    const dy = Math.max(t.box.y0 - y, 0, y - t.box.y1);
+    const out = Math.hypot(dx, dy);
+    if (out > TAP_SLACK) continue;
+    // dentro il riquadro conta solo la distanza dal corpo; fuori pesa molto la distanza dal riquadro
+    const score = out * 10 + Math.hypot(x - t.cx, (y - t.cy) * 0.8);
+    if (score < bestScore) { bestScore = score; best = t.uid; }
+  }
+  return best;
+}

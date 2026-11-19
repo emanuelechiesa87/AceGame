@@ -48,6 +48,9 @@ export class Battle {
   private swarmMult = 0;
   /** Statistiche dell'eroe in questo scontro (riepilogo della run e simulatore). */
   readonly tally: BattleTally;
+  /** Durante un colpo caricato: la Difesa para di più (vedi `combat.charged`). */
+  private chargedHit = false;
+  private parried = false;
 
   constructor(setup: BattleSetup, private readonly rng: Rng, private readonly mods: BattleMods = setup.mods) {
     this.units = [setup.hero, ...setup.companions, ...setup.enemies];
@@ -73,7 +76,7 @@ export class Battle {
   /** Avvia la battaglia: risolve i turni fino al primo input del giocatore. */
   start(): BattleEvent[] {
     const ev: BattleEvent[] = [];
-    for (const e of this.enemies()) ev.push({ t: 'intent', uid: e.uid, intent: this.moveOf(e).intent ?? 'attack', move: e.nextMove! });
+    for (const e of this.enemies()) ev.push(this.intentEvent(e));
     if (this.mods.openingShield) this.applyEffect(this.hero, this.hero, { kind: 'shield', amount: this.mods.openingShield }, ev, false);
     this.advance(ev);
     return ev;
@@ -183,6 +186,7 @@ export class Battle {
         bub.turns--;
         const pop = bub.turns <= 0;
         ev.push({ t: 'bubbled', uid: u.uid, pop });
+        this.interruptCharge(u, ev);
         if (pop) { this.removeStatus(u, 'bubble'); this.applyDamage(u, this.mitigate(u, bub.value), ev, 'hero', false, 'pop'); }
         this.endTurn(u);
         continue;
@@ -190,6 +194,7 @@ export class Battle {
       if (this.hasStatus(u, 'stun')) {
         ev.push({ t: 'stunned', uid: u.uid });
         this.removeStatus(u, 'stun');
+        this.interruptCharge(u, ev);
         this.endTurn(u);
         continue;
       }
@@ -275,18 +280,103 @@ export class Battle {
     let moveId = u.nextMove!;
     if (def.enrage && !u.enraged && u.hp <= u.maxHp / 2) {
       u.enraged = true;
+      u.chargeState = undefined; // la furia ha la precedenza sulla carica
       moveId = def.enrage;
       ev.push({ t: 'enrage', uid: u.uid });
     }
-    this.useAbility(u, def.moves[moveId], undefined, ev);
+    if (u.chargeState === 'windup') {
+      // primo turno: carica e conferma il bersaglio (se è caduto, ne sceglie un altro)
+      u.chargeState = 'release';
+      if (this.moveOf(u).target === 'enemy' && !this.aliveAlly(u.aimUid)) u.aimUid = this.pickAim(u, true);
+      ev.push({ t: 'windup', uid: u.uid, aim: u.aimUid });
+      ev.push(this.intentEvent(u));
+      return;
+    }
+    const move = def.moves[moveId];
+    if (u.chargeState === 'release') {
+      u.chargeState = undefined;
+      this.releaseCharged(u, move, ev);
+    } else {
+      this.useAbility(u, move, move.target === 'enemy' ? this.aimFor(u) : undefined, ev);
+    }
     if (u.hp > 0) this.planNext(u, ev);
+  }
+
+  /** Il colpo caricato parte: più forte, parabile con la Difesa (anche al posto di un compagno). */
+  private releaseCharged(u: Unit, move: Ability, ev: BattleEvent[]): void {
+    const K = C.charged;
+    let aim = move.target === 'enemy' ? this.aimFor(u) : undefined;
+    const hero = this.hero;
+    if (aim && aim !== hero.uid && hero.hp > 0 && this.hasStatus(hero, 'guard')) {
+      ev.push({ t: 'cover', uid: hero.uid, ally: aim });
+      aim = hero.uid;
+    }
+    const boosted: Ability = { ...move, effects: move.effects.map((e) => (e.kind === 'damage' ? { ...e, mult: e.mult * K.mult } : e)) };
+    this.chargedHit = true;
+    this.parried = false;
+    try { this.useAbility(u, boosted, aim, ev); } finally { this.chargedHit = false; }
+    if (this.parried && hero.hp > 0) {
+      this.energy = Math.min(C.energyMax, this.energy + K.parryEnergy);
+      ev.push({ t: 'parry', uid: hero.uid, energy: K.parryEnergy });
+      ev.push({ t: 'energy', value: this.energy });
+    }
+  }
+
+  /** Congelato o nella bolla mentre carica: il colpo va perso e si passa alla mossa dopo. */
+  private interruptCharge(u: Unit, ev: BattleEvent[]): void {
+    if (u.kind !== 'enemy' || !u.chargeState || u.hp <= 0) return;
+    u.chargeState = undefined;
+    ev.push({ t: 'interrupt', uid: u.uid });
+    this.planNext(u, ev);
   }
 
   private planNext(u: Unit, ev: BattleEvent[]): void {
     const def = ENEMY_BY_ID.get(u.defId)!;
     u.nextMove = def.pattern[u.patternIndex % def.pattern.length];
     u.patternIndex++;
-    ev.push({ t: 'intent', uid: u.uid, intent: def.moves[u.nextMove].intent ?? 'attack', move: u.nextMove });
+    const mv = def.moves[u.nextMove];
+    u.chargeState = isCharged(mv) ? 'windup' : undefined;
+    u.aimUid = mv.target === 'enemy' ? this.pickAim(u, !!u.chargeState) : undefined;
+    ev.push(this.intentEvent(u));
+  }
+
+  /** Fumetto dell'intenzione: per i colpi caricati mostra anche chi è nel mirino. */
+  intentEvent(u: Unit): Extract<BattleEvent, { t: 'intent' }> {
+    const mv = this.moveOf(u);
+    if (u.chargeState === 'windup') return { t: 'intent', uid: u.uid, intent: 'charge', move: u.nextMove!, aim: u.aimUid, label: 'Carica…' };
+    if (u.chargeState === 'release') return { t: 'intent', uid: u.uid, intent: 'heavy', move: u.nextMove!, aim: u.aimUid, label: `${mv.name}!` };
+    return { t: 'intent', uid: u.uid, intent: mv.intent ?? 'attack', move: u.nextMove! };
+  }
+
+  private aliveAlly(uid?: string): Unit | undefined {
+    const a = uid ? this.unit(uid) : undefined;
+    return a && a.side === 'ally' && a.hp > 0 ? a : undefined;
+  }
+
+  /** Bersaglio della mossa: quello scelto al momento dell'intenzione, se è ancora in piedi. */
+  private aimFor(u: Unit): string | undefined {
+    return this.aliveAlly(u.aimUid)?.uid ?? this.pickAim(u, false);
+  }
+
+  /**
+   * Chi prende di mira un nemico (F1): l'eroe, l'alleato più malconcio (in % di HP)
+   * o uno a caso, con le probabilità di `BALANCE.enemies.aim` per grado.
+   * I colpi caricati puntano soprattutto all'eroe (`combat.charged.aimHero`).
+   */
+  private pickAim(u: Unit, charged: boolean): string | undefined {
+    const allies = this.alive('ally');
+    if (!allies.length) return undefined;
+    const tier = ENEMY_BY_ID.get(u.defId)!.tier;
+    const w = charged ? { hero: C.charged.aimHero, weakest: 1 - C.charged.aimHero } : BALANCE.enemies.aim[tier];
+    const r = this.rng.next();
+    const hero = allies.find((a) => a.kind === 'hero');
+    if (hero && r < w.hero) return hero.uid;
+    if (r < w.hero + w.weakest) {
+      const others = allies.filter((a) => a.kind !== 'hero');
+      const pool = others.length ? others : allies;
+      return pool.reduce((m, a) => (a.hp / a.maxHp < m.hp / m.maxHp ? a : m)).uid;
+    }
+    return this.rng.pick(allies).uid;
   }
 
   moveOf(u: Unit): Ability {
@@ -305,7 +395,7 @@ export class Battle {
       case 'enemy': {
         const pick = chosen ? foes.find((f) => f.uid === chosen) : undefined;
         if (pick) return [pick];
-        if (actor.side === 'enemy') return foes.length ? [this.rng.pick(foes)] : [];
+        if (actor.side === 'enemy') return foes.length ? [this.rng.pick(foes)] : []; // senza mira (es. evocati a metà turno)
         // alleati senza bersaglio scelto: il nemico più debole (scelta "ragionevole")
         return foes.length ? [foes.reduce((m, f) => (f.hp < m.hp ? f : m))] : [];
       }
@@ -351,7 +441,10 @@ export class Battle {
           const crit = this.rng.next() < C.critChance + (actor.kind === 'hero' ? this.mods.critBonus ?? 0 : 0);
           if (crit) dmg *= C.critMult;
           if (this.hasStatus(target, 'vulnerable')) dmg *= C.vulnerableMult;
-          if (this.hasStatus(target, 'guard')) dmg *= C.guardMult;
+          if (this.hasStatus(target, 'guard')) {
+            dmg *= this.chargedHit ? C.charged.guardMult : C.guardMult;
+            if (this.chargedHit && target.kind === 'hero') this.parried = true;
+          }
           const incoming = Math.max(1, Math.round(dmg));
           const dealt = this.applyDamage(target, incoming, ev, actor.uid, crit, kind);
           if (eff.lifesteal && dealt > 0) this.heal(actor, Math.round(dealt * eff.lifesteal), ev, true);
@@ -419,10 +512,9 @@ export class Battle {
         const u = makeEnemyUnit(eff.enemyId, `e${this.nextUid++}`, this.mods.enemyScale);
         u.order = this.units.length;
         this.units.push(u);
-        this.planNext(u, []);
         ev.push({ t: 'summon', unit: u });
-        ev.push({ t: 'intent', uid: u.uid, intent: this.moveOf(u).intent ?? 'attack', move: u.nextMove! });
-        break;
+        this.planNext(u, ev);
+        break; // l'intenzione la emette già planNext
       }
     }
   }
@@ -522,4 +614,9 @@ export function makeCompanionUnit(companionId: string, uid: string, hp?: number,
 
 export function makeHeroUnit(name: string, stats: { maxHp: number; atk: number; def: number; spd: number }, hp: number): Unit {
   return baseUnit({ uid: 'hero', defId: 'hero', name, side: 'ally', kind: 'hero', ...stats, hp });
+}
+
+/** Le mosse "forti" a danno (intenzione `heavy`) diventano colpi caricati (F1). */
+export function isCharged(a: Ability): boolean {
+  return a.intent === 'heavy' && a.effects.some((e) => e.kind === 'damage');
 }

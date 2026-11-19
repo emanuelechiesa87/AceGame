@@ -28,7 +28,7 @@ function boom(scene: Phaser.Scene, x: number, y: number, colors: number[], radiu
   }
 }
 import { BaseScene, visibleBounds } from './BaseScene';
-import { allySpots, frameFor, placeEnemy, type BattleFrame, type Box } from './battleLayout';
+import { allySpots, frameFor, pickTapTarget, placeEnemy, type BattleFrame, type Box, type TapTarget } from './battleLayout';
 
 const STATUS_NAME: Record<StatusId, string> = { burn: 'Bruciatura!', poison: 'Veleno!', stun: 'Congelato!', shield: 'Scudo', atkUp: 'Furia!', vulnerable: 'Vulnerabile!', guard: 'In guardia', evade: 'Nebbia!', defUp: 'Corazza!', slow: 'Appiccicato!', reflect: 'Specchio!',
   weak: 'Tanfo! -ATT', acid: 'Acido!', bubble: 'Nella bolla!', mine: 'Mina!', swarm: 'Sciame!', twin: 'Gemella!' };
@@ -108,6 +108,14 @@ export class BattleScene extends BaseScene {
     });
     const title = this.node === 'boss' ? 'BOSS!' : this.node === 'elite' ? 'ÉLITE!' : 'BATTAGLIA!';
     this.input.on('pointerdown', () => { if (this.busy) this.speed = Math.max(this.speed, 3); });
+    // scelta del bersaglio: un solo gestore per tutto il campo (vedi pickTapTarget)
+    this.input.on('pointerup', (p: Phaser.Input.Pointer, over: Phaser.GameObjects.GameObject[]) => {
+      if (over.length > 0) return; // pulsanti, pannelli e tutorial hanno la precedenza
+      const w = p.positionToCamera(this.cameras.main) as Phaser.Math.Vector2;
+      if (w.y > this.frame.panelTop - 16) return;
+      const uid = pickTapTarget(w.x, w.y, this.tapTargets());
+      if (uid) this.setTarget(uid);
+    });
 
     // l'onda defluisce mentre la squadra entra di corsa e i nemici cadono in campo
     const s = this.speed;
@@ -183,12 +191,8 @@ export class BattleScene extends BaseScene {
     const v = new UnitView(this, u, slot.x, slot.y, run.avatar === 'a' ? 'm' : 'f', slot.k);
     this.views.set(u.uid, v);
     if (u.side === 'enemy') {
-      const hw = Math.max(80, v.width / 2);
-      v.root.setSize(hw * 2, v.height + 40).setInteractive(new Phaser.Geom.Rectangle(-hw, -v.height - 20, hw * 2, v.height + 60), Phaser.Geom.Rectangle.Contains);
-      v.root.on('pointerup', () => { if (u.hp > 0) this.setTarget(u.uid); });
       if (ENEMY_BY_ID.get(u.defId)!.tier === 'normal') v.showName(false);
-      const mv = this.battle.moveOf(u);
-      v.setIntent(mv.intent ?? 'attack', mv.name);
+      this.showIntent(this.battle.intentEvent(u));
     }
     return v;
   }
@@ -268,6 +272,52 @@ export class BattleScene extends BaseScene {
   private setInputEnabled(on: boolean): void {
     this.actionPanel.setAlpha(on ? 1 : 0.55);
     this.reticle.setVisible(on && !!this.currentTarget());
+  }
+
+  // --- intenzioni e mirini dei colpi caricati -------------------------------------------
+  /** Nemico → alleato nel mirino (solo colpi caricati). */
+  private aims = new Map<string, string>();
+  private aimMarks: Phaser.GameObjects.Container[] = [];
+
+  private showIntent(e: Extract<BattleEvent, { t: 'intent' }>): void {
+    const u = this.battle.unit(e.uid), v = this.views.get(e.uid);
+    if (!u || !v) return;
+    v.setIntent(e.intent, e.label ?? ENEMY_BY_ID.get(u.defId)!.moves[e.move].name);
+    if (e.aim) this.aims.set(e.uid, e.aim); else this.aims.delete(e.uid);
+    this.layoutAims();
+  }
+
+  private clearAim(uid: string): void {
+    this.aims.delete(uid);
+    for (const [k, t] of this.aims) if (t === uid) this.aims.delete(k);
+  }
+
+  /** Mirino rosso sopra ogni alleato preso di mira da un colpo caricato (uno per nemico). */
+  private layoutAims(): void {
+    this.aimMarks.forEach((m) => m.destroy());
+    this.aimMarks = [];
+    const per = new Map<string, number>();
+    for (const [enemy, ally] of this.aims) {
+      const av = this.views.get(ally), ev = this.views.get(enemy);
+      if (!av || !ev || av.unit.hp <= 0 || ev.unit.hp <= 0) continue;
+      const n = per.get(ally) ?? 0;
+      per.set(ally, n + 1);
+      const c = this.add.container(av.x + n * 46, av.centerY - 6).setDepth(190).setAlpha(0.92);
+      const g = this.add.graphics();
+      g.lineStyle(6, 0x1f1633, 1).strokeCircle(0, 0, 20).lineStyle(4, 0xff5f6d, 1).strokeCircle(0, 0, 20);
+      g.fillStyle(0xff5f6d, 1).fillRect(-3, -30, 6, 14).fillRect(-3, 16, 6, 14).fillRect(-30, -3, 14, 6).fillRect(16, -3, 14, 6).fillRect(-4, -4, 8, 8);
+      c.add(g);
+      this.tweens.add({ targets: c, scale: 1.18, duration: 380, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      this.aimMarks.push(c);
+    }
+  }
+
+  /** Nemici vivi toccabili: corpo + fumetto dell'intenzione sopra + barra HP sotto. */
+  private tapTargets(): TapTarget[] {
+    return [...this.views.values()].filter((v) => v.unit.side === 'enemy' && v.unit.hp > 0 && v.root.visible).map((v) => {
+      const hw = Math.max(v.width / 2, 60);
+      return { uid: v.unit.uid, box: { x0: v.x - hw, y0: v.topY - 90, x1: v.x + hw, y1: v.root.y + 44 }, cx: v.x, cy: v.centerY };
+    });
   }
 
   private currentTarget(): string | undefined {
@@ -370,7 +420,7 @@ export class BattleScene extends BaseScene {
       ...(enemy ? [{ title: 'SCEGLI IL BERSAGLIO', text: 'Tocca un nemico per mirarlo. Il fumetto sopra la sua testa dice cosa farà nel prossimo turno: preparati!', box: { x: enemy.x - Math.max(90, enemy.width / 2 + 20), y: enemy.topY - 120, w: Math.max(180, enemy.width + 40), h: enemy.root.y - enemy.topY + 160 } }] : []),
       { title: 'ATTACCO', text: 'Colpo di sciabola sul bersaglio. Non costa energia.', box: { x: 30, y: top + 52, w: 310, h: 120 } },
       { title: 'ENERGIA E POTERE', text: `Ogni round guadagni 1⚡ (max 5). POTERE usa il ${fruitName}${pw ? `: ${pw.name}, ${pw.cost}⚡` : ''}. È fortissimo: usalo al momento giusto!`, box: { x: 30, y: top - 16, w: 660, h: 190 } },
-      { title: 'DIFESA E POZIONE', text: 'DIFESA riduce i danni del prossimo colpo. La POZIONE cura: le pozioni sono poche, tienile per i momenti difficili.', box: { x: 30, y: top + 178, w: 660, h: 120 } },
+      { title: 'DIFESA E POZIONE', text: 'DIFESA dimezza i danni e ridà ⚡. Se un nemico CARICA un colpo (mirino rosso), DIFESA lo para quasi tutto, anche al posto di un compagno. La POZIONE cura: tienila per i momenti difficili.', box: { x: 30, y: top + 178, w: 660, h: 120 } },
       { title: 'RISVEGLIO', text: 'Dopo ogni vittoria scegli una ricompensa. Il RISVEGLIO potenzia il frutto fino al livello V... e cambia il tuo aspetto a ogni livello!' },
     ];
     this.setInputEnabled(false);
@@ -464,7 +514,7 @@ export class BattleScene extends BaseScene {
         case 'resist': { const v = this.views.get(e.target); if (v) floatText(this, v.x, v.topY, 'Resiste!', '#f1d7a8', 30, s); break; }
         case 'cleanse': { const v = this.views.get(e.target); if (v) v.refresh(); break; }
         case 'stunned': { const v = this.views.get(e.uid); if (v) { v.refresh(); floatText(this, v.x, v.topY, 'CONGELATO!', '#bff4ff', 38, s); await wait(this, 400 / s); } break; }
-        case 'ko': { Audio.play('ko'); const v = this.views.get(e.uid); if (v) { floatText(this, v.x, v.topY, 'KO!', '#ff5f6d', 56, s); await v.ko(s); } this.placeReticle(); break; }
+        case 'ko': { Audio.play('ko'); const v = this.views.get(e.uid); if (v) { floatText(this, v.x, v.topY, 'KO!', '#ff5f6d', 56, s); await v.ko(s); } this.clearAim(e.uid); this.layoutAims(); this.placeReticle(); break; }
         case 'survive': await banner(this, this.bannerY, e.by === 'pearl' ? 'PERLA DEL RITORNO!' : 'FILO DEL DESTINO!', e.by === 'pearl' ? 0x9fe8ff : 0xff5f8a, 50, (e.by === 'pearl' ? 900 : 500) / s); this.views.get(e.uid)?.refresh(); break;
         case 'summon': {
           const v = this.addView(e.unit, this.enemySpot(e.unit));
@@ -476,7 +526,29 @@ export class BattleScene extends BaseScene {
           break;
         }
         case 'enrage': this.cameras.main.shake(400 / s, 0.012); await banner(this, this.bannerY, `${this.battle.unit(e.uid)!.name.toUpperCase()} SI ARRABBIA!`, COLORS.hot, 46, 600 / s); break;
-        case 'intent': { const u = this.battle.unit(e.uid); const v = this.views.get(e.uid); if (u && v) v.setIntent(e.intent, ENEMY_BY_ID.get(u.defId)!.moves[e.move].name); break; }
+        case 'intent': this.showIntent(e); break;
+        case 'windup': {
+          const v = this.views.get(e.uid), u = this.battle.unit(e.uid)!;
+          Audio.play('status');
+          const victim = e.aim ? this.battle.unit(e.aim) : undefined;
+          this.log.setText(`${u.name} carica un colpo${victim ? ` su ${victim.kind === 'hero' ? 'di te' : victim.name}` : ''}: DIFESA per pararlo!`);
+          if (v) { floatText(this, v.x, v.topY, 'CARICA!', '#ff5f6d', 44, s); this.tweens.add({ targets: v.root, scaleX: 1.08, scaleY: 0.92, duration: 140 / s, yoyo: true, repeat: 1 }); await wait(this, 420 / s); }
+          break;
+        }
+        case 'cover': {
+          const h = this.views.get(e.uid), a = this.battle.unit(e.ally);
+          if (h) { floatText(this, h.x, h.topY, `PROTEGGI ${a?.name.toUpperCase() ?? ''}!`, '#9cc8ff', 36, s); await wait(this, 300 / s); }
+          break;
+        }
+        case 'parry': {
+          const h = this.views.get(e.uid);
+          Audio.play('shield');
+          this.cameras.main.shake(120 / s, 0.006);
+          if (h) floatText(this, h.x, h.topY - 30, `PARATA! +${e.energy}⚡`, '#ffcf3a', 46, s);
+          await wait(this, 380 / s);
+          break;
+        }
+        case 'interrupt': { const v = this.views.get(e.uid); if (v) { floatText(this, v.x, v.topY - 30, 'CARICA PERSA!', '#bff4ff', 36, s); await wait(this, 300 / s); } this.clearAim(e.uid); break; }
         case 'energy': case 'charge': this.updateHud(); break;
         case 'end': break;
         case 'melt': { const v = this.views.get(e.target); if (v) { v.refresh(); floatText(this, v.x, v.topY, `-${e.amount} scudo sciolto!`, '#d8f04a', 30, s); await wait(this, 200 / s); } break; }

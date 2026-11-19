@@ -111,11 +111,12 @@ function expectedHit(b: Battle, e: Unit): number {
   const mv = b.moveOf(e);
   const mult = dmgMult(mv);
   if (!mult) return 0;
-  const allies = b.alive('ally').length;
-  const share = mv.target === 'allEnemies' ? 1 : mv.target === 'enemy' ? 1 / allies : 0;
+  // F1: il bersaglio è deciso in anticipo; i colpi caricati sono più forti
+  const share = mv.target === 'allEnemies' ? 1 : mv.target === 'enemy' ? (e.aimUid === b.hero.uid ? 1 : 0) : 0;
+  const boost = e.chargeState === 'release' ? BALANCE.combat.charged.mult : e.chargeState === 'windup' ? 0 : 1;
   const atk = e.atk * (1 + statusVal(e, 'atkUp')) * (1 - statusVal(e, 'weak'));
   const shield = statusVal(b.hero, 'shield');
-  return Math.max(0, atk * mult * mitig(b.hero.def) * share - shield / Math.max(1, b.enemies().length));
+  return Math.max(0, atk * mult * boost * mitig(b.hero.def) * share - shield / Math.max(1, b.enemies().length));
 }
 
 /** Bersaglio: chi si può finire subito, altrimenti chi fa più male per HP rimasto (evocatori in testa). */
@@ -152,7 +153,11 @@ function smartTurn(b: Battle): void {
     if (protective && heavy) { b.act({ type: 'power', abilityId: protective.id }); return; }
     if (SMART.guard && incoming > 0) { b.act({ type: 'guard' }); return; }
   }
-  // 2) colpo forte in arrivo: ci si difende (dimezza e dà energia), a meno di poter chiudere lo scontro
+  // 2) F1: colpo caricato in partenza (su di te o su un compagno): si para
+  const releasing = foes.filter((e) => e.chargeState === 'release' && dmgMult(b.moveOf(e)) > 0);
+  const killNow = releasing.length === 1 && foes.length === 1 && single && releasing[0].hp <= hero.atk * dmgMult(single) * mitig(releasing[0].def) * 0.9;
+  if (SMART.guard && releasing.length && !killNow) { b.act({ type: 'guard' }); return; }
+  // 3) colpo forte in arrivo: ci si difende (dimezza e dà energia), a meno di poter chiudere lo scontro
   const canFinish = foes.length === 1 && single && foes[0].hp <= hero.atk * dmgMult(single) * mitig(foes[0].def) * 0.9;
   if (SMART.guard && heavy && incoming >= hero.maxHp * 0.12 && !canFinish) {
     if (protective) { b.act({ type: 'power', abilityId: protective.id }); return; }
