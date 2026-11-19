@@ -73,6 +73,11 @@ export const BALANCE = {
       boss: { hero: 0.55, weakest: 0.35 },
     },
   },
+  /**
+   * Mappa (19/11): tappe "libere" per mare in cui si può evitare lo scontro.
+   * Le altre tappe di mezzo offrono solo scontro o élite.
+   */
+  map: { freeSteps: 1, eliteFromStep: 2 },
   rewards: {
     restHealPct: 0.35,
     maxHpUp: 8,

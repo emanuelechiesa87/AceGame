@@ -1,3 +1,4 @@
+import { BALANCE } from '../src/data/balance';
 import { describe, expect, it } from 'vitest';
 import { AREAS } from '../src/data/areas';
 import { FRUITS } from '../src/data/fruits';
@@ -40,6 +41,11 @@ describe('RunController', () => {
     expect(map.at(-1)!.options).toEqual(['boss']);
     expect(map[1].options).toContain('recruit');
     expect(map.at(-2)!.options).toContain('rest');
+    // tappe di mezzo: lo scontro c'è sempre; solo poche tappe libere permettono di evitarlo
+    const middle = map.slice(1, -2);
+    for (const s of middle) expect(s.options).toContain('battle');
+    const calm = middle.filter((s) => s.options.some((o) => o !== 'battle' && o !== 'elite'));
+    expect(calm.length).toBeLessThanOrEqual(BALANCE.map.freeSteps + 1);
   });
 
   it('un solo frutto per run: nel primo mare il Risveglio arriva al livello III', () => {

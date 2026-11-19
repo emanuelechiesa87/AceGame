@@ -177,21 +177,44 @@ export class RunController {
     return fruit;
   }
 
+  /**
+   * Mappa di un mare. Per non poter più evitare quasi ogni scontro (feedback 19/11):
+   * - tappa 0: scontro obbligato; penultima: riposo (o altro), poi il boss;
+   * - tappe di mezzo "di combattimento": la scelta è tra scontro ed élite;
+   * - solo poche tappe "libere" (BALANCE.map.freeSteps, +1 finché la squadra non è
+   *   al completo) offrono scontro contro una tappa senza combattimento.
+   */
   generateMap(): MapStep[] {
     const a = this.area;
+    const M = BALANCE.map;
     const steps: MapStep[] = [{ options: ['battle'] }];
     const full = this.teamFull;
-    for (let i = 1; i < a.steps; i++) {
-      const weights = Object.entries(a.nodeWeights).filter(([t]) => !(t === 'elite' && i < 2) && !(t === 'recruit' && full)) as [NodeType, number][];
-      const first = this.rng.weightedPick(weights.map(([item, weight]) => ({ item, weight })));
-      let second = first;
-      for (let k = 0; k < 10 && second === first; k++) second = this.rng.weightedPick(weights.map(([item, weight]) => ({ item, weight })));
-      const opts: NodeType[] = second === first ? [first] : [first, second];
-      // garanzia: un incontro con un compagno nei primi passi (se c'è ancora qualcuno da incontrare)
-      if (i === 1 && !full && !opts.includes('recruit')) opts[opts.length - 1] = 'recruit';
-      // prima del boss si può sempre riposare
-      if (i === a.steps - 1 && !opts.includes('rest')) opts[0] = 'rest';
-      steps.push({ options: opts });
+    const last = a.steps - 1;
+    const middle: number[] = [];
+    for (let i = 1; i < last; i++) middle.push(i);
+    // la prima tappa di mezzo è sempre libera (incontro coi compagni); le altre libere a caso
+    const nFree = Math.min(middle.length, M.freeSteps + (full ? 0 : 1));
+    const free = new Set<number>(middle.length ? [middle[0]] : []);
+    const rest = middle.slice(1);
+    while (free.size < nFree && rest.length) free.add(rest.splice(this.rng.int(0, rest.length - 1), 1)[0]);
+    const calm = Object.entries(a.nodeWeights)
+      .filter(([t]) => t !== 'battle' && t !== 'elite' && !(t === 'recruit' && full)) as [NodeType, number][];
+    const pickCalm = (): NodeType => this.rng.weightedPick(calm.map(([item, weight]) => ({ item, weight })));
+    for (let i = 1; i < last; i++) {
+      if (free.has(i)) {
+        let other = pickCalm();
+        // garanzia: un incontro con un compagno nei primi passi (se c'è ancora qualcuno da incontrare)
+        if (i === 1 && !full) other = 'recruit';
+        steps.push({ options: ['battle', other] });
+      } else {
+        steps.push({ options: i >= M.eliteFromStep ? ['battle', 'elite'] : ['battle'] });
+      }
+    }
+    // prima del boss si può sempre riposare
+    if (last >= 1) {
+      let other = pickCalm();
+      for (let k = 0; k < 10 && other === 'rest'; k++) other = pickCalm();
+      steps.push({ options: other === 'rest' ? ['rest'] : ['rest', other] });
     }
     steps.push({ options: ['boss'] });
     return steps;
