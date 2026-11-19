@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { fitCamera } from './BaseScene';
 import { makeBackgroundTextures } from '../pixel/backgrounds';
+import { makeSeaThemeTextures } from '../pixel/seaThemes';
 import { makeCreatureTextures } from '../pixel/creatures';
 import { makeHeroTextures } from '../pixel/heroes';
 import { makeIconTextures } from '../pixel/icons';
@@ -22,6 +23,7 @@ export class BootScene extends Phaser.Scene {
       makeCreatureTextures(this);
       makeIconTextures(this);
       makeBackgroundTextures(this);
+      makeSeaThemeTextures(this);
       this.scene.start('Menu');
     } catch (err) {
       console.error('Errore nella generazione della grafica', err);

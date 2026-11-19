@@ -54,7 +54,7 @@ export class BattleScene extends BaseScene {
     this.busy = true; this.speed = GameSession.save.data.settings.fastAnimations ? 2 : 1; this.targetUid = undefined;
     this.node = data.node;
 
-    new BiomeBackdrop(this, { groundTop: 560, deck: true, tint: ctl.area.tint });
+    new BiomeBackdrop(this, { groundTop: 560, deck: true, tint: ctl.area.tint, theme: ctl.area.backdrop });
     this.fullRect(0x14233f, 0.15);
 
     // --- setup motore -----------------------------------------------------------

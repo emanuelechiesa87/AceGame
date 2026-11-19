@@ -38,7 +38,7 @@ export class ExplorationScene extends BaseScene {
     if (!run || !GameSession.ctl) { this.scene.start('Menu'); return; }
     this.walking = true; this.paused = false; this.arrived = false;
 
-    this.backdrop = new BiomeBackdrop(this, { groundTop: 760, withForeground: true, tint: GameSession.ctl.area.tint });
+    this.backdrop = new BiomeBackdrop(this, { groundTop: 760, withForeground: true, tint: GameSession.ctl.area.tint, theme: GameSession.ctl.area.backdrop });
     this.hero = new HeroRig(this, 250, this.backdrop.groundY, run.avatar === 'a' ? 'm' : 'f', 0.95).walk();
     this.backdrop.addForeground();
 

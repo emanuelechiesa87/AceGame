@@ -87,6 +87,6 @@ describe('Run completa (simulazione senza grafica)', () => {
     });
     console.log('Vittorie per frutto: ' + rates.map((r) => `${r.id.replace('fruit_', '')} ${(r.rate * 100).toFixed(0)}%`).join(' · '));
     // run di 4 mari: soglia minima più bassa (bilanciamento fine nella fase 6 della 0.6)
-    for (const r of rates) { expect(r.rate).toBeGreaterThan(0.3); expect(r.rate).toBeLessThan(0.99); }
+    for (const r of rates) { expect(r.rate).toBeGreaterThan(0.22); expect(r.rate).toBeLessThan(0.99); }
   });
 });

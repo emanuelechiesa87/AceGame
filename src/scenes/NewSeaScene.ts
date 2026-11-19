@@ -29,7 +29,7 @@ export class NewSeaScene extends BaseScene {
     if (!run || !ctl) { this.scene.start('Menu'); return; }
     const area = ctl.area;
 
-    new BiomeBackdrop(this, { groundTop: 980, tint: area.tint });
+    new BiomeBackdrop(this, { groundTop: 980, tint: area.tint, theme: area.backdrop });
     this.fullRect(COLORS.background, 0.45);
     const lines = this.add.image(GAME_WIDTH / 2, 330, 'fx-speedlines').setScale(FX_SCALE).setAlpha(0.6);
     this.tweens.add({ targets: lines, angle: 360, duration: 30000, repeat: -1 });
