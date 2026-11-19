@@ -26,13 +26,15 @@ export class RewardScene extends BaseScene {
     super('Reward');
   }
 
-  create(data: { node: NodeType; mode: 'battle' | 'chest'; wave?: boolean }): void {
+  create(data: { node: NodeType; mode: 'battle' | 'chest'; wave?: boolean; coins?: number; offered?: boolean }): void {
     this.setupCamera();
     const ctl = GameSession.ctl;
     if (!ctl) { this.scene.start('Menu'); return; }
     this.picked = false;
     new BiomeBackdrop(this, { groundTop: 980 });
     this.fullRect(COLORS.background, 0.55);
+    // le monete del forziere prima della barra in alto, così il totale è già aggiornato
+    const chestCoins = data.mode === 'chest' ? ctl.rollCoins('chest') : 0;
     new RunHud(this, ctl.run);
     const lines = this.add.image(GAME_WIDTH / 2, 640, 'fx-speedlines').setScale(FX_SCALE).setAlpha(0.6);
     this.tweens.add({ targets: lines, angle: 360, duration: 40000, repeat: -1 });
@@ -43,12 +45,23 @@ export class RewardScene extends BaseScene {
       const awaken = ctl.canAwaken && ctl.rng.next() < 0.35;
       const art = awaken ? undefined : ctl.randomNewArtifact();
       const reward: Reward = awaken ? { kind: 'awaken' } : art ? { kind: 'artifact', id: art } : { kind: 'potion' };
-      addBody(this, GAME_WIDTH / 2, 350, 'Dentro c\'è...', 30, '#fbe9c8');
+      addBody(this, GAME_WIDTH / 2, 350, `Dentro c'è... (+${chestCoins} monete)`, 30, '#fbe9c8');
       this.card(reward, GAME_WIDTH / 2, 620, 560, true);
       return;
     }
+    const coinText = data.coins ? `+${data.coins} monete · ` : '';
+    if (data.offered === false) {
+      // F2: negli scontri normali la ricompensa non è garantita
+      addTitle(this, GAME_WIDTH / 2, 280, 'BOTTINO', 64).setAngle(-3);
+      icon(this, GAME_WIDTH / 2, 560, iconKey('misc', 'coin'), 200);
+      addTitle(this, GAME_WIDTH / 2, 720, `+${data.coins ?? 0} MONETE`, 56);
+      addBody(this, GAME_WIDTH / 2, 800, 'Niente tesori questa volta.\nLe monete si spendono dal Mercante.', 28, '#fbe9c8');
+      new Button(this, GAME_WIDTH / 2, 1060, 'CONTINUA', () => this.finish(), { width: 420, height: 100, fontSize: 48 });
+      void this.revealIfWave(data);
+      return;
+    }
     addTitle(this, GAME_WIDTH / 2, 280, data.node === 'boss' ? 'BOTTINO DEL BOSS!' : 'SCEGLI UNA RICOMPENSA', 56).setAngle(-3);
-    addBody(this, GAME_WIDTH / 2, 346, 'Una sola: scegli bene!', 26, '#fbe9c8');
+    addBody(this, GAME_WIDTH / 2, 346, `${coinText}Una sola: scegli bene!`, 26, '#fbe9c8');
     const opts = ctl.rewardOptions(data.node);
     // con la Mappa Strappata le scelte sono 4: carte un po' più basse
     const four = opts.length > 3;

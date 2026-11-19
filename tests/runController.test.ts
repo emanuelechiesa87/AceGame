@@ -94,11 +94,45 @@ describe('RunController', () => {
     expect(ctl.run.bossesDefeated).toBe(1);
   });
 
-  it('i compagni KO tornano con parte degli HP dopo la vittoria', () => {
+  it('F2: i compagni KO restano KO dopo la vittoria e si rialzano al fuoco, al mercante o salpando', () => {
     const ctl = fresh();
     ctl.recruit('comp_bobo');
-    ctl.onVictory(['en_jelly'], 40, [{ id: 'comp_bobo', hp: 0, charge: 2 }]);
+    ctl.recruit('comp_zip');
+    ctl.onVictory(['en_jelly'], 40, [{ id: 'comp_bobo', hp: 0, charge: 2 }, { id: 'comp_zip', hp: 30, charge: 1 }]);
+    expect(ctl.run.companions[0].hp).toBe(0);
+    expect(ctl.companionsReady.map((c) => c.id)).toEqual(['comp_zip']);
+    // allo scontro dopo Bobo non scende in campo: senza di lui nella battaglia resta KO
+    ctl.onVictory(['en_jelly'], 40, [{ id: 'comp_zip', hp: 20, charge: 2 }]);
+    expect(ctl.run.companions[0].hp).toBe(0);
+    expect(ctl.reviveCompanions()).toBe(1);
     expect(ctl.run.companions[0].hp).toBeGreaterThan(0);
+    ctl.onVictory(['en_jelly'], 40, [{ id: 'comp_bobo', hp: 0, charge: 0 }, { id: 'comp_zip', hp: 20, charge: 2 }]);
+    expect(ctl.nextArea()).toBe(true);
+    expect(ctl.run.companions[0].hp).toBeGreaterThan(0);
+  });
+
+  it('F2: monete, negozio e fuoco da campo', () => {
+    const ctl = fresh();
+    expect(ctl.coins).toBe(0);
+    const n = ctl.rollCoins('battle');
+    expect(n).toBeGreaterThanOrEqual(8);
+    expect(ctl.coins).toBe(n);
+    const offers = ctl.shopOffers();
+    expect(offers.length).toBeGreaterThanOrEqual(2);
+    expect(offers.length).toBeLessThanOrEqual(4);
+    const potion = offers.find((o) => o.kind === 'potion')!;
+    const before = ctl.run.potions;
+    expect(ctl.buy(potion)).toBe(false); // non bastano le monete
+    ctl.run.coins = 100;
+    expect(ctl.buy(potion)).toBe(true);
+    expect(ctl.run.potions).toBe(before + 1);
+    expect(ctl.coins).toBe(100 - potion.price);
+    const atk = ctl.run.baseStats.atk;
+    ctl.restTrain();
+    expect(ctl.run.baseStats.atk).toBe(atk + 1);
+    // élite e boss danno sempre la scelta della ricompensa
+    expect(ctl.rewardOffered('elite')).toBe(true);
+    expect(ctl.rewardOffered('boss')).toBe(true);
   });
 
   it('riprende la stessa sequenza casuale dopo un ricaricamento', () => {

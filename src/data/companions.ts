@@ -7,14 +7,14 @@ export const COMPANIONS: CompanionDef[] = [
     description: 'Orso marinaio testardo. Para tutto col suo coperchio di botte.',
     stats: { maxHp: 70, atk: 9, def: 6, spd: 6 }, chargeMax: 3,
     auto: { id: 'bobo_bonk', name: 'Testata', description: 'Colpisce il bersaglio.', target: 'enemy', when: 'always', effects: [{ kind: 'damage', mult: 1 }] },
-    special: { id: 'bobo_acorn', name: 'Muro di Botti', description: 'Scudo da 30 a tutta la squadra.', target: 'allAllies', effects: [{ kind: 'shield', amount: 30 }] },
+    special: { id: 'bobo_acorn', name: 'Muro di Botti', description: 'Scudo da 20 a tutta la squadra.', target: 'allAllies', effects: [{ kind: 'shield', amount: 20 }] },
   },
   {
     id: 'comp_lumi', name: 'Lumi', role: 'supporto',
     description: 'Lanterna di bordo chiacchierona. Cura chi è in difficoltà.',
-    stats: { maxHp: 50, atk: 8, def: 2, spd: 12 }, chargeMax: 3,
-    auto: { id: 'lumi_glow', name: 'Bagliore', description: 'Cura il 12% all\'alleato più ferito.', target: 'lowestAlly', when: 'allyBelowHalf', effects: [{ kind: 'heal', pctMaxHp: 0.12 }] },
-    special: { id: 'lumi_dawn', name: 'Alba Tascabile', description: 'Cura il 35% a tutti e rimuove gli effetti negativi.', target: 'allAllies', effects: [{ kind: 'heal', pctMaxHp: 0.35 }, { kind: 'cleanse' }] },
+    stats: { maxHp: 50, atk: 8, def: 2, spd: 12 }, chargeMax: 4,
+    auto: { id: 'lumi_glow', name: 'Bagliore', description: 'Cura il 6% all\'alleato più ferito.', target: 'lowestAlly', when: 'allyBelowHalf', effects: [{ kind: 'heal', pctMaxHp: 0.06 }] },
+    special: { id: 'lumi_dawn', name: 'Alba Tascabile', description: 'Cura il 15% a tutti e rimuove gli effetti negativi.', target: 'allAllies', effects: [{ kind: 'heal', pctMaxHp: 0.15 }, { kind: 'cleanse' }] },
   },
   {
     id: 'comp_zip', name: 'Zip', role: 'assaltatore',

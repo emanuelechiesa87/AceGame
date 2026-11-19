@@ -5,7 +5,7 @@ export const ARTIFACTS: ArtifactDef[] = [
   { id: 'art_wolf_fang', name: 'Dente di Lupo', rarity: 'common', description: '+3 ATT.', stats: { atk: 3 } },
   { id: 'art_fate_thread', name: 'Filo del Destino', rarity: 'rare', description: 'Una volta per battaglia sopravvivi a un colpo letale.', surviveLethalOncePerBattle: true },
   { id: 'art_unstable_prism', name: 'Prisma Instabile', rarity: 'rare', description: 'I poteri dei frutti fanno +30% danni.', powerDamageMult: 1.3 },
-  { id: 'art_return_bell', name: 'Campana del Ritorno', rarity: 'common', description: 'Dopo ogni vittoria recuperi il 10% degli HP.', healAfterVictoryPct: 0.1 },
+  { id: 'art_return_bell', name: 'Campana del Ritorno', rarity: 'common', description: 'Dopo ogni vittoria recuperi il 6% degli HP.', healAfterVictoryPct: 0.06 },
   // 0.6.1 — comuni
   { id: 'art_bent_compass', name: 'Bussola Storta', rarity: 'common', description: 'Inizi ogni battaglia con +1 energia.', energyBonus: 1 },
   { id: 'art_coconut_flask', name: 'Fiaschetta di Latte di Cocco', rarity: 'common', description: 'Le pozioni curano il 50% invece del 35%.', potionHealPct: 0.5 },

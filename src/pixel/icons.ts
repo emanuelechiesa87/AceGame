@@ -118,6 +118,9 @@ const NODES: Record<string, () => Cells> = {
   event: () => fromGrid([
     '.PPPPPPPPPPPP', 'PppppKKKKpppP', 'PpppKppppKppP', 'PpppppppKpppP', 'PppppppKppppP', 'PpppppKppppP', 'PpppppKppppP', 'PppppppppppP', 'PpppppKppppP', '.PPPPPPPPPPPP',
   ], { P: '#d9b878', p: '#f1d7a8', K: '#6b3a1e' }, 1, 3),
+  shop: () => fromGrid(sym([
+    '.....RR', '....RRR', '.....SS', '....SSS', '..SSSSS', '.SSSSSS', 'SSSSSYY', 'SSSSYYY', 'SSSSYKY', 'SSSSYYY', '.SSSSSY', '..SSSSS',
+  ]), { R: '#e4342f', S: '#c98a4a', Y: '#ffcf3a', K: '#e09a12' }, 1, 2),
   boss: () => fromGrid(sym([
     'Y..Y..Y', 'YY.YY.Y', 'YYYYYYY', 'YYYYYYY', 'YYRYYGY', 'YYYYYYY', 'BBBBBBB',
   ]).concat(['..CCC....CCC', '..CCC....CCC']), { Y: '#ffcf3a', R: '#e4342f', G: '#6fe08a', B: '#e09a12', C: '#ffcf3a' }, 1, 3),
@@ -202,6 +205,11 @@ const POTION = () => fromGrid(sym([
   '.....BB', '.....BB', '.....GG', '....GWR', '...GWRR', '..GRRRR', '.GRRRRR', '.GRRRRR', '.GRRRRR', '..GRRRR', '...GGGG',
 ]), { B: '#8a5232', G: '#dff6ff', W: '#ffffff', R: '#ff5f8a' }, 1, 2);
 
+/** Moneta (F2). */
+const COIN = () => fromGrid(sym([
+  '....YYY', '..YYOOO', '.YOOYYY', '.YOYYYY', 'YOYYYWW', 'YOYYYWY', 'YOYYYWY', 'YOYYYWW', '.YOYYYY', '.YOOYYY', '..YYOOO', '....YYY',
+]), { Y: '#ffcf3a', O: '#e09a12', W: '#fff2a8' }, 1, 2);
+
 export function makeIconTextures(scene: Phaser.Scene): void {
   const group = (g: Parameters<typeof iconKey>[0], map: Record<string, () => Cells>) => Object.entries(map).forEach(([id, f]) => make(scene, iconKey(g, id), f));
   // frutti: icona 32×32 e immagine grande 64×64 per rivelazione e animazioni
@@ -214,4 +222,5 @@ export function makeIconTextures(scene: Phaser.Scene): void {
   group('intent', INTENTS);
   group('status', STATUSES);
   make(scene, iconKey('misc', 'potion'), POTION);
+  make(scene, iconKey('misc', 'coin'), COIN);
 }

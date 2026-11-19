@@ -85,7 +85,7 @@ export class BattleScene extends BaseScene {
     this.battle = new Battle(
       {
         hero: makeHeroUnit(run.heroName, stats, Math.min(run.currentHp, stats.maxHp)),
-        companions: run.companions.map((c, i) => makeCompanionUnit(c.id, `c${i}`, c.hp, c.charge, ctl.companionScale)),
+        companions: ctl.companionsReady.map((c, i) => makeCompanionUnit(c.id, `c${i}`, c.hp, c.charge, ctl.companionScale)),
         enemies: this.enemyIds.map((id, i) => makeEnemyUnit(id, `e${i}`, ctl.enemyScale)),
         powers: ctl.battlePowers(),
         potions: run.potions,
@@ -623,8 +623,11 @@ export class BattleScene extends BaseScene {
     ctl.afterBattle(this.battle.reviveUsed);
     ctl.onVictory(this.enemyIds, this.battle.hero.hp, comps);
     if (this.node === 'boss') ctl.onAreaCleared();
+    // F2: monete sempre, scelta della ricompensa garantita solo con élite e boss
+    const coins = ctl.rollCoins(this.node);
+    const offered = ctl.rewardOffered(this.node);
     GameSession.persistRun();
-    this.goTo('Reward', { node: this.node, mode: 'battle' }, 'wave');
+    this.goTo('Reward', { node: this.node, mode: 'battle', coins, offered }, 'wave');
   }
 
   private async onDefeat(): Promise<void> {

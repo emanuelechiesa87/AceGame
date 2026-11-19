@@ -177,9 +177,9 @@ export const FRUITS: FruitDef[] = [
     abilities: [
       lv('pw_blood', 'Morso Vampiro', 'Danno 190% e ti curi del 60% del danno inflitto.', 2, 'enemy', [{ kind: 'damage', mult: 1.9, lifesteal: 0.6 }]),
       lv('pw_blood_2', 'Morso Vampiro II', 'Danno 230% e ti curi del 70% del danno inflitto.', 2, 'enemy', [{ kind: 'damage', mult: 2.3, lifesteal: 0.7 }]),
-      lv('pw_blood_3', 'Banchetto Rosso', 'Danno 170% a TUTTI e ti curi del 40% del danno inflitto.', 3, 'allEnemies', [{ kind: 'damage', mult: 1.7, lifesteal: 0.4 }]),
-      lv('pw_blood_4', 'Banchetto Rosso II', 'Danno 210% a TUTTI e ti curi del 45% del danno inflitto.', 3, 'allEnemies', [{ kind: 'damage', mult: 2.1, lifesteal: 0.45 }]),
-      lv('pw_blood_5', 'Notte Cremisi', 'Danno 250% a TUTTI, ti curi del 50% del danno e vulnerabili per 2 turni.', 3, 'allEnemies', [{ kind: 'damage', mult: 2.5, lifesteal: 0.5 }, { kind: 'status', status: 'vulnerable', turns: 2 }]),
+      lv('pw_blood_3', 'Banchetto Rosso', 'Danno 170% a TUTTI e ti curi del 40% del danno al primo nemico.', 3, 'allEnemies', [{ kind: 'damage', mult: 1.7, lifesteal: 0.4 }]),
+      lv('pw_blood_4', 'Banchetto Rosso II', 'Danno 210% a TUTTI e ti curi del 45% del danno al primo nemico.', 3, 'allEnemies', [{ kind: 'damage', mult: 2.1, lifesteal: 0.45 }]),
+      lv('pw_blood_5', 'Notte Cremisi', 'Danno 250% a TUTTI, ti curi del 50% del danno al primo nemico e vulnerabili per 2 turni.', 3, 'allEnemies', [{ kind: 'damage', mult: 2.5, lifesteal: 0.5 }, { kind: 'status', status: 'vulnerable', turns: 2 }]),
     ],
   },
   {

@@ -6,7 +6,7 @@ import { createRunState, effectiveStats } from '../src/state/RunState';
 import { Battle, makeCompanionUnit, makeEnemyUnit, makeHeroUnit } from '../src/systems/combat/Battle';
 import type { Unit } from '../src/systems/combat/types';
 import { resolveEvent } from '../src/systems/EventResolver';
-import { RunController, type Reward } from '../src/systems/RunController';
+import { RunController, type Reward, type ShopItem } from '../src/systems/RunController';
 import type { Ability } from '../src/types/content';
 import type { RunStats } from '../src/types/game';
 
@@ -47,7 +47,7 @@ export function playRun(seed: number, forceFruit?: string, strategy: Strategy = 
       const enemies = ctl.enemyGroup(node);
       const b = new Battle({
         hero: makeHeroUnit('Kai', stats, run.currentHp),
-        companions: run.companions.map((c, i) => makeCompanionUnit(c.id, `c${i}`, c.hp, c.charge, ctl.companionScale)),
+        companions: ctl.companionsReady.map((c, i) => makeCompanionUnit(c.id, `c${i}`, c.hp, c.charge, ctl.companionScale)),
         enemies: enemies.map((id, i) => makeEnemyUnit(id, `e${i}`, ctl.enemyScale)),
         powers: ctl.battlePowers(),
         potions: run.potions,
@@ -63,13 +63,17 @@ export function playRun(seed: number, forceFruit?: string, strategy: Strategy = 
       ctl.afterBattle(b.reviveUsed);
       ctl.onVictory(enemies, b.hero.hp, b.units.filter((u) => u.kind === 'companion').map((u) => ({ id: u.defId, hp: u.hp, charge: u.charge })));
       if (node === 'boss') ctl.onAreaCleared();
-      const opts = ctl.rewardOptions(node);
-      const r = smart && SMART.rewards ? pickReward(ctl, opts, hpPct()) : opts.find((o) => o.kind === 'awaken') ?? opts[0];
-      if (r.kind === 'artifact') ctl.gainArtifact(r.id);
-      else ctl.applySimple(r.kind);
-    } else if (node === 'rest') ctl.healPct(BALANCE.rewards.restHealPct);
+      ctl.rollCoins(node);
+      if (ctl.rewardOffered(node)) {
+        const opts = ctl.rewardOptions(node);
+        const r = smart && SMART.rewards ? pickReward(ctl, opts, hpPct()) : opts.find((o) => o.kind === 'awaken') ?? opts[0];
+        if (r.kind === 'artifact') ctl.gainArtifact(r.id);
+        else ctl.applySimple(r.kind);
+      }
+    } else if (node === 'rest') restChoice(ctl, smart, hpPct());
+    else if (node === 'shop') shopping(ctl, smart, hpPct());
     else if (node === 'recruit') { const c = ctl.randomNewCompanion(); if (c) ctl.recruit(c); }
-    else if (node === 'chest') { if (ctl.canAwaken && ctl.rng.next() < 0.35) ctl.awaken(); else { const a = ctl.randomNewArtifact(); if (a) ctl.gainArtifact(a); } }
+    else if (node === 'chest') { ctl.rollCoins('chest'); if (ctl.canAwaken && ctl.rng.next() < 0.35) ctl.awaken(); else { const a = ctl.randomNewArtifact(); if (a) ctl.gainArtifact(a); } }
     else if (node === 'event') {
       const ev = ctl.pickEvent();
       const choice = smart && SMART.events ? ev.choices.reduce((best, c) => (eventValue(ctl, c.outcome) > eventValue(ctl, best.outcome) ? c : best)) : ev.choices[0];
@@ -174,10 +178,38 @@ function smartTurn(b: Battle): void {
   b.act({ type: 'attack', targetUid: target.uid });
 }
 
+/** Fuoco da campo (F2): una sola scelta. L'ingenuo cura sempre. */
+function restChoice(ctl: RunController, smart: boolean, hp: number): void {
+  if (!smart) { ctl.restHeal(); return; }
+  const ko = ctl.companionsKo.length;
+  if (ko >= 2 || (ko === 1 && hp > 0.6)) ctl.reviveCompanions();
+  else if (hp < 0.8) ctl.restHeal();
+  else ctl.restTrain();
+}
+
+/** Mercante (F2): l'attento compra per priorità finché può; l'ingenuo compra la prima cosa che può. */
+function shopping(ctl: RunController, smart: boolean, hp: number): void {
+  const items = ctl.shopOffers();
+  const value = (i: ShopItem): number => {
+    switch (i.kind) {
+      case 'revive': return 95;
+      case 'awaken': return 90;
+      case 'heal': return hp < 0.5 ? 85 : 20;
+      case 'artifact': return 70;
+      case 'potion': return ctl.run.potions < 2 ? 60 : 10;
+    }
+  };
+  const order = smart ? [...items].sort((a, b) => value(b) - value(a)) : items;
+  for (const it of order) {
+    if (smart && value(it) < 30) continue;
+    if (ctl.buy(it) && it.kind === 'artifact') ctl.gainArtifact(it.id);
+  }
+}
+
 /** Preferenze di tappa del giocatore attento (modificabili per le analisi). */
 export const NODE_SCORE = {
-  low: { rest: 100, chest: 70, event: 60, recruit: 55, battle: 20, elite: 0, boss: 0 } as Record<string, number>,
-  high: (hp: number): Record<string, number> => ({ recruit: 90, elite: hp > 0.7 ? 85 : 30, chest: 75, event: 55, battle: 50, rest: hp < 0.7 ? 65 : 10, boss: 0 }),
+  low: { rest: 100, shop: 75, chest: 70, event: 60, recruit: 55, battle: 20, elite: 0, boss: 0 } as Record<string, number>,
+  high: (hp: number): Record<string, number> => ({ recruit: 90, elite: hp > 0.7 ? 85 : 30, shop: 70, chest: 75, event: 55, battle: 50, rest: hp < 0.7 ? 65 : 10, boss: 0 }),
 };
 
 function pickNode(ctl: RunController, opts: NodeType[], hp: number): NodeType {

@@ -14,6 +14,10 @@ import { Rng } from './Rng';
 const RARITY_WEIGHT: Record<Rarity, number> = { common: 60, rare: 30, epic: 10 };
 const L = BALANCE.limits;
 
+export type ShopItem =
+  | { kind: 'potion' | 'heal' | 'revive' | 'awaken'; price: number }
+  | { kind: 'artifact'; id: string; price: number };
+
 export type Reward =
   | { kind: 'awaken' }
   | { kind: 'artifact'; id: string }
@@ -83,6 +87,8 @@ export class RunController {
     this.healPct(pct);
     this.run.companions = this.run.companions.map((c) => {
       const max = companionMaxHp(c.id, this.run.areaIndex);
+      // F2: chi era KO si rialza salpando, con poca vita
+      if (c.hp <= 0) return { ...c, hp: Math.round(max * BALANCE.combat.companionReviveHpPct) };
       return { ...c, hp: Math.min(max, c.hp + Math.round(max * pct)) };
     });
     return true;
@@ -258,10 +264,90 @@ export class RunController {
     }
     this.recordOutsideHeal(Math.min(stats.maxHp, hp) - heroHp);
     this.run.currentHp = Math.min(stats.maxHp, Math.max(1, hp));
-    this.run.companions = companions.map((c) => {
-      const max = companionMaxHp(c.id, this.run.areaIndex);
-      return { id: c.id, charge: c.charge, hp: c.hp > 0 ? c.hp : Math.round(max * BALANCE.combat.companionReviveHpPct) };
+    // F2: i compagni KO restano KO (si rialzano al Fuoco da campo, al Mercante o salpando)
+    this.run.companions = this.run.companions.map((c) => {
+      const b = companions.find((x) => x.id === c.id);
+      return b ? { id: c.id, charge: b.charge, hp: Math.max(0, b.hp) } : { ...c, hp: Math.max(0, c.hp) };
     });
+  }
+
+  /** Compagni in piedi: solo questi scendono in battaglia (F2). */
+  get companionsReady() { return this.run.companions.filter((c) => c.hp > 0); }
+  get companionsKo() { return this.run.companions.filter((c) => c.hp <= 0); }
+
+  // --- monete e negozio (F2) ---------------------------------------------------------
+  get coins(): number { return this.run.coins ?? 0; }
+  /** Monete guadagnate da uno scontro o da un forziere (sorteggio nell'intervallo di BALANCE.economy.coins). */
+  rollCoins(source: NodeType): number {
+    const r = BALANCE.economy.coins[source];
+    if (!r) return 0;
+    const n = this.rng.int(r[0], r[1]);
+    this.run.coins = this.coins + n;
+    return n;
+  }
+  spend(n: number): boolean {
+    if (this.coins < n) return false;
+    this.run.coins = this.coins - n;
+    return true;
+  }
+
+  /** Dopo uno scontro: c'è la scelta 1 su 3? Élite e boss sempre, scontri normali solo a volte. */
+  rewardOffered(node: NodeType): boolean {
+    if (node !== 'battle') return true;
+    return this.rng.next() < BALANCE.rewards.normalRewardChance;
+  }
+
+  /** Banco del Mercante: 4 articoli al massimo, prezzi da BALANCE.economy.prices. */
+  shopOffers(): ShopItem[] {
+    const P = BALANCE.economy.prices;
+    const out: ShopItem[] = [{ kind: 'potion', price: P.potion }, { kind: 'heal', price: P.heal }];
+    if (this.companionsKo.length) out.push({ kind: 'revive', price: P.revive });
+    const art = this.randomNewArtifact();
+    if (art) out.push({ kind: 'artifact', id: art, price: P.artifact[ARTIFACT_BY_ID.get(art)!.rarity] });
+    if (this.canAwaken && out.length < 4) out.push({ kind: 'awaken', price: P.awaken });
+    return out.slice(0, 4);
+  }
+
+  /** Compra un articolo (gli artefatti vanno poi consegnati con gainArtifact/offerArtifact). */
+  buy(item: ShopItem): boolean {
+    if (!this.spend(item.price)) return false;
+    switch (item.kind) {
+      case 'potion': this.run.potions++; break;
+      case 'heal': this.healPct(BALANCE.economy.shopHealPct); break;
+      case 'revive': this.reviveCompanions(BALANCE.rest.reviveHpPct); break;
+      case 'awaken': this.awaken(); break;
+      case 'artifact': break;
+    }
+    return true;
+  }
+
+  // --- Fuoco da campo (F2): una sola scelta ---------------------------------------------
+  /** Cura eroe e compagni in piedi. */
+  restHeal(): void {
+    const pct = BALANCE.rest.healPct;
+    this.healPct(pct);
+    this.run.companions = this.run.companions.map((c) => {
+      if (c.hp <= 0) return c;
+      const max = companionMaxHp(c.id, this.run.areaIndex);
+      return { ...c, hp: Math.min(max, c.hp + Math.round(max * pct)) };
+    });
+  }
+  /** Rialza i compagni KO con una frazione della vita. Ritorna quanti. */
+  reviveCompanions(pct: number = BALANCE.rest.reviveHpPct): number {
+    let n = 0;
+    this.run.companions = this.run.companions.map((c) => {
+      if (c.hp > 0) return c;
+      n++;
+      return { ...c, hp: Math.max(1, Math.round(companionMaxHp(c.id, this.run.areaIndex) * pct)) };
+    });
+    return n;
+  }
+  /** Allenamento: potenziamento permanente della run. */
+  restTrain(): void {
+    const T = BALANCE.rest;
+    this.run.baseStats.atk += T.trainAtk;
+    this.run.baseStats.maxHp += T.trainMaxHp;
+    this.run.currentHp += T.trainMaxHp;
   }
 
   onAreaCleared(): void {

@@ -481,12 +481,14 @@ export class Battle {
         ev.push({ t: 'status', target: actor.uid, status: 'twin', turns: eff.turns });
       }
     }
-    for (const target of this.targets(actor, a, chosen)) {
-      for (const eff of a.effects) {
-        if (target.hp <= 0 && eff.kind !== 'summon') break;
+    this.targets(actor, a, chosen).forEach((target, ti) => {
+      for (const raw of a.effects) {
+        if (target.hp <= 0 && raw.kind !== 'summon') break;
+        // F2: il furto vita dei colpi ad area vale solo sul primo bersaglio
+        const eff = ti > 0 && raw.kind === 'damage' && raw.lifesteal ? { ...raw, lifesteal: undefined } : raw;
         this.applyEffect(actor, target, eff, ev, flags.isPower ?? false);
       }
-    }
+    });
   }
 
   private applyEffect(actor: Unit, target: Unit, eff: Effect, ev: BattleEvent[], isPower: boolean, kind: DamageKind = 'hit'): void {

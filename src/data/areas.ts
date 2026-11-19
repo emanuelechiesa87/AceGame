@@ -1,5 +1,5 @@
 export type BackdropTheme = 'port' | 'reef' | 'abyss' | 'graveyard';
-export type NodeType = 'battle' | 'elite' | 'chest' | 'rest' | 'recruit' | 'event' | 'boss';
+export type NodeType = 'battle' | 'elite' | 'chest' | 'rest' | 'recruit' | 'event' | 'shop' | 'boss';
 
 export interface AreaDef {
   id: string;
@@ -50,7 +50,7 @@ const GRAVE_GROUPS: AreaDef['groups'] = {
   boss: ['en_wreck_admiral'],
 };
 
-const WEIGHTS: AreaDef['nodeWeights'] = { battle: 40, event: 16, chest: 14, rest: 10, recruit: 12, elite: 10 };
+const WEIGHTS: AreaDef['nodeWeights'] = { battle: 40, event: 16, chest: 14, rest: 10, recruit: 12, shop: 14, elite: 10 };
 
 /**
  * Quattro mari affrontati in sequenza nella stessa run (morte = fine run).
@@ -64,15 +64,15 @@ export const AREAS: AreaDef[] = [
   },
   {
     id: 'area_coral_reef', name: 'Scogliera dei Coralli', tagline: 'Acque basse, guai profondi', steps: 6,
-    nodeWeights: WEIGHTS, groups: REEF_GROUPS, scale: { hp: 1.03, atk: 0.88 }, maxFruitLevel: 4, backdrop: 'reef',
+    nodeWeights: WEIGHTS, groups: REEF_GROUPS, scale: { hp: 1.35, atk: 1.1 }, maxFruitLevel: 4, backdrop: 'reef',
   },
   {
     id: 'area_glow_abyss', name: 'Abisso Luminoso', tagline: 'Laggiù qualcosa si accende', steps: 6,
-    nodeWeights: WEIGHTS, groups: ABYSS_GROUPS, scale: { hp: 2.0, atk: 1.45 }, maxFruitLevel: 5, backdrop: 'abyss', tint: 0x8e9ad8,
+    nodeWeights: WEIGHTS, groups: ABYSS_GROUPS, scale: { hp: 2.7, atk: 1.85 }, maxFruitLevel: 5, backdrop: 'abyss', tint: 0x8e9ad8,
   },
   {
     id: 'area_ship_graveyard', name: 'Cimitero delle Navi', tagline: 'L\'ultimo mare', steps: 6,
-    nodeWeights: WEIGHTS, groups: GRAVE_GROUPS, scale: { hp: 3.5, atk: 2.32 }, maxFruitLevel: 5, backdrop: 'graveyard', tint: 0xb4a8b8,
+    nodeWeights: WEIGHTS, groups: GRAVE_GROUPS, scale: { hp: 3.2, atk: 2.15 }, maxFruitLevel: 5, backdrop: 'graveyard', tint: 0xb4a8b8,
   },
 ];
 
@@ -85,5 +85,6 @@ export const NODE_LABELS: Record<NodeType, { title: string; hint: string }> = {
   rest: { title: 'Fuoco', hint: 'Riposa un attimo' },
   recruit: { title: 'Incontro', hint: 'Qualcuno chiede aiuto' },
   event: { title: 'Mistero', hint: 'Chissà cosa succede...' },
+  shop: { title: 'Mercante', hint: 'Spendi le monete' },
   boss: { title: 'BOSS', hint: 'Il signore di questo mare' },
 };

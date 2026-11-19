@@ -19,8 +19,11 @@ export class RunHud {
     panel(scene, 16, y, 688, 176, COLORS.panel, 0.92);
     addBody(scene, 40, y + 30, 'HP', 26, '#ff9ab0').setOrigin(0, 0.5);
     new HpBar(scene, 255, y + 18, 300, 24).set(run.currentHp, stats.maxHp, 0, false);
-    icon(scene, 466, y + 30, iconKey('misc', 'potion'), 44);
-    addBody(scene, 504, y + 30, `×${run.potions}`, 28, '#ffffff').setOrigin(0, 0.5);
+    icon(scene, 440, y + 30, iconKey('misc', 'potion'), 44);
+    addBody(scene, 466, y + 30, `×${run.potions}`, 28, '#ffffff').setOrigin(0, 0.5);
+    // F2: monete della run
+    icon(scene, 534, y + 30, iconKey('misc', 'coin'), 38);
+    addBody(scene, 558, y + 30, `${run.coins ?? 0}`, 28, '#ffe14a').setOrigin(0, 0.5);
     addBody(scene, 690, y + 30, `${run.score} pt`, 26, '#ffcf3a').setOrigin(1, 0.5);
 
     // il frutto della run con il suo livello di risveglio (I-V); i livelli
@@ -45,7 +48,11 @@ export class RunHud {
       const x = 470 + i * 78, cy = y + 116;
       scene.add.graphics().lineStyle(4, 0x8a5232, 1).strokeRect(x - 32, cy - 32, 64, 64);
       const c = run.companions[i];
-      if (c) scene.add.image(x, cy + 30, creatureKey(c.id)).setOrigin(0.5, 1).setScale((CREATURE_SCALE[c.id] * 0.48) / TEXTURE_SCALE);
+      if (c) {
+        const img = scene.add.image(x, cy + 30, creatureKey(c.id)).setOrigin(0.5, 1).setScale((CREATURE_SCALE[c.id] * 0.48) / TEXTURE_SCALE);
+        // F2: i compagni KO restano a terra finché non li rianimi
+        if (c.hp <= 0) { img.setTint(0x555566).setAlpha(0.55); addBody(scene, x, cy + 4, 'KO', 22, '#ff6b6b'); }
+      }
     }
     // artefatti in piccolo, sotto
     run.artifactIds.forEach((id, i) => icon(scene, 50 + i * 40, y + 152, iconKey('artifact', id), 34));

@@ -15,7 +15,7 @@ export const BALANCE = {
     baseAtk: 12,
     baseDef: 4,
     baseSpd: 10,
-    startingPotions: 2,
+    startingPotions: 1, // F2: era 2
   },
   combat: {
     defFactor: 4, // riduzione = 100 / (100 + DEF * defFactor)
@@ -29,7 +29,7 @@ export const BALANCE = {
     energyMax: 5,
     energyPerRound: 1,
     guardEnergy: 1, // energia extra quando ti difendi
-    potionHealPct: 0.35,
+    potionHealPct: 0.3, // F2: era 0.35
     /**
      * Colpi caricati (F1): le mosse "forti" dei nemici si caricano per un turno
      * (avviso nel fumetto + mirino sul bersaglio) e poi colpiscono più forte.
@@ -37,6 +37,7 @@ export const BALANCE = {
      * compagno, l'eroe in Difesa si mette davanti e para al suo posto.
      */
     charged: { mult: 2.0, guardMult: 0.2, parryEnergy: 1, aimHero: 0.7 },
+    /** F2: i compagni KO NON si rialzano più dopo ogni scontro; questa è la vita con cui tornano salpando verso un nuovo mare. */
     companionReviveHpPct: 0.3,
   },
   /** Compagni: crescono a ogni mare, altrimenti dal secondo in poi non scalfiscono i nemici. */
@@ -81,10 +82,27 @@ export const BALANCE = {
   rewards: {
     restHealPct: 0.35,
     maxHpUp: 8,
-    healRewardPct: 0.25,
-    /** Cura (su HP max) di eroe e compagni quando si salpa verso un nuovo mare. */
-    areaHealPct: 0.5,
+    healRewardPct: 0.2, // F2: era 0.25
+    /** Cura (su HP max) di eroe e compagni quando si salpa verso un nuovo mare (F2: era 0.5). */
+    areaHealPct: 0.3,
+    /** F2: negli scontri normali la scelta 1 su 3 esce solo con questa probabilità (élite e boss: sempre). */
+    normalRewardChance: 0.4,
     weights: { awaken: 26, artifact: 22, potion: 20, heal: 18, maxHp: 16 },
+  },
+  /**
+   * F2 · Fuoco da campo: UNA sola scelta tra cura (eroe e compagni in piedi),
+   * rianimazione dei compagni KO e allenamento (potenziamento permanente della run).
+   */
+  rest: { healPct: 0.3, reviveHpPct: 0.4, trainAtk: 1, trainMaxHp: 4 },
+  /**
+   * F2 · Monete e negozio. Le monete valgono solo nella run (nessun vantaggio permanente).
+   * Prezzi alti: il negozio sostituisce in parte le ricompense tolte, non le aggiunge.
+   */
+  economy: {
+    coins: { battle: [8, 12], elite: [22, 28], boss: [35, 45], chest: [10, 15] } as Record<string, [number, number]>,
+    prices: { potion: 25, heal: 35, revive: 30, awaken: 100, artifact: { common: 60, rare: 80, epic: 100 } },
+    /** Cura comprata al negozio (su HP max dell'eroe). */
+    shopHealPct: 0.3,
   },
   /** Sorteggio del frutto iniziale: peso per rarità e penalità per i frutti delle ultime run. */
   fruitDraw: {

@@ -73,6 +73,8 @@ export interface RunState {
   nextBattleEnemyHpPct?: number;
   /** Eventi già incontrati in questa run (non si ripetono). */
   seenEventIds?: string[];
+  /** Monete della run (F2, 0.7.0; assenti nelle run salvate prima). */
+  coins?: number;
   /** Statistiche per mare (assenti nelle run salvate prima della 0.6.4). */
   stats?: RunStats;
 }
