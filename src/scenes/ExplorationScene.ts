@@ -98,7 +98,7 @@ export class ExplorationScene extends BaseScene {
     this.tweens.add({ targets: c, scale: { from: 0.6, to: 1 }, duration: 240, ease: 'Back.easeOut' });
     c.setSize(w, 240).setInteractive({ useHandCursor: true }).on('pointerup', () => {
       this.tweens.add({ targets: c, scale: 1.08, duration: 90, yoyo: true });
-      enterNode((k, d) => this.goTo(k, d), node);
+      enterNode((k, d, st) => this.goTo(k, d, st), node);
     });
   }
 

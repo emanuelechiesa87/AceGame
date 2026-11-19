@@ -25,7 +25,7 @@ export class RewardScene extends BaseScene {
     super('Reward');
   }
 
-  create(data: { node: NodeType; mode: 'battle' | 'chest' }): void {
+  create(data: { node: NodeType; mode: 'battle' | 'chest'; wave?: boolean }): void {
     this.setupCamera();
     const ctl = GameSession.ctl;
     if (!ctl) { this.scene.start('Menu'); return; }
@@ -50,6 +50,7 @@ export class RewardScene extends BaseScene {
     addBody(this, GAME_WIDTH / 2, 346, 'Una sola: scegli bene!', 26, '#fbe9c8');
     ctl.rewardOptions(data.node).forEach((r, i) => this.card(r, GAME_WIDTH / 2, 500 + i * 230, 640, false));
     new Button(this, GAME_WIDTH / 2, 1200, 'SALTA', () => this.finish(), { variant: 'secondary', width: 260, height: 80, fontSize: 36 });
+    void this.revealIfWave(data);
   }
 
   private describe(r: Reward): { key: string; title: string; text: string; tag: string } {
