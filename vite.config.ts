@@ -11,6 +11,41 @@ import type { Plugin } from 'vite';
  * i file del gioco da mettere in cache (così parte anche senza rete). La versione della cache
  * è un hash del contenuto: cambia solo se cambia davvero qualcosa.
  */
+/**
+ * Sicurezza: Content Security Policy inserita solo nella build pubblicata (in sviluppo
+ * romperebbe il ricaricamento a caldo). Il gioco può caricare solo file dal proprio sito:
+ * nessuno script esterno, nessun invio di dati altrove, niente plugin né iframe.
+ * GitHub Pages non permette intestazioni HTTP personalizzate, quindi si usa il <meta>.
+ */
+export const CSP = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline'", // stile inline di index.html e del canvas Phaser
+  "img-src 'self' data: blob:",       // texture generate in codice
+  "font-src 'self' data:",          // Vite incorpora i font piccoli nel CSS
+  "media-src 'self' data: blob:",
+  "connect-src 'self'",
+  "worker-src 'self'",
+  "manifest-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'none'",
+].join('; ');
+
+function securityHeaders(): Plugin {
+  return {
+    name: 'acegame-csp',
+    apply: 'build',
+    transformIndexHtml(html) {
+      const meta = [
+        `<meta http-equiv="Content-Security-Policy" content="${CSP}" />`,
+        '<meta name="referrer" content="no-referrer" />',
+      ].join('\n    ');
+      return html.replace('<meta charset="UTF-8" />', `<meta charset="UTF-8" />\n    ${meta}`);
+    },
+  };
+}
+
 function pwa(): Plugin {
   let outDir = 'dist';
   return {
@@ -44,7 +79,7 @@ function pwa(): Plugin {
 // (https://emanuelechiesa87.github.io/AceGame/). Solo il server di sviluppo usa "/".
 export default defineConfig(({ command, isPreview }) => ({
   base: command === 'build' || isPreview ? '/AceGame/' : '/',
-  plugins: [pwa()],
+  plugins: [securityHeaders(), pwa()],
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
   },

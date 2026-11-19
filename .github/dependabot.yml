@@ -1,0 +1,16 @@
+# Controllo automatico delle dipendenze: ogni settimana GitHub propone (come pull request)
+# gli aggiornamenti di sicurezza e di versione. Niente viene unito da solo: decide Ema.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      dipendenze-minori:
+        update-types: [minor, patch]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

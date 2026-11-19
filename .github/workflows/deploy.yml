@@ -5,10 +5,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Permessi minimi: per default solo lettura; la scrittura su Pages solo nel job che pubblica.
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
@@ -17,13 +16,20 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      # --ignore-scripts: le librerie non possono eseguire codice durante l'installazione
+      - run: npm ci --ignore-scripts
+      # Se una dipendenza ha una falla nota grave, il gioco NON viene pubblicato
+      - run: npm audit --audit-level=high
       - run: npm test
       - run: npm run build
       - uses: actions/configure-pages@v5
@@ -34,6 +40,9 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
