@@ -1,7 +1,10 @@
 import { BALANCE } from '../data/balance';
 import { FRUITS } from '../data/fruits';
 import { RunController } from '../systems/RunController';
-import { insertHallOfFame, SaveSystem } from '../systems/SaveSystem';
+import { emptyPersistentState, insertHallOfFame, parseSave, SAVE_KEY, SaveSystem } from '../systems/SaveSystem';
+import { DurableStore } from '../systems/DurableStore';
+import { buildExport, parseExport } from '../systems/SaveTransfer';
+import { BUILD_VERSION } from '../app/config';
 import { randomSeed } from '../systems/Rng';
 import type { AvatarVariant, HallOfFameEntry, RunState } from '../types/game';
 import { createRunState } from './RunState';
@@ -17,6 +20,67 @@ class GameSessionStore {
   readonly save = new SaveSystem();
   run: RunState | null = null;
   ctl: RunController | null = null;
+
+  constructor() {
+    this.save.onWrite = (k, raw) => DurableStore.put(k, raw);
+  }
+
+  /**
+   * All'avvio: recupera da IndexedDB salvataggio e run se localStorage è stato svuotato
+   * o è più vecchio; poi riallinea la copia. Non lancia mai errori.
+   */
+  async restoreFromDurable(): Promise<'restored' | 'ok'> {
+    let restored = false;
+    try {
+      const [rawSave, rawRun] = await Promise.all([DurableStore.get(SAVE_KEY), DurableStore.get(RUN_KEY)]);
+      const local = this.save.data;
+      const localEmpty = !local.lifetime.runs && !local.hallOfFame.length && !local.discoveredFruitIds.length;
+      if (rawSave) {
+        try {
+          const durable = parseSave(rawSave);
+          if (localEmpty || durable.updatedAt > local.updatedAt) {
+            if (durable.lifetime.runs || durable.discoveredFruitIds.length) { this.save.replace(durable, false); restored = true; }
+          }
+        } catch { /* copia illeggibile: si tiene quella locale */ }
+      }
+      if (!this.hasSavedRun() && rawRun) {
+        try { localStorage.setItem(RUN_KEY, rawRun); restored = true; } catch { /* ignorato */ }
+      }
+      // riallinea la copia di sicurezza con lo stato attuale
+      DurableStore.put(SAVE_KEY, JSON.stringify(this.save.data));
+      let localRun: string | null = null;
+      try { localRun = localStorage.getItem(RUN_KEY); } catch { /* ignorato */ }
+      DurableStore.put(RUN_KEY, localRun);
+      void DurableStore.requestPersistence();
+    } catch { /* IndexedDB non disponibile */ }
+    return restored ? 'restored' : 'ok';
+  }
+
+  /** Testo del file di esportazione (progressi + eventuale run in corso). */
+  exportText(): string {
+    let run: RunState | null = this.run;
+    if (!run) { try { const raw = localStorage.getItem(RUN_KEY); run = raw ? (JSON.parse(raw) as RunState) : null; } catch { run = null; } }
+    return buildExport(this.save.data, run, BUILD_VERSION);
+  }
+
+  /** Importa un file esportato: sostituisce i progressi (e la run, se presente). */
+  importText(text: string): { hasRun: boolean } {
+    const { save, run } = parseExport(text);
+    this.run = null; this.ctl = null;
+    this.save.replace(save);
+    if (run) { try { localStorage.setItem(RUN_KEY, JSON.stringify(run)); } catch { /* ignorato */ } DurableStore.put(RUN_KEY, JSON.stringify(run)); }
+    else this.clearRun();
+    return { hasRun: !!run };
+  }
+
+  /** Cancella tutti i progressi (tiene solo le impostazioni). */
+  resetProgress(): void {
+    const settings = { ...this.save.data.settings };
+    const fresh = emptyPersistentState();
+    fresh.settings = settings;
+    this.save.replace(fresh);
+    this.clearRun();
+  }
 
   get selectedAvatar(): AvatarVariant { return this.save.data.selectedAvatar; }
   set selectedAvatar(v: AvatarVariant) { this.save.update((s) => (s.selectedAvatar = v)); }
@@ -76,7 +140,9 @@ class GameSessionStore {
 
   persistRun(): void {
     if (!this.run) return;
-    try { localStorage.setItem(RUN_KEY, JSON.stringify(this.run)); } catch { /* quota o privacy: la run resta in memoria */ }
+    const raw = JSON.stringify(this.run);
+    try { localStorage.setItem(RUN_KEY, raw); } catch { /* quota o privacy: la run resta in memoria (e in IndexedDB) */ }
+    DurableStore.put(RUN_KEY, raw);
   }
 
   /** Ritorna true se c'è una run interrotta da riprendere. */
@@ -138,6 +204,7 @@ class GameSessionStore {
     this.run = null;
     this.ctl = null;
     try { localStorage.removeItem(RUN_KEY); } catch { /* ignorato */ }
+    DurableStore.put(RUN_KEY, null);
   }
 }
 

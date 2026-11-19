@@ -19,7 +19,7 @@ export function emptyPersistentState(now = new Date()): PersistentGameState {
     metCompanionIds: [],
     hallOfFame: [],
     lifetime: { runs: 0, victories: 0, enemiesDefeated: 0 },
-    settings: { fastAnimations: false },
+    settings: { fastAnimations: false, music: 0.6, sfx: 0.8, vibration: true, tutorialDone: false },
   };
 }
 
@@ -51,14 +51,29 @@ export function parseSave(raw: string): PersistentGameState {
     metCompanionIds: arr(data.metCompanionIds),
     hallOfFame: Array.isArray(data.hallOfFame) ? data.hallOfFame.slice(0, BALANCE.limits.hallOfFameSize) : [],
     lifetime: { ...base.lifetime, ...(data.lifetime ?? {}) },
-    settings: { ...base.settings, ...(data.settings ?? {}) },
+    settings: cleanSettings(base.settings, data.settings),
   };
 }
 
+function cleanSettings(base: PersistentGameState['settings'], raw: unknown): PersistentGameState['settings'] {
+  const r = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+  const vol = (v: unknown, d: number) => (typeof v === 'number' && isFinite(v) ? Math.max(0, Math.min(1, v)) : d);
+  const bool = (v: unknown, d: boolean) => (typeof v === 'boolean' ? v : d);
+  return {
+    fastAnimations: bool(r.fastAnimations, base.fastAnimations),
+    music: vol(r.music, base.music),
+    sfx: vol(r.sfx, base.sfx),
+    vibration: bool(r.vibration, base.vibration),
+    tutorialDone: bool(r.tutorialDone, base.tutorialDone),
+  };
+}
+
+export const SAVE_KEY = KEY;
+
 /**
- * Salvataggio locale minimo (M1) su localStorage. In M3 passerà a IndexedDB con
- * export/import. Se il salvataggio esistente è illeggibile NON viene sovrascritto:
- * viene copiato in una chiave di backup.
+ * Salvataggio locale su localStorage (veloce, sincrono), con copia in IndexedDB
+ * tramite `onWrite` (vedi DurableStore). Se il salvataggio esistente è illeggibile
+ * NON viene sovrascritto: viene copiato in una chiave di backup.
  */
 export class SaveSystem {
   private state: PersistentGameState;
@@ -77,12 +92,28 @@ export class SaveSystem {
     }
   }
 
+  /** Chiamato a ogni scrittura (copia di sicurezza in IndexedDB). */
+  onWrite?: (key: string, raw: string) => void;
+
   get data(): PersistentGameState { return this.state; }
 
   update(mutate: (s: PersistentGameState) => void): void {
     mutate(this.state);
     this.state.updatedAt = new Date().toISOString();
-    this.safeSet(KEY, JSON.stringify(this.state));
+    this.write();
+  }
+
+  /** Sostituisce tutto lo stato (importazione o recupero dalla copia di sicurezza). */
+  replace(state: PersistentGameState, touch = true): void {
+    this.state = state;
+    if (touch) this.state.updatedAt = new Date().toISOString();
+    this.write();
+  }
+
+  private write(): void {
+    const raw = JSON.stringify(this.state);
+    this.safeSet(KEY, raw);
+    this.onWrite?.(KEY, raw);
   }
 
   private safeGet(k: string): string | null {

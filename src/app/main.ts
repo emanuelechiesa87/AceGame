@@ -1,4 +1,5 @@
 import '@fontsource/pixelify-sans/700.css';
+import { Audio } from '../systems/Audio';
 import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH, RENDER_SCALE } from './config';
 import { BootScene } from '../scenes/BootScene';
@@ -13,6 +14,7 @@ import { SummaryScene } from '../scenes/SummaryScene';
 import { NewSeaScene } from '../scenes/NewSeaScene';
 import { CollectionScene } from '../scenes/CollectionScene';
 import { RecordsScene } from '../scenes/RecordsScene';
+import { SettingsScene } from '../scenes/SettingsScene';
 import { GameSession } from '../state/GameSession';
 import { HeroRig } from '../ui/HeroRig';
 
@@ -33,11 +35,13 @@ async function start(): Promise<void> {
       height: GAME_HEIGHT * RENDER_SCALE,
     },
     input: { activePointers: 2 },
+    audio: { noAudio: true }, // suoni e musica sono sintetizzati da systems/Audio.ts
     render: { antialias: true, pixelArt: false },
-    scene: [BootScene, MenuScene, CharacterSelectScene, FruitRevealScene, ExplorationScene, BattleScene, RewardScene, EventScene, NewSeaScene, SummaryScene, CollectionScene, RecordsScene],
+    scene: [BootScene, MenuScene, CharacterSelectScene, FruitRevealScene, ExplorationScene, BattleScene, RewardScene, EventScene, NewSeaScene, SummaryScene, CollectionScene, RecordsScene, SettingsScene],
   });
 
   // Esposto solo per il debug da console (es. chrome://inspect sull'S23).
+  Audio.init(GameSession.save.data.settings);
   (window as unknown as { __game: Phaser.Game; __session: typeof GameSession }).__game = game;
   (window as unknown as { __session: typeof GameSession }).__session = GameSession;
   (window as unknown as { __HeroRig: typeof HeroRig }).__HeroRig = HeroRig;

@@ -45,13 +45,9 @@ export class MenuScene extends BaseScene {
     const small = { variant: 'secondary' as const, width: 190, height: 84, fontSize: 32 };
     new Button(this, cx - 222, 1150, 'COLLEZIONE', () => this.goTo('Collection'), small);
     new Button(this, cx, 1150, 'RECORD', () => this.goTo('Records'), small);
-    const fast = () => GameSession.save.data.settings.fastAnimations;
-    const speedBtn = new Button(this, cx + 222, 1150, fast() ? 'VELOCE' : 'NORMALE', () => {
-      GameSession.save.update((s) => (s.settings.fastAnimations = !s.settings.fastAnimations));
-      (speedBtn.list[1] as Phaser.GameObjects.Text).setText(fast() ? 'VELOCE' : 'NORMALE');
-    }, small);
+    new Button(this, cx + 222, 1150, 'OPZIONI', () => this.goTo('Settings'), small);
 
-    addBody(this, cx, GAME_HEIGHT - 30, `v${BUILD_VERSION} · tocca gli eroi! · animazioni: tasto a destra`, 20, '#fbe9c8');
+    addBody(this, cx, GAME_HEIGHT - 30, `v${BUILD_VERSION} · tocca gli eroi!`, 20, '#fbe9c8');
   }
 
   private confirmNew(): void {

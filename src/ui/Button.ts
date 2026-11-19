@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { Audio } from '../systems/Audio';
 import { COLORS, FONT_TITLE, RENDER_SCALE } from '../app/config';
 import { steppedRect } from './widgets';
 
@@ -59,6 +60,7 @@ export class Button extends Phaser.GameObjects.Container {
         this.draw(false);
         if (!this.isActive()) return;
         this.locked = true;
+        Audio.play('click');
         scene.tweens.add({ targets: this, scale: { from: 0.94, to: 1 }, duration: 160, ease: 'Back.easeOut' });
         scene.time.delayedCall(opts.cooldownMs ?? 400, () => (this.locked = false));
         this.onTap();

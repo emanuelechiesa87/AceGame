@@ -1,4 +1,5 @@
 import { FX_SCALE } from '../pixel/backgrounds';
+import { Audio } from '../systems/Audio';
 import { runLook } from '../data/fruitLooks';
 import { COLORS, GAME_WIDTH } from '../app/config';
 import { iconKey } from '../pixel/keys';
@@ -27,6 +28,7 @@ export class SummaryScene extends BaseScene {
     const snapshot = { ...run };
     const res = GameSession.endRun(data.result);
     const win = data.result === 'victory';
+    if (win) Audio.play('victory');
 
     new BiomeBackdrop(this, { groundTop: 980 });
     this.fullRect(COLORS.background, win ? 0.45 : 0.75);

@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { Audio, type TrackName } from '../systems/Audio';
 import { GAME_HEIGHT, GAME_WIDTH } from '../app/config';
 import { waveCover, waveReveal } from '../ui/transitions';
 import { GameSession } from '../state/GameSession';
@@ -27,12 +28,20 @@ export function visibleBounds(scene: Phaser.Scene): { top: number; bottom: numbe
   return { top: GAME_HEIGHT / 2 - vh / 2, bottom: GAME_HEIGHT / 2 + vh / 2, left: GAME_WIDTH / 2 - vw / 2, right: GAME_WIDTH / 2 + vw / 2 };
 }
 
+/** Musica di sottofondo per scena (la battaglia la sceglie da sé: normale o boss). */
+const SCENE_MUSIC: Record<string, TrackName | null> = {
+  Menu: 'menu', CharacterSelect: 'menu', Collection: 'menu', Records: 'menu', Settings: 'menu',
+  FruitReveal: 'map', Exploration: 'map', Event: 'map', Reward: 'map', NewSea: 'map', Summary: null,
+};
+
 export abstract class BaseScene extends Phaser.Scene {
   private transitioning = false;
 
   protected setupCamera(): void {
     this.transitioning = false;
     fitCamera(this);
+    const track = SCENE_MUSIC[this.scene.key];
+    if (track !== undefined) Audio.music(track);
   }
 
   /** Velocità delle transizioni: doppia con "animazioni veloci". */

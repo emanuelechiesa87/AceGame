@@ -79,5 +79,17 @@ export interface PersistentGameState {
   metCompanionIds: string[];
   hallOfFame: HallOfFameEntry[];
   lifetime: { runs: number; victories: number; enemiesDefeated: number };
-  settings: { fastAnimations: boolean };
+  settings: GameSettings;
+}
+
+export interface GameSettings {
+  fastAnimations: boolean;
+  /** volume della musica 0..1 */
+  music: number;
+  /** volume degli effetti 0..1 */
+  sfx: number;
+  /** vibrazione sui colpi importanti (dove il telefono la supporta) */
+  vibration: boolean;
+  /** tutorial della prima battaglia già visto */
+  tutorialDone: boolean;
 }

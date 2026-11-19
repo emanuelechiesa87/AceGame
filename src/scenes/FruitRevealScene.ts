@@ -1,4 +1,5 @@
 import { FX_SCALE } from '../pixel/backgrounds';
+import { Audio } from '../systems/Audio';
 import { runLook } from '../data/fruitLooks';
 import { COLORS, GAME_WIDTH } from '../app/config';
 import { iconKey } from '../pixel/keys';
@@ -52,6 +53,7 @@ export class FruitRevealScene extends BaseScene {
     new Button(this, 440, 1050, 'MANGIALO!', () => {
       if (eaten) return;
       eaten = true;
+      Audio.play('eat');
       // il frutto "contagia" subito l'eroe: colori e stemma del livello I
       hero.setLook(runLook(run), true);
       this.time.delayedCall(1300, () => this.goTo('Exploration'));

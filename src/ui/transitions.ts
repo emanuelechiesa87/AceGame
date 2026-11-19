@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { Audio } from '../systems/Audio';
 
 /**
  * Transizione "a onda" (0.5.4): un'onda pixel attraversa lo schermo da sinistra
@@ -40,6 +41,7 @@ function drawWave(scene: Phaser.Scene): Phaser.GameObjects.Container {
 
 /** Copre la scena con l'onda, poi chiama `done` (di solito `scene.start`). */
 export function waveCover(scene: Phaser.Scene, done: () => void, speed = 1, wrap: <T>(fn: () => T) => T = (fn) => fn()): void {
+  Audio.play('whoosh');
   const w = wrap(() => drawWave(scene));
   w.x = LEFT;
   scene.tweens.add({ targets: w, x: RIGHT, duration: 460 / speed, ease: 'Sine.easeIn', onComplete: done });

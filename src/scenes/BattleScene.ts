@@ -1,4 +1,6 @@
 import Phaser from 'phaser';
+import { Audio } from '../systems/Audio';
+import { runTutorial, type TutorialStep } from '../ui/Tutorial';
 import { COLORS, GAME_HEIGHT, GAME_WIDTH } from '../app/config';
 import { CREATURES, CREATURE_SCALE } from '../pixel/creatures';
 import type { NodeType } from '../data/areas';
@@ -71,6 +73,7 @@ export class BattleScene extends BaseScene {
     this.views.clear(); this.specialButtons.clear();
     this.busy = true; this.speed = GameSession.save.data.settings.fastAnimations ? 2 : 1; this.targetUid = undefined;
     this.node = data.node;
+    Audio.music(this.node === 'boss' ? 'boss' : 'battle');
 
     new BiomeBackdrop(this, { groundTop: this.frame.groundTop, deck: true, tint: ctl.area.tint, theme: ctl.area.backdrop });
     this.fullRect(0x14233f, 0.15);
@@ -280,6 +283,7 @@ export class BattleScene extends BaseScene {
   }
 
   private setTarget(uid: string): void {
+    if (this.targetUid !== uid) Audio.play('select');
     this.targetUid = uid;
     this.placeReticle();
   }
@@ -357,6 +361,31 @@ export class BattleScene extends BaseScene {
     this.afterResolve();
   }
 
+  private tutorialOn = false;
+
+  /** Tutorial alla prima battaglia (o quando richiesto dalle Impostazioni). */
+  private async showTutorial(): Promise<void> {
+    this.tutorialOn = true;
+    const top = this.frame.panelTop;
+    const enemy = [...this.views.values()].find((v) => v.unit.side === 'enemy' && v.unit.hp > 0);
+    const hero = this.views.get('hero');
+    const pw = this.battle.powers[0];
+    const fruitName = GameSession.run ? FRUIT_BY_ID.get(GameSession.run.activeFruitIds[0])?.name ?? 'frutto' : 'frutto';
+    const steps: TutorialStep[] = [
+      { title: 'SI COMBATTE A TURNI', text: 'La tua squadra è in basso, i nemici in alto. A ogni turno scegli un\'azione, poi agiscono compagni e nemici.', box: hero ? { x: hero.x - 110, y: hero.topY - 20, w: 220, h: hero.root.y - hero.topY + 60 } : undefined },
+      ...(enemy ? [{ title: 'SCEGLI IL BERSAGLIO', text: 'Tocca un nemico per mirarlo. Il fumetto sopra la sua testa dice cosa farà nel prossimo turno: preparati!', box: { x: enemy.x - Math.max(90, enemy.width / 2 + 20), y: enemy.topY - 120, w: Math.max(180, enemy.width + 40), h: enemy.root.y - enemy.topY + 160 } }] : []),
+      { title: 'ATTACCO', text: 'Colpo di sciabola sul bersaglio. Non costa energia.', box: { x: 30, y: top + 52, w: 310, h: 120 } },
+      { title: 'ENERGIA E POTERE', text: `Ogni round guadagni 1⚡ (max 5). POTERE usa il ${fruitName}${pw ? `: ${pw.name}, ${pw.cost}⚡` : ''}. È fortissimo: usalo al momento giusto!`, box: { x: 30, y: top - 16, w: 660, h: 190 } },
+      { title: 'DIFESA E POZIONE', text: 'DIFESA riduce i danni del prossimo colpo. La POZIONE cura: le pozioni sono poche, tienile per i momenti difficili.', box: { x: 30, y: top + 178, w: 660, h: 120 } },
+      { title: 'RISVEGLIO', text: 'Dopo ogni vittoria scegli una ricompensa. Il RISVEGLIO potenzia il frutto fino al livello V... e cambia il tuo aspetto a ogni livello!' },
+    ];
+    this.setInputEnabled(false);
+    await runTutorial(this, steps, (fn) => this.uiWrap(fn));
+    GameSession.save.update((s) => (s.settings.tutorialDone = true));
+    this.tutorialOn = false;
+    if (!this.busy) this.setInputEnabled(true);
+  }
+
   private afterResolve(): void {
     if (this.battle.phase === 'victory') { void this.onVictory(); return; }
     if (this.battle.phase === 'defeat') { void this.onDefeat(); return; }
@@ -367,6 +396,7 @@ export class BattleScene extends BaseScene {
     this.placeReticle();
     this.log.setText(this.battle.powers[0] ? `Potere: ${this.battle.powers[0].name} (${this.battle.powers[0].cost}⚡)` : 'Tocca un nemico per mirare · scegli un\'azione');
     this.views.get('hero')?.fierce();
+    if (!GameSession.save.data.settings.tutorialDone && !this.tutorialOn) void this.showTutorial();
   }
 
   // --- animazione degli eventi -------------------------------------------------------------
@@ -391,6 +421,7 @@ export class BattleScene extends BaseScene {
           }
           this.log.setText(`${who.name}: ${e.name}`);
           if (e.isPower || e.isSpecial) {
+            Audio.play(e.isPower ? 'power' : 'whoosh');
             if (v) this.actionCam(v.x, v.centerY, 1.1, 700 / s);
             this.cameras.main.shake(160 / s, 0.006);
             await banner(this, this.bannerY, e.name.toUpperCase() + '!', e.isPower ? COLORS.hot : 0x1f6fb2, 56, 380 / s);
@@ -419,6 +450,9 @@ export class BattleScene extends BaseScene {
           if (e.absorbed > 0) floatText(this, v.x + 40, v.centerY - 30, `-${e.absorbed}🛡`, '#9cc8ff', 30, s);
           const KCOL: Record<string, string> = { burn: '#ff8a3d', poison: '#9be06a', reflect: '#9fe8ff', acid: '#d8f04a', mine: '#ff9a2a', pop: '#ffb45f', swarm: '#c9a8ff' };
           const col = KCOL[e.kind] ?? (e.crit ? '#ffe14a' : '#ffffff');
+          const hurtHero = this.battle.unit(e.target)?.kind === 'hero';
+          if (e.kind === 'mine') Audio.play('boom'); else if (e.kind === 'pop') Audio.play('pop'); else if (e.amount > 0 || e.absorbed > 0) Audio.play(e.crit ? 'crit' : hurtHero ? 'hurt' : 'hit');
+          if (hurtHero && e.amount > 0) Audio.buzz(e.crit ? 60 : 25);
           if (e.kind === 'mine') { this.cameras.main.shake(260 / s, 0.014); boom(this, v.x, v.root.y - 20, [0xff9a2a, 0xffe14a, 0x3fae4a, 0xe4342f], 160); floatText(this, v.x, v.topY, 'BOOM!', '#ffcf3a', 52, s); }
           if (e.kind === 'pop') { boom(this, v.x, v.centerY, [0xffb45f, 0xffffff, 0xffd8a8], 120); floatText(this, v.x, v.topY, 'POP!', '#ffd8a8', 48, s); }
           if (e.kind === 'swarm') { if (e.amount > 0 || e.absorbed === 0) floatText(this, v.x + Phaser.Math.Between(-40, 40), v.centerY + Phaser.Math.Between(-30, 30), String(e.amount), col, 34, s); v.refresh(); await wait(this, 70 / s); break; }
@@ -427,16 +461,16 @@ export class BattleScene extends BaseScene {
           else await wait(this, 160 / s);
           break;
         }
-        case 'heal': { const v = this.views.get(e.target); if (v) { v.refresh(); floatText(this, v.x, v.centerY, `+${e.amount}`, '#6fe08a', 46, s); await wait(this, 200 / s); } break; }
-        case 'shield': { const v = this.views.get(e.target); if (v) { v.refresh(); floatText(this, v.x, v.centerY - 20, `+${e.amount} scudo`, '#9cc8ff', 32, s); await wait(this, 120 / s); } break; }
-        case 'status': { const v = this.views.get(e.target); if (v) { v.refresh(); if (e.status !== 'guard') floatText(this, v.x, v.topY, STATUS_NAME[e.status], '#d6a8ff', 32, s); await wait(this, 150 / s); } break; }
-        case 'dodge': { const v = this.views.get(e.target); if (v) { floatText(this, v.x, v.centerY, 'SCHIVATO!', '#e8f0fb', 38, s); await wait(this, 220 / s); } break; }
+        case 'heal': { Audio.play('heal'); const v = this.views.get(e.target); if (v) { v.refresh(); floatText(this, v.x, v.centerY, `+${e.amount}`, '#6fe08a', 46, s); await wait(this, 200 / s); } break; }
+        case 'shield': { Audio.play('shield'); const v = this.views.get(e.target); if (v) { v.refresh(); floatText(this, v.x, v.centerY - 20, `+${e.amount} scudo`, '#9cc8ff', 32, s); await wait(this, 120 / s); } break; }
+        case 'status': { const v = this.views.get(e.target); if (v) { v.refresh(); if (e.status !== 'guard') Audio.play('status'); if (e.status !== 'guard') floatText(this, v.x, v.topY, STATUS_NAME[e.status], '#d6a8ff', 32, s); await wait(this, 150 / s); } break; }
+        case 'dodge': { Audio.play('dodge'); const v = this.views.get(e.target); if (v) { floatText(this, v.x, v.centerY, 'SCHIVATO!', '#e8f0fb', 38, s); await wait(this, 220 / s); } break; }
         case 'steal': { const a = this.views.get(e.source), t = this.views.get(e.target); t?.refresh(); a?.refresh(); if (t) floatText(this, t.x, t.topY, `-${e.amount} scudo rubato!`, '#9cc8ff', 30, s); await wait(this, 200 / s); break; }
         case 'extraAction': await banner(this, this.bannerY, 'ANCORA UN TURNO!', 0xffcf3a, 52, 380 / s); break;
         case 'resist': { const v = this.views.get(e.target); if (v) floatText(this, v.x, v.topY, 'Resiste!', '#f1d7a8', 30, s); break; }
         case 'cleanse': { const v = this.views.get(e.target); if (v) v.refresh(); break; }
         case 'stunned': { const v = this.views.get(e.uid); if (v) { v.refresh(); floatText(this, v.x, v.topY, 'CONGELATO!', '#bff4ff', 38, s); await wait(this, 400 / s); } break; }
-        case 'ko': { const v = this.views.get(e.uid); if (v) { floatText(this, v.x, v.topY, 'KO!', '#ff5f6d', 56, s); await v.ko(s); } this.placeReticle(); break; }
+        case 'ko': { Audio.play('ko'); const v = this.views.get(e.uid); if (v) { floatText(this, v.x, v.topY, 'KO!', '#ff5f6d', 56, s); await v.ko(s); } this.placeReticle(); break; }
         case 'survive': await banner(this, this.bannerY, 'FILO DEL DESTINO!', 0xff5f8a, 50, 500 / s); this.views.get(e.uid)?.refresh(); break;
         case 'summon': {
           const v = this.addView(e.unit, this.enemySpot(e.unit));
@@ -474,6 +508,7 @@ export class BattleScene extends BaseScene {
     this.views.get('hero')?.cheer();
     [...this.views.values()].filter((v) => v.unit.side === 'ally' && v.unit.hp > 0).forEach((v, i) => v.hop(i * 90));
     this.actionCam(this.views.get('hero')?.x ?? 240, this.views.get('hero')?.centerY ?? 700, 1.08, 1100);
+    Audio.music(null); Audio.play('victory');
     await banner(this, this.bannerY, 'VITTORIA!', 0xffcf3a, 90, 900);
     const comps = this.battle.units.filter((u) => u.kind === 'companion').map((u) => ({ id: u.defId, hp: u.hp, charge: u.charge }));
     ctl.run.potions = this.battle.potions;
@@ -486,6 +521,7 @@ export class BattleScene extends BaseScene {
 
   private async onDefeat(): Promise<void> {
     this.log.setText('');
+    Audio.music(null); Audio.play('defeat'); Audio.buzz([80, 60, 160]);
     await banner(this, this.bannerY, 'SCONFITTA...', 0x4a3a33, 80, 1100);
     GameSession.run!.currentHp = 0;
     GameSession.run!.potions = this.battle.potions;

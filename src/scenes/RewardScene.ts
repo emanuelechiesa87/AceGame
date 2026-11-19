@@ -1,4 +1,5 @@
 import { FX_SCALE } from '../pixel/backgrounds';
+import { Audio } from '../systems/Audio';
 import { COLORS, GAME_WIDTH } from '../app/config';
 import { iconKey } from '../pixel/keys';
 import type { NodeType } from '../data/areas';
@@ -90,6 +91,7 @@ export class RewardScene extends BaseScene {
     if (this.picked) return;
     this.picked = true;
     this.tweens.add({ targets: c, scale: 1.08, duration: 100, yoyo: true });
+    if (r.kind !== 'awaken') Audio.play('reward');
     const ctl = GameSession.ctl!;
     switch (r.kind) {
       case 'awaken': {

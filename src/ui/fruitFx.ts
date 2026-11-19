@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { Audio } from '../systems/Audio';
 import { COLORS, GAME_WIDTH } from '../app/config';
 import { FRUIT_BY_ID, fruitAbility } from '../data/fruits';
 import { iconKey, type HeroId } from '../pixel/keys';
@@ -537,6 +538,8 @@ async function highLevelIntro({ scene, caster, level, speed: s }: FxCtx, col: nu
 export async function awakenFx(scene: Phaser.Scene, fruitId: string, level: number, heroId?: HeroId): Promise<void> {
   const f = FRUIT_BY_ID.get(fruitId)!;
   const col = hex(f.color);
+  Audio.play('awaken');
+  Audio.buzz([40, 60, 120]);
   const withHero = !!heroId;
   const cx = GAME_WIDTH / 2, cy = withHero ? 380 : 560, size = withHero ? 170 : 220;
   const shade = scene.add.rectangle(-400, -800, GAME_WIDTH + 800, 2880, COLORS.background, 0.85).setOrigin(0).setDepth(700).setInteractive();
