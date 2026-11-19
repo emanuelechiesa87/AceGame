@@ -64,11 +64,11 @@ export class CollectionScene extends BaseScene {
     const cm = COMPANIONS.filter((c) => s.metCompanionIds.includes(c.id));
     section(912, 'COMPAGNI', cm.length, COMPANIONS.length);
     COMPANIONS.forEach((c, i) => {
-      const x = 140 + i * 220, y = 1078;
+      const n = COMPANIONS.length, gap = Math.min(220, 660 / n), x = GAME_WIDTH / 2 + (i - (n - 1) / 2) * gap, y = 1078;
       const known = s.metCompanionIds.includes(c.id);
-      const img = this.add.image(x, y, creatureKey(c.id)).setOrigin(0.5, 1).setScale((CREATURE_SCALE[c.id] * 0.9) / TEXTURE_SCALE);
+      const img = this.add.image(x, y, creatureKey(c.id)).setOrigin(0.5, 1).setScale((CREATURE_SCALE[c.id] * (n > 3 ? 0.62 : 0.9)) / TEXTURE_SCALE);
       if (!known) img.setTintFill(0x3a2414);
-      addBody(this, x, y + 22, known ? c.name : '???', 22, known ? '#fff7e6' : '#a89580');
+      addBody(this, x, y + 22, known ? c.name : '???', n > 3 ? 20 : 22, known ? '#fff7e6' : '#a89580');
     });
 
     new Button(this, GAME_WIDTH / 2, 1190, 'INDIETRO', () => this.goTo('Menu'), { variant: 'secondary', width: 320, height: 88, fontSize: 40 });

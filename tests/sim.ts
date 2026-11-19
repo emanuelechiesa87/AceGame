@@ -26,6 +26,9 @@ export type Strategy = 'naive' | 'smart';
 /** Interruttori del giocatore attento, per capire quale abilità conta di più (analisi F0). */
 export const SMART = { guard: true, target: true, nodes: true, rewards: true, events: true };
 
+/** F4b: ordine di preferenza dei compagni per il giocatore attento (modificabile nei rapporti). */
+export const COMPANION_PREF: string[] = ['comp_lumi', 'comp_bobo', 'comp_gonfio', 'comp_ottavio', 'comp_zip', 'comp_strillo'];
+
 export function playRun(seed: number, forceFruit?: string, strategy: Strategy = 'naive', tide = 0): RunResult {
   const ctl = new RunController(createRunState('a', seed, undefined, 'Kai', tide));
   ctl.start([]);
@@ -72,7 +75,12 @@ export function playRun(seed: number, forceFruit?: string, strategy: Strategy = 
       }
     } else if (node === 'rest') restChoice(ctl, smart, hpPct());
     else if (node === 'shop') shopping(ctl, smart, hpPct());
-    else if (node === 'recruit') { const c = ctl.randomNewCompanion(); if (c) ctl.recruit(c); }
+    else if (node === 'recruit') {
+      // F4b: due candidati; l'attento sceglie secondo COMPANION_PREF, l'ingenuo il primo
+      const cs = ctl.randomNewCompanions(2);
+      const c = smart ? [...cs].sort((a, b) => COMPANION_PREF.indexOf(a) - COMPANION_PREF.indexOf(b))[0] : cs[0];
+      if (c) ctl.recruit(c);
+    }
     else if (node === 'chest') { ctl.rollCoins('chest'); if (ctl.canAwaken && ctl.rng.next() < 0.35) ctl.awaken(); else { const a = ctl.randomNewArtifact(); if (a) ctl.gainArtifact(a); } }
     else if (node === 'event') {
       const ev = ctl.pickEvent();

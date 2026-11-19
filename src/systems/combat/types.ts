@@ -21,6 +21,8 @@ export interface Unit {
   // compagni
   charge: number;
   chargeMax: number;
+  /** (F4b) Compagno con miccia accesa: al prossimo turno spara (Ottavio). */
+  fuse?: boolean;
   // nemici
   patternIndex: number;
   nextMove?: string;
@@ -117,6 +119,8 @@ export type BattleEvent =
   | { t: 'parry'; uid: string; energy: number }
   /** Carica interrotta (nemico congelato o nella bolla). */
   | { t: 'interrupt'; uid: string }
+  /** (F4b) Ottavio accende la miccia: sparerà al prossimo turno. */
+  | { t: 'fuse'; uid: string }
   /** (F1) Energia rubata all'eroe. */
   | { t: 'drain'; uid: string; amount: number; energy: number }
   /** (F1) Esplosione alla morte di un nemico. */

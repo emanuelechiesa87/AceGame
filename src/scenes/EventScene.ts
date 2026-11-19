@@ -127,14 +127,27 @@ export class EventScene extends BaseScene {
 
   private recruit(): void {
     const ctl = GameSession.ctl!;
-    const id = ctl.randomNewCompanion();
-    if (!id) { this.header('Sentiero tranquillo', 'recruit', 'Nessuno in vista. La tua squadra è già al completo di amici.'); this.done('Prosegui con la tua squadra.'); return; }
-    const def = COMPANION_BY_ID.get(id)!;
-    this.add.image(470, 756, creatureKey(id)).setOrigin(0.5, 1).setScale((CREATURE_SCALE[id] * 1.1) / TEXTURE_SCALE);
-    this.header(`${def.name} (${def.role})`, 'recruit', `${def.description}\nSpeciale: ${def.special.name} — ${def.special.description}`);
+    const ids = ctl.randomNewCompanions(2);
+    if (!ids.length) { this.header('Sentiero tranquillo', 'recruit', 'Nessuno in vista. La tua squadra è già al completo di amici.'); this.done('Prosegui con la tua squadra.'); return; }
+    GameSession.discover({ companions: ids });
+    const defs = ids.map((id) => COMPANION_BY_ID.get(id)!);
+    const info = (d: (typeof defs)[number]) => `${d.name} (${d.role}): ${d.description}\nSpeciale: ${d.special.name} — ${d.special.description}`;
+    // (F4b) due candidati: tocca la figura per leggere chi è
+    const xs = defs.length > 1 ? [400, 600] : [470];
+    defs.forEach((d, i) => {
+      const img = this.add.image(xs[i], 756, creatureKey(d.id)).setOrigin(0.5, 1).setScale((CREATURE_SCALE[d.id] * (defs.length > 1 ? 0.85 : 1.1)) / TEXTURE_SCALE);
+      img.setInteractive({ useHandCursor: true }).on('pointerdown', () => this.body.setText(`${d.name} (${d.role}) · ${d.special.name}: ${d.special.description}`).setFontSize(24));
+      if (defs.length > 1) addBody(this, xs[i], 772, d.name, 24, '#fff7e6');
+    });
+    if (defs.length === 1) this.header(`${defs[0].name} (${defs[0].role})`, 'recruit', info(defs[0]));
+    else this.header('Marinai in cerca di nave', 'recruit', `${defs.map((d) => d.name).join(' e ')} vogliono salire a bordo, ma c'è posto per uno solo. Tocca chi vuoi conoscere meglio.`);
+    const take = (id: string) => {
+      const d = COMPANION_BY_ID.get(id)!;
+      offerCompanion(this, id, (ok) => this.done(ok ? `${d.name} si unisce alla squadra! Agirà da solo; la sua speciale la attivi tu.` : `${d.name} ti saluta e se ne va.`, ok ? 'good' : 'neutral'));
+    };
     this.choices([
-      { label: `RECLUTA ${def.name.toUpperCase()}!`, act: () => offerCompanion(this, id, (ok) => this.done(ok ? `${def.name} si unisce alla squadra! Agirà da solo; la sua speciale la attivi tu.` : `${def.name} ti saluta e se ne va.`, ok ? 'good' : 'neutral')) },
-      { label: 'NO GRAZIE', act: () => this.done(`${def.name} fa spallucce e se ne va.`) },
+      ...defs.map((d) => ({ label: `RECLUTA ${d.name.toUpperCase()}!`, act: () => take(d.id), variant: 'primary' as const })),
+      { label: 'NO GRAZIE', act: () => this.done(defs.length > 1 ? 'Li saluti e riparti.' : `${defs[0].name} fa spallucce e se ne va.`), variant: 'secondary' as const },
     ]);
   }
 

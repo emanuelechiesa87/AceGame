@@ -6,7 +6,9 @@ export type StatusId = 'burn' | 'poison' | 'stun' | 'shield' | 'atkUp' | 'vulner
   // dalla 0.5.5 (fase 4): tanfo (-ATT), acido (danno che cresce, DIF annullata), bolla, mina, sciame di acini, gemella
   | 'weak' | 'acid' | 'bubble' | 'mine' | 'swarm' | 'twin'
   // dalla 0.6.6 (F1): immune ai poteri (nemici che cambiano fase a turni alterni)
-  | 'immune';
+  | 'immune'
+  // dalla 0.9.1 (F4b): provocazione (Gonfio) — i colpi singoli dei nemici vanno su di lui
+  | 'taunt';
 export type TargetRule = 'enemy' | 'allEnemies' | 'self' | 'allAllies' | 'lowestAlly';
 /** `charge` = il nemico sta caricando un colpo forte (F1, 0.6.5): parte al suo turno successivo. */
 export type Intent = 'attack' | 'heavy' | 'defend' | 'debuff' | 'special' | 'charge';
@@ -93,11 +95,17 @@ export interface ArtifactDef {
 export interface CompanionDef {
   id: string;
   name: string;
-  role: 'difensore' | 'supporto' | 'assaltatore';
+  role: 'difensore' | 'supporto' | 'assaltatore' | 'cannoniere' | 'vedetta';
   description: string;
   stats: Required<StatMods>;
-  /** Abilità automatica usata quando la condizione è vera, altrimenti attacco base. */
-  auto: Ability & { when: 'allyBelowHalf' | 'always' };
+  /**
+   * Abilità automatica usata quando la condizione è vera, altrimenti attacco base.
+   * (F4b) `enemyCharging` = un nemico sta caricando un colpo (una volta per nemico per battaglia);
+   * `fuse` = un turno di carica (visibile) e al turno dopo l'abilità parte.
+   */
+  auto: Ability & { when: 'allyBelowHalf' | 'always' | 'enemyCharging' | 'fuse' };
+  /** (F4b) Probabilità che un colpo singolo (non caricato) dei nemici miri questo compagno. */
+  provoke?: number;
   special: Ability;
   chargeMax: number;
 }

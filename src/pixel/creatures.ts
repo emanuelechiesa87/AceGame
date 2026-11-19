@@ -6,6 +6,7 @@ import { bandana, captainHat, eyes, GOLD, rblock } from './creatureKit';
 import { SEA_CREATURES } from './seaCreatures';
 import { F1_CREATURES } from './f1Creatures';
 import { F4_CREATURES } from './f4Creatures';
+import { F4B_COMPANIONS } from './f4bCompanions';
 
 /**
  * Nemici del mare e compagni, tutti "a blocchi". Ogni creatura ha due
@@ -204,7 +205,7 @@ function crab(px: Px, hit: boolean, c: string, captain: boolean): void {
   } else bandana(px, 16, 13, 24, GOLD);
 }
 
-Object.assign(DEFS, SEA_CREATURES, F1_CREATURES, F4_CREATURES);
+Object.assign(DEFS, SEA_CREATURES, F1_CREATURES, F4_CREATURES, F4B_COMPANIONS);
 
 export interface CreatureArt { w: number; h: number }
 
@@ -225,6 +226,8 @@ export const CREATURE_SCALE: Record<string, number> = {
   // F4 (0.9.0) capibanda
   en_walrus: 1.4, en_barracuda: 1.35, en_nautilus: 1.4, en_ghost_cook: 1.4,
   comp_bobo: 1, comp_lumi: 1, comp_zip: 1,
+  // F4b (0.9.1)
+  comp_ottavio: 1, comp_strillo: 1, comp_gonfio: 1,
 };
 
 export function makeCreatureTextures(scene: Phaser.Scene): void {

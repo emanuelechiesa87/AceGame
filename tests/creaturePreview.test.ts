@@ -4,7 +4,8 @@ declare const process: { env: Record<string, string | undefined> };
 import { writeFileSync } from 'node:fs';
 // Anteprima dei disegni F1 su un foglio PPM: PREVIEW=1 npx vitest run tests/creaturePreview.test.ts
 it.skipIf(!process.env.PREVIEW)('anteprima creature', async () => {
-  const { F1_CREATURES } = await import('../src/pixel/f1Creatures');
+  const MOD = process.env.PREVIEW === 'f4b' ? (await import('../src/pixel/f4bCompanions')).F4B_COMPANIONS : (await import('../src/pixel/f1Creatures')).F1_CREATURES;
+  const F1_CREATURES = MOD;
   const S = 4, cell = 70;
   const ids = Object.keys(F1_CREATURES);
   const cols = 6, W = cols * cell * 2 * S, rows = Math.ceil(ids.length / cols);

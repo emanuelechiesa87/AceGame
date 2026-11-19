@@ -203,6 +203,10 @@ const STATUSES: Record<string, () => Cells> = {
   twin: () => fromGrid([
     '......SS', '.....S..S', '....S....S', '...S......S', '..RRR....RRR', '.RWRRR..RWRRR', '.RRRRR..RRRRR', '.RRRRR..RRRRR', '..RRR....RRR',
   ], { S: '#3fb36a', R: '#e8264a', W: '#ffffff' }, 1, 3),
+  // F4b (0.9.1): provocazione (mirino rosso)
+  taunt: () => fromGrid(sym([
+    '......R', '...RRRR', '..R....', '.R.....', '.R...RR', 'RRR..RW', '.R...RR', '.R.....', '..R....', '...RRRR', '......R',
+  ]), { R: '#ff5f6d', W: '#ffffff' }, 1, 2),
 };
 
 const POTION = () => fromGrid(sym([

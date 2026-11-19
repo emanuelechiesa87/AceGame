@@ -33,7 +33,7 @@ import { allySpots, frameFor, pickTapTarget, placeEnemy, type BattleFrame, type 
 /** Nomi degli affissi delle élite (F1). */
 const AFFIX_NAME: Record<AffixId, string> = { armored: 'Corazzato', swift: 'Rapido', vampire: 'Vampiro', spiky: 'Spinoso', regen: 'Rigenerante', commander: 'Comandante' };
 const STATUS_NAME: Record<StatusId, string> = { burn: 'Bruciatura!', poison: 'Veleno!', stun: 'Congelato!', shield: 'Scudo', atkUp: 'Furia!', vulnerable: 'Vulnerabile!', guard: 'In guardia', evade: 'Nebbia!', defUp: 'Corazza!', slow: 'Appiccicato!', reflect: 'Specchio!', immune: 'Immune ai poteri!',
-  weak: 'Tanfo! -ATT', acid: 'Acido!', bubble: 'Nella bolla!', mine: 'Mina!', swarm: 'Sciame!', twin: 'Gemella!' };
+  weak: 'Tanfo! -ATT', acid: 'Acido!', bubble: 'Nella bolla!', mine: 'Mina!', swarm: 'Sciame!', twin: 'Gemella!', taunt: 'Provocazione!' };
 
 /**
  * Battaglia a turni. Il motore (Battle) decide tutto; la scena anima gli eventi
@@ -590,6 +590,12 @@ export class BattleScene extends BaseScene {
           break;
         }
         case 'interrupt': { const v = this.views.get(e.uid); if (v) { floatText(this, v.x, v.topY - 30, 'CARICA PERSA!', '#bff4ff', 36, s); await wait(this, 300 / s); } this.clearAim(e.uid); break; }
+        case 'fuse': {
+          const v = this.views.get(e.uid);
+          this.log.setText(`${this.battle.unit(e.uid)?.name ?? ''} accende la miccia: al prossimo turno spara!`);
+          if (v) { floatText(this, v.x, v.topY, 'MICCIA!', '#ffb45f', 36, s); await wait(this, 300 / s); }
+          break;
+        }
         case 'energy': case 'charge': this.updateHud(); break;
         case 'end': break;
         case 'melt': { const v = this.views.get(e.target); if (v) { v.refresh(); floatText(this, v.x, v.topY, `-${e.amount} scudo sciolto!`, '#d8f04a', 30, s); await wait(this, 200 / s); } break; }

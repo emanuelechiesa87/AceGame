@@ -441,8 +441,15 @@ export class RunController {
   }
 
   randomNewCompanion(): string | undefined {
-    const pool = COMPANIONS.filter((c) => !this.run.companions.some((x) => x.id === c.id));
-    return pool.length ? this.rng.pick(pool).id : undefined;
+    return this.randomNewCompanions(1)[0];
+  }
+
+  /** (F4b) Candidati per l'incontro: fino a `n` compagni diversi non ancora in squadra. */
+  randomNewCompanions(n = 2): string[] {
+    const pool = COMPANIONS.filter((c) => !this.run.companions.some((x) => x.id === c.id)).map((c) => c.id);
+    const out: string[] = [];
+    while (out.length < n && pool.length) out.push(pool.splice(Math.floor(this.rng.next() * pool.length), 1)[0]);
+    return out;
   }
 
   /** Applica ricompense semplici; artefatti e risveglio hanno metodi dedicati. */

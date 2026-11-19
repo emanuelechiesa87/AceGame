@@ -9,7 +9,7 @@ import type { BattleEvent, BattleTally, BattleMods, DamageKind, EnemyScale, Phas
 const C = BALANCE.combat;
 const NEGATIVE: StatusId[] = ['burn', 'poison', 'stun', 'vulnerable', 'slow', 'weak', 'acid', 'bubble', 'mine'];
 /** Stati che scadono alla fine del turno di chi li porta. */
-const TIMED: StatusId[] = ['atkUp', 'vulnerable', 'shield', 'defUp', 'evade', 'slow', 'reflect', 'weak', 'twin'];
+const TIMED: StatusId[] = ['atkUp', 'vulnerable', 'shield', 'defUp', 'evade', 'slow', 'reflect', 'weak', 'twin', 'taunt'];
 /** Stati che durano finché non vengono consumati (non scadono a fine turno). */
 const KEPT: StatusId[] = ['guard', 'stun', 'burn', 'poison', 'acid', 'bubble', 'mine', 'swarm', 'immune'];
 export const AFFIXES: AffixId[] = ['armored', 'swift', 'vampire', 'spiky', 'regen', 'commander'];
@@ -54,6 +54,8 @@ export class Battle {
   /** Durante un colpo caricato: la Difesa para di più (vedi `combat.charged`). */
   private chargedHit = false;
   private parried = false;
+  /** (F4b) Nemici a cui la vedetta ha già interrotto una carica in questo scontro. */
+  private alarmed = new Set<string>();
 
   constructor(setup: BattleSetup, private readonly rng: Rng, private readonly mods: BattleMods = setup.mods) {
     this.units = [setup.hero, ...setup.companions, ...setup.enemies];
@@ -288,9 +290,28 @@ export class Battle {
   private companionTurn(u: Unit, ev: BattleEvent[]): void {
     const def = COMPANION_BY_ID.get(u.defId)!;
     const allies = this.alive('ally');
-    const useAuto = def.auto.when === 'always' || allies.some((a) => a.hp < a.maxHp / 2);
-    const ability = useAuto ? def.auto : BASIC_ATTACK;
-    this.useAbility(u, ability, this.focusUid, ev);
+    const when = def.auto.when;
+    if (when === 'fuse') {
+      // Ottavio: un turno accende la miccia (visibile), quello dopo spara
+      if (!u.fuse) {
+        u.fuse = true;
+        ev.push({ t: 'fuse', uid: u.uid });
+      } else {
+        u.fuse = false;
+        this.useAbility(u, def.auto, this.focusUid, ev);
+      }
+    } else if (when === 'enemyCharging') {
+      // Strillo: avvista chi carica e lo disturba (una volta per nemico)
+      const charging = this.enemies().find((e) => e.chargeState && !this.alarmed.has(e.uid));
+      if (charging) {
+        this.alarmed.add(charging.uid);
+        this.useAbility(u, def.auto, charging.uid, ev);
+        this.interruptCharge(charging, ev);
+      } else this.useAbility(u, BASIC_ATTACK, this.focusUid, ev);
+    } else {
+      const useAuto = when === 'always' || allies.some((a) => a.hp < a.maxHp / 2);
+      this.useAbility(u, useAuto ? def.auto : BASIC_ATTACK, this.focusUid, ev);
+    }
     if (u.charge < u.chargeMax) {
       u.charge++;
       ev.push({ t: 'charge', uid: u.uid, value: u.charge });
@@ -407,7 +428,12 @@ export class Battle {
 
   /** Bersaglio della mossa: quello scelto al momento dell'intenzione, se è ancora in piedi. */
   private aimFor(u: Unit): string | undefined {
-    return this.aliveAlly(u.aimUid)?.uid ?? this.pickAim(u, false);
+    return this.taunter()?.uid ?? this.aliveAlly(u.aimUid)?.uid ?? this.pickAim(u, false);
+  }
+
+  /** (F4b) Alleato in Provocazione (Gonfiata): attira tutti i colpi singoli. */
+  private taunter(): Unit | undefined {
+    return this.alive('ally').find((a) => this.hasStatus(a, 'taunt'));
   }
 
   /**
@@ -419,10 +445,15 @@ export class Battle {
     const allies = this.alive('ally');
     if (!allies.length) return undefined;
     const def = ENEMY_BY_ID.get(u.defId)!;
+    const taunt = this.taunter();
+    if (taunt) return taunt.uid;
     if (def.aim === 'companions') {
       const comps = allies.filter((a) => a.kind !== 'hero');
       return (comps.length ? comps.reduce((m, a) => (a.hp / a.maxHp < m.hp / m.maxHp ? a : m)) : allies[0]).uid;
     }
+    // (F4b) Gonfio: i colpi normali vanno spesso su di lui
+    const prov = charged ? undefined : allies.find((a) => a.kind === 'companion' && COMPANION_BY_ID.get(a.defId)?.provoke);
+    if (prov && this.rng.next() < COMPANION_BY_ID.get(prov.defId)!.provoke!) return prov.uid;
     const tier = def.tier;
     const w = charged ? { hero: C.charged.aimHero, weakest: 1 - C.charged.aimHero } : BALANCE.enemies.aim[tier];
     const r = this.rng.next();
@@ -541,6 +572,10 @@ export class Battle {
         const extra = target.uid === actor.uid && TIMED.includes(eff.status) ? 1 : 0;
         this.addStatus(target, { id: eff.status, turns: eff.turns + extra, value: eff.value ?? 0 });
         ev.push({ t: 'status', target: target.uid, status: eff.status, turns: eff.turns });
+        if (eff.status === 'taunt') {
+          // tutti i nemici con una mossa a bersaglio singolo cambiano mira
+          for (const e of this.enemies()) if (e.nextMove && this.moveOf(e).target === 'enemy') { e.aimUid = target.uid; ev.push(this.intentEvent(e)); }
+        }
         break;
       }
       case 'cleanse':
