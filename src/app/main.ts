@@ -17,6 +17,7 @@ import { RecordsScene } from '../scenes/RecordsScene';
 import { SettingsScene } from '../scenes/SettingsScene';
 import { GameSession } from '../state/GameSession';
 import { HeroRig } from '../ui/HeroRig';
+import { registerPwa } from './pwa';
 
 async function start(): Promise<void> {
   // I testi Phaser vengono disegnati subito: i font devono essere pronti prima.
@@ -47,4 +48,5 @@ async function start(): Promise<void> {
   (window as unknown as { __HeroRig: typeof HeroRig }).__HeroRig = HeroRig;
 }
 
+registerPwa();
 void start();

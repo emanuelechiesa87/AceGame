@@ -8,6 +8,7 @@ import { GameSession } from '../state/GameSession';
 import { modal } from '../ui/Offers';
 import { addBody, addTitle, gradientFill } from '../ui/text';
 import { BaseScene } from './BaseScene';
+import { setUpdateSafe } from '../app/pwa';
 
 export class MenuScene extends BaseScene {
   constructor() {
@@ -16,6 +17,9 @@ export class MenuScene extends BaseScene {
 
   create(): void {
     this.setupCamera();
+    // Al menu non c'è nulla in corso: si può applicare un aggiornamento del gioco.
+    setUpdateSafe(true);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => setUpdateSafe(false));
     const cx = GAME_WIDTH / 2;
     const backdrop = new BiomeBackdrop(this, { groundTop: 760 });
     // velo scuro in alto per far leggere il logo
