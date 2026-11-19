@@ -26,8 +26,8 @@ export type Strategy = 'naive' | 'smart';
 /** Interruttori del giocatore attento, per capire quale abilità conta di più (analisi F0). */
 export const SMART = { guard: true, target: true, nodes: true, rewards: true, events: true };
 
-export function playRun(seed: number, forceFruit?: string, strategy: Strategy = 'naive'): RunResult {
-  const ctl = new RunController(createRunState('a', seed));
+export function playRun(seed: number, forceFruit?: string, strategy: Strategy = 'naive', tide = 0): RunResult {
+  const ctl = new RunController(createRunState('a', seed, undefined, 'Kai', tide));
   ctl.start([]);
   const run = ctl.run;
   let rounds = 0, battles = 0; const hpAtBoss: number[] = [];

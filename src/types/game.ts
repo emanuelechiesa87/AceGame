@@ -75,6 +75,8 @@ export interface RunState {
   seenEventIds?: string[];
   /** Monete della run (F2, 0.7.0; assenti nelle run salvate prima). */
   coins?: number;
+  /** F3 · Marea della run (assente = 0). */
+  tide?: number;
   /** Statistiche per mare (assenti nelle run salvate prima della 0.6.4). */
   stats?: RunStats;
 }
@@ -89,6 +91,8 @@ export interface HallOfFameEntry {
   enemiesDefeated: number;
   fruits: string[];
   result: 'defeat' | 'victory';
+  /** F3 · Marea della run (assente = 0). */
+  tide?: number;
 }
 
 /** Riassunto di una run conclusa, tenuto nel salvataggio (ultime 10) per misurare il bilanciamento. */
@@ -122,6 +126,12 @@ export interface PersistentGameState {
   hallOfFame: HallOfFameEntry[];
   /** Ultime run concluse con le statistiche (la più recente per prima). */
   runLog?: RunLogEntry[];
+  /** F3 · Marea più alta sbloccata (0 = solo la base). */
+  maxTideUnlocked?: number;
+  /** F3 · Marea più alta vinta con ciascun frutto (id → Marea). */
+  bestTideByFruit?: Record<string, number>;
+  /** F3 · Ultima Marea scelta al menu. */
+  selectedTide?: number;
   lifetime: { runs: number; victories: number; enemiesDefeated: number };
   settings: GameSettings;
 }

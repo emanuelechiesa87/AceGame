@@ -44,7 +44,7 @@ export class SummaryScene extends BaseScene {
     else hero.setBaseExpression('closed', 'ouch');
 
     panel(this, 60, 520, 600, 430, COLORS.panel, 0.96);
-    addTitle(this, GAME_WIDTH / 2, 580, `${snapshot.score} PUNTI`, 64).setColor('#ffcf3a');
+    addTitle(this, GAME_WIDTH / 2, 580, `${res?.entry.score ?? snapshot.score} PUNTI`, 64).setColor('#ffcf3a');
     if (res && res.rank >= 0) {
       const t = addTitle(this, GAME_WIDTH / 2, 645, res.rank === 0 ? 'NUOVO RECORD!' : `${res.rank + 1}° MIGLIOR RISULTATO!`, 34).setColor('#ff5f8a');
       this.tweens.add({ targets: t, scale: 1.1, duration: 400, yoyo: true, repeat: -1 });
@@ -59,9 +59,13 @@ export class SummaryScene extends BaseScene {
       ['Eventi completati', String(snapshot.eventsCompleted)],
       [stats ? 'Tempo di gioco' : 'Durata', dur],
     ];
+    // F3: Marea della run, con il moltiplicatore del punteggio
+    const tide = res?.tide ?? 0;
+    if (tide) rows.unshift(['Marea', `${tide} · punti ×${(1 + BALANCE.tides.scoreBonus * tide).toFixed(1).replace('.', ',')}`]);
+    const gap = rows.length > 5 ? 34 : 40;
     rows.forEach(([k, v], i) => {
-      addBody(this, 110, 700 + i * 40, k, 26, '#fbe9c8').setOrigin(0, 0.5);
-      addBody(this, 610, 700 + i * 40, v, 26, '#ffffff').setOrigin(1, 0.5);
+      addBody(this, 110, 700 + i * gap, k, 26, '#fbe9c8').setOrigin(0, 0.5);
+      addBody(this, 610, 700 + i * gap, v, 26, '#ffffff').setOrigin(1, 0.5);
     });
     const fid = snapshot.activeFruitIds[0];
     addBody(this, 110, 905, 'Frutto:', 24, '#fbe9c8').setOrigin(0, 0.5);
@@ -72,7 +76,15 @@ export class SummaryScene extends BaseScene {
 
     // sblocchi tra una run e l'altra: nuovi frutti nel pool iniziale
     const unlocked = res?.unlocked ?? [];
-    if (unlocked.length) {
+    // F3: Marea sbloccata e record del frutto, in cima ai messaggi
+    const tideMsg = res?.tideUnlocked ? `MAREA ${res.tideUnlocked} SBLOCCATA!` : '';
+    const recMsg = fid && res?.fruitRecord !== undefined && tide > 0 ? `Record con ${FRUIT_BY_ID.get(fid)!.name}: Marea ${tide}` : '';
+    if (tideMsg || recMsg) {
+      const t = addTitle(this, GAME_WIDTH / 2, 975, tideMsg || recMsg, 30).setColor('#7fd8ff');
+      this.tweens.add({ targets: t, scale: 1.06, duration: 500, yoyo: true, repeat: -1 });
+      const second = tideMsg && recMsg ? recMsg : unlocked.length ? `Nuovo frutto: ${unlocked.map((u) => FRUIT_BY_ID.get(u)!.name).join(', ')}!` : '';
+      if (second) addBody(this, GAME_WIDTH / 2, 1012, second, 22, '#6fe08a');
+    } else if (unlocked.length) {
       const names = unlocked.map((u) => FRUIT_BY_ID.get(u)!.name).join(', ');
       const t = addTitle(this, GAME_WIDTH / 2, 990, `NUOVO FRUTTO SBLOCCATO: ${names}!`, 26).setColor('#6fe08a').setWordWrapWidth(640);
       this.tweens.add({ targets: t, scale: 1.06, duration: 500, yoyo: true, repeat: -1 });

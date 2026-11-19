@@ -1,4 +1,5 @@
 import { BALANCE } from '../data/balance';
+import { clampTide } from '../data/tides';
 import type { HallOfFameEntry, PersistentGameState } from '../types/game';
 
 export const SCHEMA_VERSION = 1;
@@ -19,6 +20,9 @@ export function emptyPersistentState(now = new Date()): PersistentGameState {
     metCompanionIds: [],
     hallOfFame: [],
     runLog: [],
+    maxTideUnlocked: 0,
+    bestTideByFruit: {},
+    selectedTide: 0,
     lifetime: { runs: 0, victories: 0, enemiesDefeated: 0 },
     settings: { fastAnimations: false, music: 0.6, sfx: 0.8, vibration: true, tutorialDone: false },
   };
@@ -52,9 +56,18 @@ export function parseSave(raw: string): PersistentGameState {
     metCompanionIds: arr(data.metCompanionIds),
     hallOfFame: Array.isArray(data.hallOfFame) ? data.hallOfFame.slice(0, BALANCE.limits.hallOfFameSize) : [],
     runLog: Array.isArray(data.runLog) ? data.runLog.filter((r) => r && typeof r === 'object' && Array.isArray(r.stats?.areas)).slice(0, 10) : [],
+    maxTideUnlocked: clampTide(data.maxTideUnlocked),
+    bestTideByFruit: cleanTides(data.bestTideByFruit),
+    selectedTide: Math.min(clampTide(data.selectedTide), clampTide(data.maxTideUnlocked)),
     lifetime: { ...base.lifetime, ...(data.lifetime ?? {}) },
     settings: cleanSettings(base.settings, data.settings),
   };
+}
+
+function cleanTides(raw: unknown): Record<string, number> {
+  const out: Record<string, number> = {};
+  if (raw && typeof raw === 'object') for (const [k, v] of Object.entries(raw as Record<string, unknown>)) if (typeof v === 'number') out[k] = clampTide(v);
+  return out;
 }
 
 function cleanSettings(base: PersistentGameState['settings'], raw: unknown): PersistentGameState['settings'] {

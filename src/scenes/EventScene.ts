@@ -74,9 +74,9 @@ export class EventScene extends BaseScene {
     this.header('Fuoco da campo', 'rest', `Un fuocherello scoppietta. C'è tempo per una cosa sola.${koText}`);
     this.body.setY(935);
     const list: { label: string; act: () => void }[] = [
-      { label: `CURA (+${Math.round(R.healPct * 100)}% A TUTTI)`, act: () => { ctl.restHeal(); this.done('Ti senti rinato! Gli HP tuoi e della squadra risalgono.', 'good'); } },
+      { label: `CURA (+${Math.round(ctl.tx.restHealPct * 100)}% A TUTTI)`, act: () => { ctl.restHeal(); this.done('Ti senti rinato! Gli HP tuoi e della squadra risalgono.', 'good'); } },
     ];
-    if (ko.length) list.push({ label: `RIANIMA ${ko.length > 1 ? 'I COMPAGNI' : (COMPANION_BY_ID.get(ko[0].id)?.name ?? '').toUpperCase()} (${Math.round(R.reviveHpPct * 100)}%)`, act: () => { const n = ctl.reviveCompanions(); this.done(n > 1 ? 'I compagni si rimettono in piedi!' : 'Il compagno si rimette in piedi!', 'good'); } });
+    if (ko.length) list.push({ label: `RIANIMA ${ko.length > 1 ? 'I COMPAGNI' : (COMPANION_BY_ID.get(ko[0].id)?.name ?? '').toUpperCase()} (${Math.round(ctl.tx.restRevivePct * 100)}%)`, act: () => { const n = ctl.reviveCompanions(); this.done(n > 1 ? 'I compagni si rimettono in piedi!' : 'Il compagno si rimette in piedi!', 'good'); } });
     list.push({ label: `ALLENATI (+${R.trainAtk} ATT, +${R.trainMaxHp} HP MAX)`, act: () => { ctl.restTrain(); this.done('Colpi più secchi, fiato più lungo: sei più forte per il resto del viaggio.', 'good'); } });
     this.choices(list);
   }

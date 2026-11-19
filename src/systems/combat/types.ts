@@ -41,11 +41,14 @@ export interface Unit {
   turns?: number;
 }
 
+/** Rinforzo dei nemici: per l'area e (F3 Maree) per grado. */
+export interface EnemyScale { hp: number; atk: number; tier?: Partial<Record<'normal' | 'elite' | 'boss', { hp: number; atk: number }>> }
+
 export interface BattleMods {
   powerDamageMult: number;
   surviveLethalOnce: boolean;
   /** Rinforzo dei nemici dell'area (anche quelli evocati). */
-  enemyScale?: { hp: number; atk: number };
+  enemyScale?: EnemyScale;
   /** Artefatti (0.6.1): tutti facoltativi, assenti = nessun effetto. */
   energyBonus?: number;
   potionHealPct?: number;
@@ -62,6 +65,8 @@ export interface BattleMods {
   enemyStartHpPct?: number;
   /** (F1) Quanti affissi ricevono le élite (1 nei mari 1-2, 2 nei mari 3-4). */
   eliteAffixes?: number;
+  /** (F3) Moltiplicatore dei colpi caricati (Marea 10); assente = BALANCE.combat.charged.mult. */
+  chargedMult?: number;
 }
 
 /** Contatori dell'eroe in uno scontro (HP persi, cure, pozioni, HP minimo, turni giocati). */

@@ -2,7 +2,6 @@ import { FX_SCALE } from '../pixel/backgrounds';
 import { runLook } from '../data/fruitLooks';
 import { COLORS, GAME_WIDTH } from '../app/config';
 import { AREAS } from '../data/areas';
-import { BALANCE } from '../data/balance';
 import { FRUIT_BY_ID, fruitAbility } from '../data/fruits';
 import { iconKey } from '../pixel/keys';
 import { GameSession } from '../state/GameSession';
@@ -45,7 +44,7 @@ export class NewSeaScene extends BaseScene {
     this.time.delayedCall(900, () => hero.idle());
 
     panel(this, 60, 640, 600, 330, COLORS.panel, 0.95);
-    const pct = Math.round(BALANCE.rewards.areaHealPct * 100);
+    const pct = Math.round(ctl.tx.areaHealPct * 100);
     addBody(this, GAME_WIDTH / 2, 690, `La ciurma si riposa a bordo: +${pct}% HP`, 26, '#6fe08a');
     addBody(this, GAME_WIDTH / 2, 740, `Nemici più forti in questo mare`, 26, '#ff9ab0');
 

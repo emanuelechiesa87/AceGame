@@ -91,6 +91,12 @@ export class CharacterSelectScene extends BaseScene {
   private startRun(): void {
     if (!isValidHeroName(this.heroName)) { this.nameField.el.focus(); return; }
     this.nameField.el.blur();
+    // F3: con almeno una Marea sbloccata si passa dalla scelta della Marea
+    if (GameSession.maxTideUnlocked > 0) {
+      GameSession.save.update((s) => (s.lastHeroName = this.heroName.trim()));
+      this.goTo('TideSelect', { heroName: this.heroName.trim() });
+      return;
+    }
     GameSession.beginRun(GameSession.selectedAvatar, this.heroName.trim());
     this.rigs.get(GameSession.selectedAvatar)?.cheer('fierce', 'shout');
     this.time.delayedCall(450, () => this.goTo('FruitReveal'));

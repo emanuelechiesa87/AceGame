@@ -7,7 +7,8 @@ import { EVENTS, type EventDef } from '../data/events';
 import { FRUITS, FRUIT_BY_ID, MAX_FRUIT_LEVEL, fruitAbility } from '../data/fruits';
 import { effectiveStats } from '../state/RunState';
 import type { Ability, ArtifactDef, Rarity } from '../types/content';
-import type { BattleMods, BattleTally } from './combat/types';
+import type { BattleMods, BattleTally, EnemyScale } from './combat/types';
+import { clampTide, tideEffects, type TideEffects } from '../data/tides';
 import type { AreaStats, MapStep, RunState } from '../types/game';
 import { Rng } from './Rng';
 
@@ -70,7 +71,18 @@ export class RunController {
   get areaNumber(): number { return this.run.areaIndex + 1; }
   get hasNextArea(): boolean { return this.run.areaIndex < LAST_AREA_INDEX; }
   /** Rinforzo dei nemici dell'area corrente (da passare alla battaglia). */
-  get enemyScale(): { hp: number; atk: number } { return { ...this.area.scale }; }
+  get enemyScale(): EnemyScale {
+    const t = this.tx;
+    return { hp: this.area.scale.hp * t.enemyHp, atk: this.area.scale.atk, tier: { normal: { hp: 1, atk: t.normalAtk }, boss: { hp: t.boss, atk: t.boss } } };
+  }
+  /** F3 · Marea della run (0 = nessun malus). */
+  get tide(): number { return clampTide(this.run.tide); }
+  private txCache?: { n: number; e: TideEffects };
+  /** F3 · Valori effettivi con i malus della Marea. */
+  get tx(): TideEffects {
+    if (this.txCache?.n !== this.tide) this.txCache = { n: this.tide, e: tideEffects(this.tide) };
+    return this.txCache.e;
+  }
   /** Crescita dei compagni nel mare corrente. */
   get companionScale(): { hp: number; atk: number } { return companionScale(this.run.areaIndex); }
 
@@ -83,7 +95,7 @@ export class RunController {
     this.run.areaIndex++;
     this.run.stepIndex = 0;
     this.run.map = this.generateMap();
-    const pct = BALANCE.rewards.areaHealPct;
+    const pct = this.tx.areaHealPct;
     this.healPct(pct);
     this.run.companions = this.run.companions.map((c) => {
       const max = companionMaxHp(c.id, this.run.areaIndex);
@@ -143,7 +155,8 @@ export class RunController {
       guardEnergyBonus: sum((x) => x.guardEnergyBonus),
       reviveOncePct: pearl,
       enemyStartHpPct: this.run.nextBattleEnemyHpPct,
-      eliteAffixes: this.run.areaIndex >= 2 ? 2 : 1,
+      eliteAffixes: Math.max(this.run.areaIndex >= 2 ? 2 : 1, this.tx.eliteAffixMin),
+      chargedMult: this.tx.chargedMult,
     };
   }
 
@@ -281,7 +294,7 @@ export class RunController {
   rollCoins(source: NodeType): number {
     const r = BALANCE.economy.coins[source];
     if (!r) return 0;
-    const n = this.rng.int(r[0], r[1]);
+    const n = Math.round(this.rng.int(r[0], r[1]) * this.tx.coinMult);
     this.run.coins = this.coins + n;
     return n;
   }
@@ -294,7 +307,7 @@ export class RunController {
   /** Dopo uno scontro: c'è la scelta 1 su 3? Élite e boss sempre, scontri normali solo a volte. */
   rewardOffered(node: NodeType): boolean {
     if (node !== 'battle') return true;
-    return this.rng.next() < BALANCE.rewards.normalRewardChance;
+    return this.rng.next() < this.tx.normalRewardChance;
   }
 
   /** Banco del Mercante: 4 articoli al massimo, prezzi da BALANCE.economy.prices. */
@@ -314,7 +327,7 @@ export class RunController {
     switch (item.kind) {
       case 'potion': this.run.potions++; break;
       case 'heal': this.healPct(BALANCE.economy.shopHealPct); break;
-      case 'revive': this.reviveCompanions(BALANCE.rest.reviveHpPct); break;
+      case 'revive': this.reviveCompanions(); break;
       case 'awaken': this.awaken(); break;
       case 'artifact': break;
     }
@@ -324,7 +337,7 @@ export class RunController {
   // --- Fuoco da campo (F2): una sola scelta ---------------------------------------------
   /** Cura eroe e compagni in piedi. */
   restHeal(): void {
-    const pct = BALANCE.rest.healPct;
+    const pct = this.tx.restHealPct;
     this.healPct(pct);
     this.run.companions = this.run.companions.map((c) => {
       if (c.hp <= 0) return c;
@@ -333,7 +346,7 @@ export class RunController {
     });
   }
   /** Rialza i compagni KO con una frazione della vita. Ritorna quanti. */
-  reviveCompanions(pct: number = BALANCE.rest.reviveHpPct): number {
+  reviveCompanions(pct: number = this.tx.restRevivePct): number {
     let n = 0;
     this.run.companions = this.run.companions.map((c) => {
       if (c.hp > 0) return c;

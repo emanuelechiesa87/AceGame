@@ -123,6 +123,8 @@ export const BALANCE = {
     eventCompleted: 15,
     noKoBossBonus: 50,
   },
+  /** F3 · Maree: valori dei malus in `data/tides.ts`. */
+  tides: { scoreBonus: 0.1 },
   exploration: {
     walkSpeedPxPerSec: 120,
   },

@@ -33,13 +33,15 @@ export class CollectionScene extends BaseScene {
     const fr = FRUITS.filter((f) => s.discoveredFruitIds.includes(f.id));
     section(190, 'FRUTTI', fr.length, FRUITS.length);
     const inPool = FRUITS.length - GameSession.lockedFruitIds().length;
-    addBody(this, 360, 190, `nel pool: ${inPool}`, 18, '#6fe08a');
+    const best = s.bestTideByFruit ?? {};
+    addBody(this, 360, 190, `nel pool: ${inPool}${Object.keys(best).length ? ' · M = Marea vinta' : ''}`, 18, '#6fe08a');
     FRUITS.forEach((f, i) => {
       // 20 frutti: griglia 5×4
       const x = 76 + (i % 5) * 142, y = 252 + Math.floor(i / 5) * 100;
       const known = s.discoveredFruitIds.includes(f.id);
       const ic = icon(this, x, y - 10, iconKey('fruit', f.id), 62);
       if (!known) ic.setTintFill(0x3a2414);
+      if (best[f.id] !== undefined) addBody(this, x + 46, y - 12, `M${best[f.id]}`, 18, '#7fd8ff').setStroke('#1f1633', 4);
       addBody(this, x, y + 36, known ? f.name : '???', 15, known ? '#fff7e6' : '#a89580').setWordWrapWidth(134).setAlign('center').setLineSpacing(-4);
     });
 

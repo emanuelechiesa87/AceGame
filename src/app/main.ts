@@ -15,6 +15,7 @@ import { NewSeaScene } from '../scenes/NewSeaScene';
 import { CollectionScene } from '../scenes/CollectionScene';
 import { RecordsScene } from '../scenes/RecordsScene';
 import { SettingsScene } from '../scenes/SettingsScene';
+import { TideSelectScene } from '../scenes/TideSelectScene';
 import { GameSession } from '../state/GameSession';
 import { HeroRig } from '../ui/HeroRig';
 import { registerPwa } from './pwa';
@@ -38,7 +39,7 @@ async function start(): Promise<void> {
     input: { activePointers: 2 },
     audio: { noAudio: true }, // suoni e musica sono sintetizzati da systems/Audio.ts
     render: { antialias: true, pixelArt: false },
-    scene: [BootScene, MenuScene, CharacterSelectScene, FruitRevealScene, ExplorationScene, BattleScene, RewardScene, EventScene, NewSeaScene, SummaryScene, CollectionScene, RecordsScene, SettingsScene],
+    scene: [BootScene, MenuScene, CharacterSelectScene, TideSelectScene, FruitRevealScene, ExplorationScene, BattleScene, RewardScene, EventScene, NewSeaScene, SummaryScene, CollectionScene, RecordsScene, SettingsScene],
   });
 
   // Esposto solo per il debug da console (es. chrome://inspect sull'S23).

@@ -1,9 +1,10 @@
 import { BALANCE } from '../data/balance';
+import { clampTide, tideEffects } from '../data/tides';
 import { FRUIT_BY_ID } from '../data/fruits';
 import { ARTIFACT_BY_ID } from '../data/artifacts';
 import type { AvatarVariant, RunState, Stats } from '../types/game';
 
-export function createRunState(avatar: AvatarVariant, seed: number, now = new Date(), heroName = 'Eroe'): RunState {
+export function createRunState(avatar: AvatarVariant, seed: number, now = new Date(), heroName = 'Eroe', tide = 0): RunState {
   const p = BALANCE.player;
   return {
     runId: `run-${seed.toString(16)}-${now.getTime().toString(36)}`,
@@ -22,7 +23,8 @@ export function createRunState(avatar: AvatarVariant, seed: number, now = new Da
     fruitLevel: 1,
     artifactIds: [],
     companions: [],
-    potions: p.startingPotions,
+    potions: tideEffects(tide).startingPotions,
+    tide: clampTide(tide),
     usedFruitIds: [],
     score: 0,
     enemiesDefeated: 0,

@@ -8,6 +8,7 @@ import { BUILD_VERSION } from '../app/config';
 import { randomSeed } from '../systems/Rng';
 import type { AvatarVariant, HallOfFameEntry, RunLogEntry, RunState } from '../types/game';
 import { createRunState } from './RunState';
+import { clampTide, MAX_TIDE, tideScore } from '../data/tides';
 
 const RUN_KEY = 'acegame.run';
 /** Run concluse tenute nel salvataggio con le statistiche (F0). */
@@ -129,10 +130,19 @@ class GameSessionStore {
     return unlocked;
   }
 
-  beginRun(avatar: AvatarVariant, heroName = this.save.data.lastHeroName || 'Eroe'): string {
+  /** F3 · Marea più alta sbloccata. Con `?maree=10` nell'indirizzo (solo collaudo) tutte. */
+  get maxTideUnlocked(): number {
+    let test = 0;
+    try { test = clampTide(Number(new URLSearchParams(globalThis.location?.search ?? '').get('maree'))); } catch { /* fuori dal browser */ }
+    return Math.max(clampTide(this.save.data.maxTideUnlocked), test);
+  }
+  get selectedTide(): number { return Math.min(clampTide(this.save.data.selectedTide), this.maxTideUnlocked); }
+  set selectedTide(n: number) { this.save.update((s) => (s.selectedTide = Math.min(clampTide(n), this.maxTideUnlocked))); }
+
+  beginRun(avatar: AvatarVariant, heroName = this.save.data.lastHeroName || 'Eroe', tide = this.selectedTide): string {
     const name = heroName.trim() || 'Eroe';
     this.save.update((s) => (s.lastHeroName = name));
-    this.run = createRunState(avatar, randomSeed(), new Date(), name);
+    this.run = createRunState(avatar, randomSeed(), new Date(), name, Math.min(clampTide(tide), this.maxTideUnlocked));
     this.ctl = new RunController(this.run);
     const fruit = this.ctl.start(this.unlockedFruitIds(), this.save.data.recentFruitIds);
     this.discover({ fruits: [fruit] });
@@ -183,11 +193,13 @@ class GameSessionStore {
   }
 
   /** Fine run: aggiorna record e statistiche, cancella SOLO lo stato temporaneo. */
-  endRun(result: 'victory' | 'defeat'): { entry: HallOfFameEntry; rank: number; unlocked: string[] } | null {
+  endRun(result: 'victory' | 'defeat'): { entry: HallOfFameEntry; rank: number; unlocked: string[]; tide: number; tideUnlocked?: number; fruitRecord?: number } | null {
     const run = this.run;
     if (!run) return null;
+    const tide = clampTide(run.tide);
     const entry: HallOfFameEntry = {
-      score: run.score,
+      score: tideScore(run.score, tide),
+      tide,
       heroName: run.heroName,
       date: new Date().toISOString(),
       durationSec: Math.round((Date.now() - new Date(run.startedAt).getTime()) / 1000),
@@ -209,9 +221,20 @@ class GameSessionStore {
         s.runLog = [log, ...(s.runLog ?? [])].slice(0, RUN_LOG_SIZE);
       }
     });
+    // F3 · Maree: la vittoria alla Marea più alta sblocca la successiva; record del frutto
+    let tideUnlocked: number | undefined, fruitRecord: number | undefined;
+    const fruit = run.activeFruitIds[0];
+    if (result === 'victory') this.save.update((s) => {
+      const max = clampTide(s.maxTideUnlocked);
+      if (tide >= max && max < MAX_TIDE) { s.maxTideUnlocked = max + 1; s.selectedTide = max + 1; tideUnlocked = max + 1; }
+      if (fruit) {
+        const best = (s.bestTideByFruit ??= {});
+        if (best[fruit] === undefined || tide > best[fruit]) { best[fruit] = tide; fruitRecord = tide; }
+      }
+    });
     const unlocked = this.grantUnlocks(result);
     this.clearRun();
-    return { entry, rank, unlocked };
+    return { entry, rank, unlocked, tide, tideUnlocked, fruitRecord };
   }
 
   abandonRun(): void {

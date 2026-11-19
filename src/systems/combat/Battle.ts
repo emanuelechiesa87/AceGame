@@ -4,7 +4,7 @@ import { COMPANION_BY_ID } from '../../data/companions';
 import { ENEMY_BY_ID } from '../../data/enemies';
 import type { Ability, AffixId, Effect, StatusId } from '../../types/content';
 import type { Rng } from '../Rng';
-import type { BattleEvent, BattleTally, BattleMods, DamageKind, Phase, PlayerAction, Side, StatusInstance, Unit } from './types';
+import type { BattleEvent, BattleTally, BattleMods, DamageKind, EnemyScale, Phase, PlayerAction, Side, StatusInstance, Unit } from './types';
 
 const C = BALANCE.combat;
 const NEGATIVE: StatusId[] = ['burn', 'poison', 'stun', 'vulnerable', 'slow', 'weak', 'acid', 'bubble', 'mine'];
@@ -335,7 +335,7 @@ export class Battle {
       ev.push({ t: 'cover', uid: hero.uid, ally: aim });
       aim = hero.uid;
     }
-    const boosted: Ability = { ...move, effects: move.effects.map((e) => (e.kind === 'damage' ? { ...e, mult: e.mult * K.mult } : e)) };
+    const boosted: Ability = { ...move, effects: move.effects.map((e) => (e.kind === 'damage' ? { ...e, mult: e.mult * (this.mods.chargedMult ?? K.mult) } : e)) };
     this.chargedHit = true;
     this.parried = false;
     try { this.useAbility(u, boosted, aim, ev); } finally { this.chargedHit = false; }
@@ -675,12 +675,13 @@ function baseUnit(partial: Partial<Unit> & Pick<Unit, 'uid' | 'defId' | 'name' |
 }
 
 /** `scale` = rinforzo dell'area (1 nella prima). */
-export function makeEnemyUnit(enemyId: string, uid: string, scale: { hp: number; atk: number } = { hp: 1, atk: 1 }): Unit {
+export function makeEnemyUnit(enemyId: string, uid: string, scale: EnemyScale = { hp: 1, atk: 1 }): Unit {
   const d = ENEMY_BY_ID.get(enemyId);
   if (!d) throw new Error(`Nemico sconosciuto: ${enemyId}`);
   const E = BALANCE.enemies;
   const T = E.tier[d.tier];
-  return baseUnit({ uid, defId: d.id, name: d.name, side: 'enemy', kind: 'enemy', maxHp: Math.round(d.stats.maxHp * E.hpMult * T.hp * scale.hp), atk: Math.round(d.stats.atk * E.atkMult * T.atk * scale.atk), def: d.stats.def, spd: d.stats.spd });
+  const X = scale.tier?.[d.tier] ?? { hp: 1, atk: 1 };
+  return baseUnit({ uid, defId: d.id, name: d.name, side: 'enemy', kind: 'enemy', maxHp: Math.round(d.stats.maxHp * E.hpMult * T.hp * X.hp * scale.hp), atk: Math.round(d.stats.atk * E.atkMult * T.atk * X.atk * scale.atk), def: d.stats.def, spd: d.stats.spd });
 }
 
 /** `scale` = crescita del compagno nel mare corrente (vedi `companionScale`). */

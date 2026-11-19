@@ -25,6 +25,8 @@ export class RunHud {
     icon(scene, 534, y + 30, iconKey('misc', 'coin'), 38);
     addBody(scene, 558, y + 30, `${run.coins ?? 0}`, 28, '#ffe14a').setOrigin(0, 0.5);
     addBody(scene, 690, y + 30, `${run.score} pt`, 26, '#ffcf3a').setOrigin(1, 0.5);
+    // F3: Marea della run
+    if (run.tide) addBody(scene, 690, y + 70, `MAREA ${run.tide}`, 20, '#7fd8ff').setOrigin(1, 0.5);
 
     // il frutto della run con il suo livello di risveglio (I-V); i livelli
     // non ancora raggiungibili in quest'area sono sbarrati
