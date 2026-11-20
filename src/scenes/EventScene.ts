@@ -10,6 +10,7 @@ import { Audio } from '../systems/Audio';
 import type { ShopItem } from '../systems/RunController';
 import { resolveEvent } from '../systems/EventResolver';
 import { BiomeBackdrop } from '../ui/BiomeBackdrop';
+import { pickBranch } from '../ui/branchPicker';
 import { Button } from '../ui/Button';
 import { HeroRig } from '../ui/HeroRig';
 import { artifactName, offerArtifact, offerCompanion } from '../ui/Offers';
@@ -109,7 +110,7 @@ export class EventScene extends BaseScene {
       Audio.play('reward');
       let msg = 'Affare fatto!';
       if (it.kind === 'artifact') { offerArtifact(it.id); msg = `Ora hai: ${artifactName(it.id)}!`; }
-      if (it.kind === 'awaken') { this.hero.setLook(runLook(GameSession.run), true); msg = 'Il frutto si risveglia!'; }
+      if (it.kind === 'awaken') { this.hero.setLook(runLook(GameSession.run), true); msg = 'Il frutto si risveglia!'; void pickBranch(this); }
       if (it.kind === 'revive') msg = 'I compagni si rimettono in piedi!';
       if (it.kind === 'heal') msg = 'Una zuppa calda: HP su!';
       if (it.kind === 'potion') msg = 'Una pozione in più nello zaino.';
@@ -159,7 +160,7 @@ export class EventScene extends BaseScene {
       label: c.label.toUpperCase(),
       act: () => {
         const out = resolveEvent(ctl, c.outcome);
-        if (out.awakened) { this.hero.setLook(runLook(GameSession.run), true); this.done(out.text, 'good'); }
+        if (out.awakened) { this.hero.setLook(runLook(GameSession.run), true); void pickBranch(this).then(() => this.done(out.text, 'good')); }
         else if (out.artifactOffer) { offerArtifact(out.artifactOffer); this.done(`${out.text} Trovi: ${artifactName(out.artifactOffer)}!`, 'good'); }
         else if (out.mood === undefined && /\(-\d/.test(out.text)) this.done(out.text, 'bad');
         else this.done(out.text, out.mood ?? 'neutral');

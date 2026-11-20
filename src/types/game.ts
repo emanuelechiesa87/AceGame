@@ -57,6 +57,8 @@ export interface RunState {
   activeFruitIds: string[]; // un solo frutto per run
   /** Livello di risveglio del frutto (1..3). Assente nelle run salvate prima della 0.5. */
   fruitLevel?: number;
+  /** (F5) Strada scelta al Risveglio III ('a' = quella classica). Assente = non ancora scelta. */
+  fruitBranch?: 'a' | 'b';
   artifactIds: string[];
   companions: CompanionState[]; // max BALANCE.limits.maxCompanions
   potions: number;
@@ -101,6 +103,7 @@ export interface RunLogEntry {
   result: 'defeat' | 'victory';
   fruit: string;
   fruitLevel: number;
+  fruitBranch?: 'a' | 'b';
   maxArea: number;
   stats: RunStats;
 }

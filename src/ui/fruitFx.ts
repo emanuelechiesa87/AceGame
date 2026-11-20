@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { Audio } from '../systems/Audio';
 import { COLORS, GAME_WIDTH } from '../app/config';
-import { FRUIT_BY_ID, fruitAbility } from '../data/fruits';
+import { FRUIT_BY_ID, fruitAbility, type FruitBranch } from '../data/fruits';
 import { iconKey, type HeroId } from '../pixel/keys';
 import { HeroRig } from './HeroRig';
 import { addBody, addTitle } from './text';
@@ -535,7 +535,7 @@ async function highLevelIntro({ scene, caster, level, speed: s }: FxCtx, col: nu
  * Animazione del Risveglio (ricompensa): il frutto si illumina e sale di livello.
  * Con `heroId` sotto al frutto compare l'eroe, che al lampo si trasforma nel nuovo aspetto.
  */
-export async function awakenFx(scene: Phaser.Scene, fruitId: string, level: number, heroId?: HeroId): Promise<void> {
+export async function awakenFx(scene: Phaser.Scene, fruitId: string, level: number, heroId?: HeroId, branch: FruitBranch = 'a'): Promise<void> {
   const f = FRUIT_BY_ID.get(fruitId)!;
   const col = hex(f.color);
   Audio.play('awaken');
@@ -570,7 +570,7 @@ export async function awakenFx(scene: Phaser.Scene, fruitId: string, level: numb
   }
   hero?.setLook({ fruitId, level }, true);
   scene.cameras.main.shake(250, 0.01);
-  const a = fruitAbility(f, level);
+  const a = fruitAbility(f, level, branch);
   const tY = withHero ? 190 : cy - 210;
   const t1 = addTitle(scene, cx, tY, `RISVEGLIO ${ROMAN[level]}!`, 72).setColor(level >= 5 ? '#ffffff' : '#ffcf3a').setDepth(704);
   const t2 = addTitle(scene, cx, withHero ? 1000 : cy + 180, a.name, 44).setDepth(704);

@@ -4,7 +4,7 @@ import { BALANCE } from '../data/balance';
 import { COMPANION_BY_ID, COMPANIONS, companionScale } from '../data/companions';
 import { ENEMY_BY_ID } from '../data/enemies';
 import { EVENTS, type EventDef } from '../data/events';
-import { FRUITS, FRUIT_BY_ID, MAX_FRUIT_LEVEL, fruitAbility } from '../data/fruits';
+import { BRANCH_LEVEL, FRUITS, FRUIT_BY_ID, MAX_FRUIT_LEVEL, fruitAbility, type FruitBranch } from '../data/fruits';
 import { effectiveStats } from '../state/RunState';
 import type { Ability, ArtifactDef, Rarity } from '../types/content';
 import type { BattleMods, BattleTally, EnemyScale } from './combat/types';
@@ -188,7 +188,7 @@ export class RunController {
   battlePowers(): Ability[] {
     const down = this.arts.reduce((m, x) => m + (x.powerCostDown ?? 0), 0);
     return this.run.activeFruitIds.slice(0, 1).map((id) => {
-      const ab = fruitAbility(FRUIT_BY_ID.get(id)!, this.fruitLevel);
+      const ab = fruitAbility(FRUIT_BY_ID.get(id)!, this.fruitLevel, this.fruitBranch);
       return down ? { ...ab, cost: Math.max(1, (ab.cost ?? 0) - down) } : ab;
     });
   }
@@ -405,6 +405,14 @@ export class RunController {
   // --- ricompense ------------------------------------------------------------------
   /** Livello di risveglio del frutto (le run salvate prima del risveglio valgono 1). */
   get fruitLevel(): number { return this.run.fruitLevel ?? 1; }
+  /** (F5) Strada del frutto ('a' finché non si sceglie). */
+  get fruitBranch(): FruitBranch { return this.run.fruitBranch ?? 'a'; }
+  /** (F5) Il frutto è arrivato al III e la strada va ancora scelta. */
+  get needsBranchChoice(): boolean {
+    const f = FRUIT_BY_ID.get(this.run.activeFruitIds[0] ?? '');
+    return !!f?.branches && this.fruitLevel >= BRANCH_LEVEL && !this.run.fruitBranch;
+  }
+  chooseBranch(b: FruitBranch): void { this.run.fruitBranch = b; }
   /** Tetto del Risveglio nell'area corrente (III nel primo mare, poi IV e V). */
   get fruitLevelCap(): number { return Math.min(MAX_FRUIT_LEVEL, this.area.maxFruitLevel); }
   get canAwaken(): boolean { return this.fruitLevel < this.fruitLevelCap; }

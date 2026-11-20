@@ -12,6 +12,7 @@ import { mapProgress, RunHud } from '../ui/RunHud';
 import { addBody, addTitle } from '../ui/text';
 import { icon, panel, steppedRect } from '../ui/widgets';
 import { BaseScene } from './BaseScene';
+import { pickBranch } from '../ui/branchPicker';
 import { enterNode } from './flow';
 
 const WALK_MS = 2200;
@@ -54,7 +55,10 @@ export class ExplorationScene extends BaseScene {
     new Button(this, 640, 1210, 'II', () => this.setPaused(true), { width: 100, height: 84, fontSize: 40, variant: 'secondary' });
 
     const arrive = this.time.delayedCall(WALK_MS, () => this.arrive(hint));
-    this.input.once('pointerdown', () => { if (!this.arrived) { arrive.remove(); this.arrive(hint); } });
+    // F5: se la strada del frutto non è ancora stata scelta (risveglio da un percorso senza scelta), la si sceglie qui
+    let choosing = GameSession.ctl.needsBranchChoice;
+    if (choosing) { arrive.paused = true; void pickBranch(this).then(() => { choosing = false; arrive.paused = false; }); }
+    this.input.on('pointerdown', () => { if (!choosing && !this.arrived) { arrive.remove(); this.arrive(hint); } });
 
     this.pauseOverlay = this.buildPauseOverlay();
     document.addEventListener('visibilitychange', this.onVisibility);

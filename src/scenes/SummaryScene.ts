@@ -4,7 +4,7 @@ import { runLook } from '../data/fruitLooks';
 import { COLORS, GAME_WIDTH } from '../app/config';
 import { iconKey } from '../pixel/keys';
 import { BALANCE } from '../data/balance';
-import { FRUIT_BY_ID } from '../data/fruits';
+import { branchName, FRUIT_BY_ID } from '../data/fruits';
 import { AREAS } from '../data/areas';
 import { ROMAN } from '../ui/fruitFx';
 import { GameSession } from '../state/GameSession';
@@ -71,7 +71,7 @@ export class SummaryScene extends BaseScene {
     addBody(this, 110, 905, 'Frutto:', 24, '#fbe9c8').setOrigin(0, 0.5);
     if (fid) {
       icon(this, 230, 905, iconKey('fruit', fid), 50);
-      addBody(this, 266, 905, `${FRUIT_BY_ID.get(fid)!.name} · Lv ${ROMAN[snapshot.fruitLevel ?? 1]}`, 22, '#ffffff').setOrigin(0, 0.5);
+      addBody(this, 266, 905, `${FRUIT_BY_ID.get(fid)!.name} · Lv ${ROMAN[snapshot.fruitLevel ?? 1]}${snapshot.fruitBranch ? ` · ${branchName(FRUIT_BY_ID.get(fid)!, snapshot.fruitBranch)}` : ''}`, 22, '#ffffff').setOrigin(0, 0.5);
     }
 
     // sblocchi tra una run e l'altra: nuovi frutti nel pool iniziale

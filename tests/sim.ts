@@ -26,6 +26,9 @@ export type Strategy = 'naive' | 'smart';
 /** Interruttori del giocatore attento, per capire quale abilità conta di più (analisi F0). */
 export const SMART = { guard: true, target: true, nodes: true, rewards: true, events: true };
 
+/** F5: strada scelta dal simulatore al Risveglio III (modificabile nei rapporti). */
+export const BRANCH: { pick: 'a' | 'b' | 'rand' } = { pick: 'rand' };
+
 /** F4b: ordine di preferenza dei compagni per il giocatore attento (modificabile nei rapporti). */
 export const COMPANION_PREF: string[] = ['comp_lumi', 'comp_bobo', 'comp_gonfio', 'comp_ottavio', 'comp_zip', 'comp_strillo'];
 
@@ -40,6 +43,8 @@ export function playRun(seed: number, forceFruit?: string, strategy: Strategy = 
   const result = (won: boolean, turns: number, deathNode?: string): RunResult =>
     ({ won, step: run.stepIndex, area: run.areaIndex, score: run.score, turns, level: ctl.fruitLevel, rounds, battles, deathNode, hpAtBoss, fruit: run.activeFruitIds[0], stats: run.stats ?? { areas: [] } });
   for (;;) {
+    // F5: strada del frutto al Risveglio III ('a', 'b' o a caso secondo il seme)
+    if (ctl.needsBranchChoice) ctl.chooseBranch(BRANCH.pick === 'rand' ? (seed % 2 ? 'b' : 'a') : BRANCH.pick);
     if (run.stepIndex >= run.map.length) { if (!ctl.nextArea()) break; }
     const node = smart && SMART.nodes ? pickNode(ctl, ctl.currentStep.options, hpPct()) : ctl.currentStep.options[0];
     ctl.choose(node);
@@ -115,7 +120,9 @@ function powerUseful(b: Battle, p: Ability): boolean {
   const shieldLow = (st('shield')?.value ?? 0) < shieldAmt * 0.4;
   const expiring = (id: string) => (st(id)?.turns ?? 0) <= 1;
   if (p.target === 'self') return p.effects.some((e) => (e.kind === 'status' && expiring(e.status)) || (e.kind === 'shield' && shieldLow));
-  if (p.target === 'allAllies') return p.effects.some((e) => e.kind === 'heal') ? b.alive('ally').some((u) => u.hp < u.maxHp * 0.7) : shieldLow;
+  if (p.target === 'allAllies') return p.effects.some((e) => e.kind === 'heal') ? b.alive('ally').some((u) => u.hp < u.maxHp * 0.7)
+    // F5: i potenziamenti di squadra (Nebbia Fitta, Branco) si rilanciano quando scadono
+    : shieldLow || p.effects.some((e) => e.kind === 'status' && e.status !== 'evade' && expiring(e.status));
   return true;
 }
 

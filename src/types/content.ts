@@ -14,7 +14,7 @@ export type TargetRule = 'enemy' | 'allEnemies' | 'self' | 'allAllies' | 'lowest
 export type Intent = 'attack' | 'heavy' | 'defend' | 'debuff' | 'special' | 'charge';
 
 export type Effect =
-  | { kind: 'damage'; mult: number; lifesteal?: number; hits?: number }
+  | { kind: 'damage'; mult: number; lifesteal?: number; hits?: number; pierce?: boolean; overhealShield?: boolean }
   | { kind: 'heal'; pctMaxHp: number }
   | { kind: 'shield'; amount: number }
   | { kind: 'status'; status: StatusId; turns: number; value?: number; chance?: number }
@@ -29,7 +29,7 @@ export type Effect =
   /** Chiude il bersaglio in una bolla: salta i turni, poi la bolla scoppia (danno `popMult`). I boss ci restano 1 turno. */
   | { kind: 'bubble'; turns: number; popMult: number }
   /** Piazza una mina: esplode all'inizio del prossimo turno del bersaglio (danno `mult`). */
-  | { kind: 'mine'; mult: number }
+  | { kind: 'mine'; mult: number; splash?: number }
   /** Aggiunge acini allo sciame dell'eroe: a fine turno ognuno colpisce il bersaglio (danno `mult`). */
   | { kind: 'swarm'; count: number; mult: number; max: number }
   /** Gemella: per `turns` turni ripete gli attacchi e i poteri dell'eroe con il `ratio` del danno. */
@@ -37,7 +37,11 @@ export type Effect =
   /** (F1) Toglie energia all'eroe (una volta per uso, anche se colpisce più bersagli). */
   | { kind: 'drainEnergy'; amount: number }
   /** (F4) Onda d'urto: danno `mult` × ATT a TUTTI i nemici, dopo gli altri effetti (anche se il potere è su di sé o sugli alleati). */
-  | { kind: 'shockwave'; mult: number };
+  | { kind: 'shockwave'; mult: number }
+  /** (F5) Se il bersaglio muore, l'eroe guadagna energia. */
+  | { kind: 'energyOnKill'; amount: number }
+  /** (F5) Carica le speciali dei compagni. */
+  | { kind: 'chargeAllies'; amount: number };
 
 export interface Ability {
   id: string;
@@ -63,8 +67,10 @@ export interface FruitDef {
   color: string;
   description: string;
   passive: StatMods;
-  /** Potere ai livelli di risveglio I → V. */
+  /** Potere ai livelli di risveglio I → V (i livelli III-V sono la strada A). */
   abilities: [Ability, Ability, Ability, Ability, Ability];
+  /** (F5) Strade dal Risveglio III: nome della strada A e strada B (poteri III, IV, V). */
+  branches?: { a: string; b: { name: string; abilities: [Ability, Ability, Ability] } };
   startsUnlocked: boolean;
 }
 

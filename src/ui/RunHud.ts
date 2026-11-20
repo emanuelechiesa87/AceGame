@@ -2,13 +2,13 @@ import Phaser from 'phaser';
 import { COLORS } from '../app/config';
 import { AREAS, NODE_LABELS } from '../data/areas';
 import { BALANCE } from '../data/balance';
-import { MAX_FRUIT_LEVEL } from '../data/fruits';
+import { FRUIT_BY_ID, MAX_FRUIT_LEVEL, branchName } from '../data/fruits';
 import { ROMAN } from './fruitFx';
 import { creatureKey, iconKey } from '../pixel/keys';
 import { CREATURE_SCALE } from '../pixel/creatures';
 import { effectiveStats } from '../state/RunState';
 import type { RunState } from '../types/game';
-import { addBody } from './text';
+import { addBody, fitWidth } from './text';
 import { HpBar, icon, panel } from './widgets';
 import { TEXTURE_SCALE } from '../app/config';
 
@@ -43,7 +43,10 @@ export class RunHud {
         g.fillStyle(i < lvl ? 0xffcf3a : 0x4a2a14, 1).fillRect(x + 4, y + 104, 14, 14);
         if (i >= cap) g.lineStyle(3, 0x1f1633, 1).lineBetween(x + 4, y + 118, x + 18, y + 104);
       }
-      addBody(scene, 309, y + 138, `Lv ${ROMAN[lvl]}`, 18, '#ffcf3a');
+
+      // F5: dopo il III, accanto al livello compare la strada scelta
+      const bn = run.fruitBranch && branchName(FRUIT_BY_ID.get(id)!, run.fruitBranch);
+      fitWidth(addBody(scene, 309, y + 138, bn ? `Lv ${ROMAN[lvl]} · ${bn}` : `Lv ${ROMAN[lvl]}`, 18, '#ffcf3a'), 200);
     }
     addBody(scene, 438, y + 70, 'SQUADRA', 20, '#f1d7a8').setOrigin(0, 0.5);
     for (let i = 0; i < BALANCE.limits.maxCompanions; i++) {

@@ -2,7 +2,7 @@ import type { Ability, AffixId, Intent, StatusId } from '../../types/content';
 
 export type Side = 'ally' | 'enemy';
 
-export interface StatusInstance { id: StatusId; turns: number; value: number }
+export interface StatusInstance { id: StatusId; turns: number; value: number; /** (F5) mina: frazione che colpisce gli altri nemici */ splash?: number }
 
 export interface Unit {
   uid: string;

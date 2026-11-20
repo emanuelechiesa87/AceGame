@@ -1,4 +1,5 @@
 import type { Ability, Effect, FruitDef, TargetRule } from '../types/content';
+import { attachBranches } from './fruitBranches';
 
 /** Livello massimo del risveglio di un frutto (I → V). */
 export const MAX_FRUIT_LEVEL = 5;
@@ -259,11 +260,24 @@ export const FRUITS: FruitDef[] = [
 export const FRUIT_BY_ID = new Map(FRUITS.map((f) => [f.id, f]));
 
 /** Potere del frutto al livello di risveglio dato (1..5). */
-export function fruitAbility(f: FruitDef, level: number): Ability {
-  return f.abilities[Math.max(1, Math.min(MAX_FRUIT_LEVEL, Math.floor(level || 1))) - 1];
+attachBranches(FRUITS);
+
+/** Livello da cui il frutto si divide in due strade. */
+export const BRANCH_LEVEL = 3;
+export type FruitBranch = 'a' | 'b';
+
+export function fruitAbility(f: FruitDef, level: number, branch: FruitBranch = 'a'): Ability {
+  const l = Math.max(1, Math.min(MAX_FRUIT_LEVEL, Math.floor(level || 1)));
+  if (branch === 'b' && l >= BRANCH_LEVEL && f.branches) return f.branches.b.abilities[l - BRANCH_LEVEL];
+  return f.abilities[l - 1];
+}
+
+/** Nome della strada (per schede e riepilogo). */
+export function branchName(f: FruitDef, branch: FruitBranch = 'a'): string | undefined {
+  return f.branches ? (branch === 'b' ? f.branches.b.name : f.branches.a) : undefined;
 }
 
 /** Frutto a cui appartiene un potere (per animazioni e descrizioni). */
 export function fruitOfAbility(abilityId: string): FruitDef | undefined {
-  return FRUITS.find((f) => f.abilities.some((a) => a.id === abilityId));
+  return FRUITS.find((f) => f.abilities.some((a) => a.id === abilityId) || f.branches?.b.abilities.some((a) => a.id === abilityId));
 }

@@ -5,13 +5,14 @@ import { iconKey } from '../pixel/keys';
 import type { NodeType } from '../data/areas';
 import { ARTIFACT_BY_ID } from '../data/artifacts';
 import { BALANCE } from '../data/balance';
-import { FRUIT_BY_ID, fruitAbility } from '../data/fruits';
+import { BRANCH_LEVEL, FRUIT_BY_ID, fruitAbility } from '../data/fruits';
 import { GameSession } from '../state/GameSession';
 import type { Reward } from '../systems/RunController';
 import { BiomeBackdrop } from '../ui/BiomeBackdrop';
 import { Button } from '../ui/Button';
 import { offerArtifact, RARITY_LABEL } from '../ui/Offers';
 import { awakenFx, ROMAN } from '../ui/fruitFx';
+import { pickBranch } from '../ui/branchPicker';
 import { RunHud } from '../ui/RunHud';
 import { addBody, addTitle, fitWidth } from '../ui/text';
 import { icon, panel } from '../ui/widgets';
@@ -75,8 +76,11 @@ export class RewardScene extends BaseScene {
     switch (r.kind) {
       case 'awaken': {
         const f = FRUIT_BY_ID.get(GameSession.run!.activeFruitIds[0])!;
-        const next = fruitAbility(f, GameSession.ctl!.fruitLevel + 1);
-        return { key: iconKey('fruit', f.id), title: `Risveglio ${ROMAN[GameSession.ctl!.fruitLevel + 1]}`, text: `${next.name} (${next.cost}⚡): ${next.description}`, tag: 'POTERE DEL FRUTTO' };
+        const c = GameSession.ctl!, nl = c.fruitLevel + 1;
+        const next = fruitAbility(f, nl, c.fruitBranch);
+        // F5: verso il III la strada non è ancora scelta
+        const text = nl === BRANCH_LEVEL && f.branches && !c.run.fruitBranch ? `Scegli la strada: ${f.branches.a} o ${f.branches.b.name}.` : `${next.name} (${next.cost}⚡): ${next.description}`;
+        return { key: iconKey('fruit', f.id), title: `Risveglio ${ROMAN[nl]}`, text, tag: 'POTERE DEL FRUTTO' };
       }
       case 'artifact': { const a = ARTIFACT_BY_ID.get(r.id)!; return { key: iconKey('artifact', a.id), title: a.name, text: a.description, tag: `ARTEFATTO · ${RARITY_LABEL[a.rarity]}` }; }
       case 'potion': return { key: iconKey('misc', 'potion'), title: 'Pozione', text: `Cura il ${Math.round(BALANCE.combat.potionHealPct * 100)}% degli HP in battaglia.`, tag: 'OGGETTO' };
@@ -112,7 +116,10 @@ export class RewardScene extends BaseScene {
     switch (r.kind) {
       case 'awaken': {
         ctl.awaken();
-        void awakenFx(this, GameSession.run!.activeFruitIds[0], ctl.fruitLevel, GameSession.run!.avatar === 'a' ? 'm' : 'f').then(() => this.finish());
+        // F5: al III si sceglie prima la strada
+        void pickBranch(this)
+          .then(() => awakenFx(this, GameSession.run!.activeFruitIds[0], ctl.fruitLevel, GameSession.run!.avatar === 'a' ? 'm' : 'f', ctl.fruitBranch))
+          .then(() => this.finish());
         return;
       }
       case 'artifact': offerArtifact(r.id); break;

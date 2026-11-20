@@ -215,9 +215,11 @@ export class Battle {
         this.endTurn(u);
         continue;
       }
-      if (this.hasStatus(u, 'stun')) {
+      const stun = this.getStatus(u, 'stun');
+      if (stun) {
         ev.push({ t: 'stunned', uid: u.uid });
-        this.removeStatus(u, 'stun');
+        // (F5) congelamenti di più turni: si consuma un turno alla volta
+        if (--stun.turns <= 0) this.removeStatus(u, 'stun');
         this.interruptCharge(u, ev);
         this.endTurn(u);
         continue;
@@ -281,6 +283,8 @@ export class Battle {
     if (mine && u.hp > 0) {
       this.removeStatus(u, 'mine');
       this.applyDamage(u, this.mitigate(u, mine.value), ev, 'hero', false, 'mine');
+      // (F5) Bomba Grappolo: le schegge colpiscono gli altri nemici
+      if (mine.splash) for (const o of this.alive(u.side)) if (o.uid !== u.uid) this.applyDamage(o, this.mitigate(o, mine.value * mine.splash), ev, 'hero', false, 'mine');
     }
   }
 
@@ -537,7 +541,7 @@ export class Battle {
     }
     this.targets(actor, a, chosen).forEach((target, ti) => {
       for (const raw of a.effects) {
-        if (target.hp <= 0 && raw.kind !== 'summon') break;
+        if (target.hp <= 0 && raw.kind !== 'summon' && raw.kind !== 'energyOnKill') break;
         // F2: il furto vita dei colpi ad area vale solo sul primo bersaglio
         const eff = ti > 0 && raw.kind === 'damage' && raw.lifesteal ? { ...raw, lifesteal: undefined } : raw;
         this.applyEffect(actor, target, eff, ev, flags.isPower ?? false);
@@ -570,8 +574,14 @@ export class Battle {
             if (this.chargedHit && target.kind === 'hero') this.parried = true;
           }
           const incoming = Math.max(1, Math.round(dmg));
+          if (eff.pierce) { const sh = this.getStatus(target, 'shield'); if (sh && sh.value > 0) { this.removeStatus(target, 'shield'); ev.push({ t: 'melt', target: target.uid, amount: sh.value }); } }
           const dealt = this.applyDamage(target, incoming, ev, actor.uid, crit, kind);
-          if (eff.lifesteal && dealt > 0) this.heal(actor, Math.round(dealt * eff.lifesteal), ev, true);
+          if (eff.lifesteal && dealt > 0) {
+            const want = Math.round(dealt * eff.lifesteal), room = actor.maxHp - actor.hp;
+            this.heal(actor, want, ev, true);
+            // (F5) Patto di Sangue: la cura in eccesso diventa scudo
+            if (eff.overhealShield && want > room) this.applyEffect(actor, actor, { kind: 'shield', amount: want - room }, ev, false);
+          }
           if (hasAffix(actor, 'vampire') && dealt > 0 && actor.hp > 0) this.heal(actor, Math.max(1, Math.round(dealt * AF.vampire.lifesteal)), ev);
           if (hasAffix(target, 'spiky') && actor.side === 'ally' && actor.hp > 0) this.applyDamage(actor, Math.max(1, Math.round(incoming * AF.spiky.reflect)), ev, target.uid, false, 'reflect');
           const refl = this.statusValue(target, 'reflect');
@@ -601,7 +611,9 @@ export class Battle {
         // un potenziamento su se stessi non deve "scadere" subito alla fine del turno in corso
         const extra = target.uid === actor.uid && TIMED.includes(eff.status) ? 1 : 0;
         const PB = eff.status === 'poison' && actor.side === 'ally' ? this.mods.poisonBonus : undefined;
-        this.addStatus(target, { id: eff.status, turns: eff.turns + extra + (PB?.turns ?? 0), value: (eff.value ?? 0) + (PB?.value ?? 0) });
+        const tdef = target.kind === 'enemy' ? ENEMY_BY_ID.get(target.defId) : undefined;
+        const bossCap = eff.status === 'stun' && (tdef?.tier === 'boss' || tdef?.miniBoss) ? 1 : Infinity; // boss e Capibanda: max 1 turno
+        this.addStatus(target, { id: eff.status, turns: Math.min(bossCap, eff.turns + extra + (PB?.turns ?? 0)), value: (eff.value ?? 0) + (PB?.value ?? 0) });
         ev.push({ t: 'status', target: target.uid, status: eff.status, turns: eff.turns + (PB?.turns ?? 0) });
         if (eff.status === 'taunt') {
           // tutti i nemici con una mossa a bersaglio singolo cambiano mira
@@ -623,6 +635,12 @@ export class Battle {
         break;
       }
       case 'extraAction': case 'swarm': case 'twin': case 'drainEnergy': case 'shockwave': break; // gestite in act() / useAbility()
+      case 'energyOnKill':
+        if (target.hp <= 0 && target.side !== actor.side && actor.kind === 'hero') { this.energy = Math.min(this.energyMax, this.energy + eff.amount); ev.push({ t: 'energy', value: this.energy }); }
+        break;
+      case 'chargeAllies':
+        for (const c of this.alive('ally')) if (c.kind === 'companion' && c.charge < c.chargeMax) { c.charge = Math.min(c.chargeMax, c.charge + eff.amount); ev.push({ t: 'charge', uid: c.uid, value: c.charge }); }
+        break;
       case 'meltShield': {
         const sh = this.getStatus(target, 'shield');
         if (!sh || sh.value <= 0) break;
@@ -640,7 +658,7 @@ export class Battle {
       case 'mine': {
         const cur = this.getStatus(target, 'mine');
         const raw = this.rawPower(actor, eff.mult, isPower);
-        if (cur) cur.value += raw; else target.statuses.push({ id: 'mine', turns: 1, value: raw });
+        if (cur) { cur.value += raw; cur.splash = Math.max(cur.splash ?? 0, eff.splash ?? 0); } else target.statuses.push({ id: 'mine', turns: 1, value: raw, splash: eff.splash });
         ev.push({ t: 'status', target: target.uid, status: 'mine', turns: 1 });
         break;
       }

@@ -2,7 +2,7 @@ import { FX_SCALE } from '../pixel/backgrounds';
 import { runLook } from '../data/fruitLooks';
 import { COLORS, GAME_WIDTH } from '../app/config';
 import { AREAS } from '../data/areas';
-import { FRUIT_BY_ID, fruitAbility } from '../data/fruits';
+import { BRANCH_LEVEL, FRUIT_BY_ID, fruitAbility } from '../data/fruits';
 import { iconKey } from '../pixel/keys';
 import { GameSession } from '../state/GameSession';
 import { BiomeBackdrop } from '../ui/BiomeBackdrop';
@@ -54,9 +54,10 @@ export class NewSeaScene extends BaseScene {
     const f = fid ? FRUIT_BY_ID.get(fid) : undefined;
     if (f && ctl.fruitLevelCap > prevCap) {
       icon(this, 130, 850, iconKey('fruit', f.id), 84);
-      const next = fruitAbility(f, ctl.fruitLevelCap);
+      const next = fruitAbility(f, ctl.fruitLevelCap, ctl.fruitBranch);
       addTitle(this, 400, 820, `RISVEGLIO FINO AL ${ROMAN[ctl.fruitLevelCap]}!`, 32).setColor('#ffcf3a');
-      addBody(this, 400, 870, `Al ${ROMAN[ctl.fruitLevelCap]}: ${next.name}`, 22, '#fbe9c8').setWordWrapWidth(470);
+      const choose = ctl.fruitLevelCap >= BRANCH_LEVEL && f.branches && !ctl.run.fruitBranch;
+      addBody(this, 400, 870, choose ? `Al ${ROMAN[BRANCH_LEVEL]} scegli la strada: ${f.branches!.a} o ${f.branches!.b.name}` : `Al ${ROMAN[ctl.fruitLevelCap]}: ${next.name}`, 22, '#fbe9c8').setWordWrapWidth(470);
     } else if (f) {
       icon(this, 130, 850, iconKey('fruit', f.id), 84);
       addBody(this, 400, 850, `${f.name} · Lv ${ROMAN[ctl.fruitLevel]}`, 26, '#ffffff').setWordWrapWidth(470);

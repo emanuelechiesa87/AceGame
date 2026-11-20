@@ -183,6 +183,7 @@ class GameSessionStore {
       if (typeof run.heroName !== 'string' || !run.heroName) run.heroName = 'Eroe'; // run salvate prima del nome
       run.activeFruitIds = run.activeFruitIds.slice(0, 1); // dalla 0.5: un solo frutto per run
       run.fruitLevel = run.fruitLevel ?? 1;
+      if (run.fruitLevel >= 3 && !run.fruitBranch) run.fruitBranch = 'a'; // (F5) run salvate prima delle strade
       this.run = run;
       this.ctl = new RunController(run);
       return true;
@@ -217,7 +218,7 @@ class GameSessionStore {
       s.lifetime.enemiesDefeated += entry.enemiesDefeated;
       if (result === 'victory') s.lifetime.victories++;
       if (run.stats) {
-        const log: RunLogEntry = { date: entry.date, result, fruit: run.activeFruitIds[0] ?? '', fruitLevel: run.fruitLevel ?? 1, maxArea: entry.maxArea, stats: run.stats };
+        const log: RunLogEntry = { date: entry.date, result, fruit: run.activeFruitIds[0] ?? '', fruitLevel: run.fruitLevel ?? 1, fruitBranch: run.fruitBranch, maxArea: entry.maxArea, stats: run.stats };
         s.runLog = [log, ...(s.runLog ?? [])].slice(0, RUN_LOG_SIZE);
       }
     });
