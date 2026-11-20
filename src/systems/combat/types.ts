@@ -69,6 +69,20 @@ export interface BattleMods {
   eliteAffixes?: number;
   /** (F3) Moltiplicatore dei colpi caricati (Marea 10); assente = BALANCE.combat.charged.mult. */
   chargedMult?: number;
+  /** (F4b, 0.9.2) Artefatti delle costruzioni: tutti facoltativi. */
+  parryShield?: number;
+  guardMult?: number;
+  parryBoost?: number;
+  shieldMult?: number;
+  specialEnergy?: number;
+  atkPerCompanion?: number;
+  poisonBonus?: { turns: number; value: number };
+  poisonedVulnMult?: number;
+  retaliatePoison?: { chance: number; value: number; turns: number };
+  energyEvery?: number;
+  energyMaxBonus?: number;
+  firstPowerFree?: boolean;
+  selfDamagePerTurn?: number;
 }
 
 /** Contatori dell'eroe in uno scontro (HP persi, cure, pozioni, HP minimo, turni giocati). */
@@ -146,7 +160,7 @@ export type BattleEvent =
   | { t: 'swarm'; count: number }
   | { t: 'swarmLoss'; count: number };
 
-export type DamageKind = 'hit' | 'burn' | 'poison' | 'reflect' | 'acid' | 'mine' | 'pop' | 'swarm' | 'blast';
+export type DamageKind = 'hit' | 'burn' | 'poison' | 'reflect' | 'acid' | 'mine' | 'pop' | 'swarm' | 'blast' | 'pact';
 
 export type Phase = 'awaitingInput' | 'victory' | 'defeat';
 

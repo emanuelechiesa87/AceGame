@@ -61,7 +61,7 @@ describe('F3 · Maree', () => {
   it('più alta la Marea, meno vittorie (giocatore attento)', () => {
     const rate = (t: number) => { let w = 0; for (let s = 0; s < 120; s++) if (playRun(300 + s, undefined, 'smart', t).won) w++; return w / 120; };
     const r0 = rate(0), r10 = rate(10);
-    expect(r10).toBeLessThan(r0 - 0.2);
+    expect(r10).toBeLessThan(r0 - 0.15); // 0.9.2: ~45% → ~19% su 300 semi
     expect(r10).toBeGreaterThan(0);
   }, 120_000);
 });

@@ -256,7 +256,7 @@ export class BattleScene extends BaseScene {
 
   private updateHudInner(): void {
     this.energyPips.removeAll(true);
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < this.battle.energyMax; i++) {
       const g = this.add.graphics();
       const on = i < this.battle.energy;
       const py = this.frame.panelTop - 3;
@@ -272,7 +272,10 @@ export class BattleScene extends BaseScene {
     }
     const power = this.actionPanel.getByName('power') as Button | null;
     const pw = this.battle.powers[0];
-    if (power && pw) power.setAlpha(this.battle.energy >= (pw.cost ?? 0) ? 1 : 0.6);
+    if (power && pw) {
+      power.setAlpha(this.battle.energy >= this.battle.powerCost(pw) ? 1 : 0.6);
+      (power.list[1] as Phaser.GameObjects.Text).setText(`POTERE ${this.battle.powerCost(pw)}⚡`);
+    }
     for (const u of this.battle.units) if (u.kind === 'companion') this.drawSpecial(u);
   }
 
@@ -370,7 +373,7 @@ export class BattleScene extends BaseScene {
     const a = this.battle.powers[0];
     if (!a) { this.log.setText('Nessun frutto attivo.'); return; }
     if (!this.battle.canUsePower(a)) {
-      this.log.setText(`${a.name}: servono ${a.cost}⚡ (ne hai ${this.battle.energy}). DIFESA ricarica +1⚡`);
+      this.log.setText(`${a.name}: servono ${this.battle.powerCost(a)}⚡ (ne hai ${this.battle.energy}). DIFESA ricarica +1⚡`);
       this.tweens.add({ targets: this.energyPips, x: 8, duration: 50, yoyo: true, repeat: 3 });
       return;
     }
@@ -499,7 +502,7 @@ export class BattleScene extends BaseScene {
           if (!v) break;
           v.refresh();
           if (e.absorbed > 0) floatText(this, v.x + 40, v.centerY - 30, `-${e.absorbed}🛡`, '#9cc8ff', 30, s);
-          const KCOL: Record<string, string> = { burn: '#ff8a3d', poison: '#9be06a', reflect: '#9fe8ff', acid: '#d8f04a', mine: '#ff9a2a', pop: '#ffb45f', swarm: '#c9a8ff' };
+          const KCOL: Record<string, string> = { burn: '#ff8a3d', poison: '#9be06a', reflect: '#9fe8ff', acid: '#d8f04a', mine: '#ff9a2a', pop: '#ffb45f', swarm: '#c9a8ff', pact: '#b46bff' };
           const col = KCOL[e.kind] ?? (e.crit ? '#ffe14a' : '#ffffff');
           const hurtHero = this.battle.unit(e.target)?.kind === 'hero';
           if (e.kind === 'mine') Audio.play('boom'); else if (e.kind === 'pop') Audio.play('pop'); else if (e.amount > 0 || e.absorbed > 0) Audio.play(e.crit ? 'crit' : hurtHero ? 'hurt' : 'hit');

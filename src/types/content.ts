@@ -90,6 +90,24 @@ export interface ArtifactDef {
   reviveOncePerRunPct?: number;
   powerCostDown?: number;
   extraRewardChoice?: number;
+  /** (F4b, 0.9.2) Artefatti delle costruzioni. */
+  /** Maledetto: forte ma con un prezzo (bordo viola). */
+  cursed?: boolean;
+  parryShield?: number;
+  guardMult?: number;
+  parryBoost?: number;
+  shieldMult?: number;
+  companionHpMult?: number;
+  companionHealAfterVictoryPct?: number;
+  specialEnergy?: number;
+  atkPerCompanion?: number;
+  poisonBonus?: { turns: number; value: number };
+  poisonedVulnMult?: number;
+  retaliatePoison?: { chance: number; value: number; turns: number };
+  energyEvery?: number;
+  energyMaxBonus?: number;
+  firstPowerFree?: boolean;
+  selfDamagePerTurn?: number;
 }
 
 export interface CompanionDef {

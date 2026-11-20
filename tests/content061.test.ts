@@ -25,9 +25,9 @@ function ctlWith(arts: string[], seed = 5) {
 }
 
 describe('Artefatti 0.6.1', () => {
-  it('sono 17, con id unici e almeno un effetto ciascuno', () => {
-    expect(ARTIFACTS).toHaveLength(17);
-    expect(new Set(ARTIFACTS.map((a) => a.id)).size).toBe(17);
+  it('sono 34 (17 del 0.6.1 + 17 della 0.9.2), con id unici e almeno un effetto ciascuno', () => {
+    expect(ARTIFACTS).toHaveLength(34);
+    expect(new Set(ARTIFACTS.map((a) => a.id)).size).toBe(34);
     for (const a of ARTIFACTS) expect(Object.keys(a).length).toBeGreaterThan(4);
   });
 

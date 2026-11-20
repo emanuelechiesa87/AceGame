@@ -56,6 +56,12 @@ export class Battle {
   private parried = false;
   /** (F4b) Nemici a cui la vedetta ha già interrotto una carica in questo scontro. */
   private alarmed = new Set<string>();
+  /** (F4b) Moneta del Primo Colpo: il primo potere della battaglia è gratis. */
+  private freePowerUsed = false;
+  /** Energia massima (Clessidra di Sabbia Nera: +1). */
+  get energyMax(): number { return C.energyMax + (this.mods.energyMaxBonus ?? 0); }
+  /** Costo effettivo di un potere (primo gratis con la Moneta). */
+  powerCost(a: Ability): number { return this.mods.firstPowerFree && !this.freePowerUsed ? 0 : a.cost ?? 0; }
 
   constructor(setup: BattleSetup, private readonly rng: Rng, private readonly mods: BattleMods = setup.mods) {
     this.units = [setup.hero, ...setup.companions, ...setup.enemies];
@@ -63,7 +69,7 @@ export class Battle {
     this.powers = setup.powers;
     this.potions = setup.potions;
     this.tally = { damageTaken: 0, healed: 0, lifesteal: 0, potions: 0, minHp: setup.hero.hp, heroTurns: 0 };
-    this.energy = Math.min(C.energyMax, C.energyStart + (this.mods.energyBonus ?? 0));
+    this.energy = Math.min(this.energyMax, C.energyStart + (this.mods.energyBonus ?? 0));
     for (const c of this.units) if (c.kind === 'companion' && this.mods.companionStartCharge) c.charge = Math.min(c.chargeMax, c.charge + this.mods.companionStartCharge);
     const hpPct = this.mods.enemyStartHpPct;
     if (hpPct !== undefined && hpPct < 1) for (const e of this.enemies()) e.hp = Math.max(1, Math.round(e.maxHp * hpPct));
@@ -85,7 +91,7 @@ export class Battle {
   alive(side?: Side): Unit[] { return this.units.filter((u) => u.hp > 0 && (!side || u.side === side)); }
   enemies(): Unit[] { return this.alive('enemy'); }
   unit(uid: string): Unit | undefined { return this.units.find((u) => u.uid === uid); }
-  canUsePower(a: Ability): boolean { return this.phase === 'awaitingInput' && this.energy >= (a.cost ?? 0); }
+  canUsePower(a: Ability): boolean { return this.phase === 'awaitingInput' && this.energy >= this.powerCost(a); }
   canSpecial(u: Unit): boolean { return this.phase === 'awaitingInput' && u.hp > 0 && u.kind === 'companion' && u.charge >= u.chargeMax; }
 
   /** Avvia la battaglia: risolve i turni fino al primo input del giocatore. */
@@ -110,6 +116,7 @@ export class Battle {
         c.charge = 0;
         ev.push({ t: 'charge', uid: c.uid, value: 0 });
         this.useAbility(c, def.special, action.targetUid, ev, { isSpecial: true });
+        if (this.mods.specialEnergy) { this.energy = Math.min(this.energyMax, this.energy + this.mods.specialEnergy); ev.push({ t: 'energy', value: this.energy }); }
         this.checkEnd(ev);
         return ev; // azione gratuita: il turno del protagonista continua
       }
@@ -122,7 +129,8 @@ export class Battle {
       case 'power': {
         const a = this.powers.find((p) => p.id === action.abilityId);
         if (!a || !this.canUsePower(a)) throw new Error('Potere non disponibile');
-        this.energy -= a.cost ?? 0;
+        this.energy -= this.powerCost(a);
+        this.freePowerUsed = true;
         ev.push({ t: 'energy', value: this.energy });
         if (a.target === 'enemy') this.focusUid = action.targetUid;
         this.useAbility(hero, a, action.targetUid, ev, { isPower: true });
@@ -135,7 +143,7 @@ export class Battle {
       }
       case 'guard':
         this.useAbility(hero, GUARD, hero.uid, ev);
-        this.energy = Math.min(C.energyMax, this.energy + C.guardEnergy + (this.mods.guardEnergyBonus ?? 0));
+        this.energy = Math.min(this.energyMax, this.energy + C.guardEnergy + (this.mods.guardEnergyBonus ?? 0));
         ev.push({ t: 'energy', value: this.energy });
         break;
       case 'potion': {
@@ -214,7 +222,13 @@ export class Battle {
         this.endTurn(u);
         continue;
       }
-      if (u.kind === 'hero') { this.phase = 'awaitingInput'; return; }
+      if (u.kind === 'hero') {
+        // Teschio del Patto: il prezzo a ogni tuo turno (non uccide)
+        const pact = Math.min(this.mods.selfDamagePerTurn ?? 0, u.hp - 1);
+        if (pact > 0) this.applyDamage(u, pact, ev, u.uid, false, 'pact');
+        this.phase = 'awaitingInput';
+        return;
+      }
       if (u.kind === 'companion') this.companionTurn(u, ev);
       else {
         this.enemyTurn(u, ev);
@@ -234,7 +248,8 @@ export class Battle {
     this.round++;
     ev.push({ t: 'round', n: this.round });
     if (this.round > 1) {
-      this.energy = Math.min(C.energyMax, this.energy + C.energyPerRound);
+      const eel = this.mods.energyEvery && this.round % this.mods.energyEvery === 0 ? 1 : 0;
+      this.energy = Math.min(this.energyMax, this.energy + C.energyPerRound + eel);
       ev.push({ t: 'energy', value: this.energy });
     }
     this.queue = this.alive()
@@ -282,9 +297,15 @@ export class Battle {
     return Math.max(0, u.def) * (1 + this.statusValue(u, 'defUp'));
   }
 
+  /** ATT dell'unità; l'eroe ha +N per ogni compagno in piedi con la Bandiera di Ciurma. */
+  private atkOf(u: Unit): number {
+    if (u.kind !== 'hero' || !this.mods.atkPerCompanion) return u.atk;
+    return u.atk + this.mods.atkPerCompanion * this.alive('ally').filter((a) => a.kind === 'companion').length;
+  }
+
   /** ATT "grezzo" di chi lancia un potere ritardato (mina, bolla). */
   private rawPower(actor: Unit, mult: number, isPower: boolean): number {
-    return actor.atk * (1 + this.statusValue(actor, 'atkUp')) * (1 - this.statusValue(actor, 'weak')) * mult * (isPower ? this.mods.powerDamageMult : 1);
+    return this.atkOf(actor) * (1 + this.statusValue(actor, 'atkUp')) * (1 - this.statusValue(actor, 'weak')) * mult * (isPower ? this.mods.powerDamageMult : 1);
   }
 
   private companionTurn(u: Unit, ev: BattleEvent[]): void {
@@ -361,9 +382,11 @@ export class Battle {
     this.parried = false;
     try { this.useAbility(u, boosted, aim, ev); } finally { this.chargedHit = false; }
     if (this.parried && hero.hp > 0) {
-      this.energy = Math.min(C.energyMax, this.energy + K.parryEnergy);
+      this.energy = Math.min(this.energyMax, this.energy + K.parryEnergy);
       ev.push({ t: 'parry', uid: hero.uid, energy: K.parryEnergy });
       ev.push({ t: 'energy', value: this.energy });
+      if (this.mods.parryShield) this.applyEffect(hero, hero, { kind: 'shield', amount: this.mods.parryShield }, ev, false);
+      if (this.mods.parryBoost) { this.addStatus(hero, { id: 'atkUp', turns: 1, value: this.mods.parryBoost }); ev.push({ t: 'status', target: hero.uid, status: 'atkUp', turns: 1 }); }
     }
   }
 
@@ -387,7 +410,7 @@ export class Battle {
     ev.push({ t: 'burst', uid: u.uid });
     for (const a of this.alive('ally')) {
       let dmg = this.mitigate(a, u.atk * B.mult);
-      if (this.hasStatus(a, 'guard')) dmg = Math.max(1, Math.round(dmg * C.guardMult));
+      if (this.hasStatus(a, 'guard')) dmg = Math.max(1, Math.round(dmg * (this.mods.guardMult ?? C.guardMult)));
       this.applyDamage(a, dmg, ev, u.uid, false, 'blast');
       if (B.poison && a.hp > 0) { this.addStatus(a, { id: 'poison', turns: 3, value: B.poison }); ev.push({ t: 'status', target: a.uid, status: 'poison', turns: 3 }); }
     }
@@ -533,7 +556,8 @@ export class Battle {
           if (this.rng.next() < this.statusValue(target, 'evade')) { ev.push({ t: 'dodge', target: target.uid }); continue; }
           if (isPower && this.hasStatus(target, 'immune')) { ev.push({ t: 'immune', target: target.uid }); continue; }
           const atkUp = this.statusValue(actor, 'atkUp');
-          let dmg = actor.atk * (1 + atkUp) * (1 - this.statusValue(actor, 'weak')) * eff.mult;
+          let dmg = this.atkOf(actor) * (1 + atkUp) * (1 - this.statusValue(actor, 'weak')) * eff.mult;
+          if (actor.side === 'ally' && this.mods.poisonedVulnMult && this.hasStatus(target, 'poison')) dmg *= this.mods.poisonedVulnMult;
           if (isPower) dmg *= this.mods.powerDamageMult;
           if (actor.kind === 'companion') dmg *= this.mods.companionDmgMult ?? 1;
           dmg *= 100 / (100 + this.effDef(target) * C.defFactor);
@@ -542,7 +566,7 @@ export class Battle {
           if (crit) dmg *= C.critMult;
           if (this.hasStatus(target, 'vulnerable')) dmg *= C.vulnerableMult;
           if (this.hasStatus(target, 'guard')) {
-            dmg *= this.chargedHit ? C.charged.guardMult : C.guardMult;
+            dmg *= this.chargedHit ? C.charged.guardMult : this.mods.guardMult ?? C.guardMult;
             if (this.chargedHit && target.kind === 'hero') this.parried = true;
           }
           const incoming = Math.max(1, Math.round(dmg));
@@ -556,22 +580,29 @@ export class Battle {
           // Aculei di Riccio: chi colpisce l'eroe si punge
           const thorns = this.mods.thornsPct ?? 0;
           if (thorns > 0 && target.kind === 'hero' && actor.side === 'enemy' && actor.hp > 0) this.applyDamage(actor, Math.max(1, Math.round(incoming * thorns)), ev, target.uid, false, 'reflect');
+          const RP = this.mods.retaliatePoison;
+          if (RP && target.kind === 'hero' && actor.side === 'enemy' && actor.hp > 0 && this.rng.next() < RP.chance) {
+            this.addStatus(actor, { id: 'poison', turns: RP.turns, value: RP.value });
+            ev.push({ t: 'status', target: actor.uid, status: 'poison', turns: RP.turns });
+          }
         }
         break;
       }
       case 'heal': this.heal(target, Math.round(target.maxHp * eff.pctMaxHp), ev); break;
       case 'shield': {
+        const amount = target.kind === 'hero' && this.mods.shieldMult ? Math.round(eff.amount * this.mods.shieldMult) : eff.amount;
         const s = this.getStatus(target, 'shield');
-        if (s) { s.value += eff.amount; s.turns = 3; } else target.statuses.push({ id: 'shield', turns: 3, value: eff.amount });
-        ev.push({ t: 'shield', target: target.uid, amount: eff.amount });
+        if (s) { s.value += amount; s.turns = 3; } else target.statuses.push({ id: 'shield', turns: 3, value: amount });
+        ev.push({ t: 'shield', target: target.uid, amount });
         break;
       }
       case 'status': {
         if (eff.chance !== undefined && this.rng.next() >= eff.chance) { ev.push({ t: 'resist', target: target.uid, status: eff.status }); break; }
         // un potenziamento su se stessi non deve "scadere" subito alla fine del turno in corso
         const extra = target.uid === actor.uid && TIMED.includes(eff.status) ? 1 : 0;
-        this.addStatus(target, { id: eff.status, turns: eff.turns + extra, value: eff.value ?? 0 });
-        ev.push({ t: 'status', target: target.uid, status: eff.status, turns: eff.turns });
+        const PB = eff.status === 'poison' && actor.side === 'ally' ? this.mods.poisonBonus : undefined;
+        this.addStatus(target, { id: eff.status, turns: eff.turns + extra + (PB?.turns ?? 0), value: (eff.value ?? 0) + (PB?.value ?? 0) });
+        ev.push({ t: 'status', target: target.uid, status: eff.status, turns: eff.turns + (PB?.turns ?? 0) });
         if (eff.status === 'taunt') {
           // tutti i nemici con una mossa a bersaglio singolo cambiano mira
           for (const e of this.enemies()) if (e.nextMove && this.moveOf(e).target === 'enemy') { e.aimUid = target.uid; ev.push(this.intentEvent(e)); }

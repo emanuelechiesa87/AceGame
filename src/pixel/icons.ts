@@ -94,6 +94,58 @@ const ARTIFACTS: Record<string, () => Cells> = {
   art_black_coral_crown: () => fromGrid([
     'R.....RR.....R', 'RR..R.RR.R..RR', '.R..R.RR.R..R', '.RR.RRRRRR.RR', '..RRRRRRRRRR', '..KKKKKKKKKK', '.KKKKKGGKKKKK', '.KKKKGGGGKKKK', '.KKKKKGGKKKKK', '.KKKKKKKKKKKK',
   ], { R: '#c0283a', K: '#2a2433', G: '#ffcf3a' }, 1, 3),
+  // --- F4b (0.9.2) ---
+  art_diver_helmet: () => fromGrid(sym([
+    '....BBB', '..BBBBB', '.BBGGGG', '.BGGWWW', 'BBGWWLL', 'BBGWLLL', 'BBGWLLL', 'BBGGLLL', '.BBGGGG', '.BBBBBB', 'DDDDDDD', 'DBDBDBD',
+  ]), { B: '#c8873a', G: '#8a5232', W: '#dff6ff', L: '#7ad7ff', D: '#5f3520' }, 1, 1),
+  art_turtle_shell: () => fromGrid(sym([
+    '....GGG', '..GGHGG', '.GHHGHH', '.GHGGGH', 'GGGHHGG', 'GHHGHHG', 'GHGGGHG', 'GGGHHGG', '.GHHGHH', '..GGGGG', 'YYYYYYY',
+  ]), { G: '#3f8a4a', H: '#6fc06a', Y: '#d9c27a' }, 1, 2),
+  art_broken_anchor: () => fromGrid([
+    '.....GGG', '....G...G', '.....GGG', '......G', '...GGGGGGG', '......G', '......G', '......G', '.G....G....G', '.GG...G...GG', '..GGG.G.', '....GG', '',
+  ], { G: '#9aa3b5' }, 1, 1),
+  art_figurehead: () => fromGrid([
+    '......YYYY', '.....YSSSSY', '....YSSKSSY', '....YSSSSSY', '.....YSRSY', '......YSSY', '....BBBBBBB', '...BBBBBBBBB', '..BBBWBBBWBB', '..BBBBBBBBBB', '...BBBBBBBB', '....BBBBBB',
+  ], { Y: '#ffcf3a', S: '#ffd8a8', K: '#3a3550', R: '#e4342f', B: '#b8743c', W: '#d08a50' }, 1, 1),
+  art_hearty_rations: () => fromGrid(sym([
+    '.......', '...M.M.', '..MMMMM', '.MMMMMM', 'WWWWWWW', 'BWWWWWW', 'BBBBBBB', 'BBBBBBB', '.BBBBBB', '..BBBBB', '...BBBB',
+  ]), { M: '#c06a3f', W: '#fff7e6', B: '#7a8494' }, 1, 2),
+  art_cook_mess: () => fromGrid(sym([
+    '.....S.', '......S', '.....S.', '..GGGGG', '.GGGGGG', 'GGSSSSS', 'GGSRRRS', 'GGSSSSS', 'GGGGGGG', '.GGGGGG', '..GGGGG',
+  ]), { G: '#9aa3b5', S: '#fff7e6', R: '#e4342f' }, 1, 1),
+  art_fog_horn: () => fromGrid([
+    'BBB', 'BYBB', 'BYYBB', 'BYYYBBB', 'BYYYYYBBB', 'BYYYYYYYBBBB', 'BYYYYYYYYYYB', 'BYYYYYYYBBBB', 'BYYYYYBBB', 'BYYYBBB', 'BYYBB', 'BYBB', 'BBB',
+  ], { B: '#8a5232', Y: '#ffcf3a' }, 1, 1),
+  art_crew_flag: () => fromGrid([
+    'P', 'PRRRRRRRRRR', 'PRRRRRRRRRR', 'PRRWWRRWWRR', 'PRRWWRRWWRR', 'PRRRRRRRRRR', 'PRRWWWWWWRR', 'PRRRRRRRRRR', 'P', 'P', 'P', 'P', 'PP',
+  ], { P: '#8a5232', R: '#26386b', W: '#fff7e6' }, 2, 1),
+  art_moray_vial: () => fromGrid(sym([
+    '.....CC', '.....CC', '......G', '.....GG', '....GGG', '...GVVV', '..GVVVV', '.GVVVLV', '.GVVVVV', '.GVVVVV', '..GVVVV', '...GGGG',
+  ]), { C: '#8a5232', G: '#dff6ff', V: '#9be06a', L: '#d6ffb0' }, 1, 1),
+  art_crab_armor: () => fromGrid(sym([
+    'R...RRR', 'RR.RRRR', '.RRRRWR', '..RRRRR', '.RRRRRR', 'RRRWRRR', 'RRRRRRR', 'RRRRRWR', '.RRRRRR', '..RRRRR', '..R..R.',
+  ]), { R: '#e4542f', W: '#ff9a7a' }, 1, 2),
+  art_stinging_net: () => fromGrid([
+    'N.N.N.N.N.N.N', '.N.N.N.N.N.N', 'N.N.N.N.N.N.N', '.N.N.V.N.N.N', 'N.N.VVV.N.N.N', '.N.N.V.N.N.N', 'N.N.N.N.N.N.N', '.N.N.N.N.V.N', 'N.N.N.N.VVV.N', '.N.N.N.N.V.N', 'N.N.N.N.N.N.N',
+  ], { N: '#d9b07a', V: '#9be06a' }, 1, 2),
+  art_jelly_tentacle: () => fromGrid([
+    '...PPPPPPP', '..PPLLPPPPP', '.PPLPPPPPPPP', '.PPPPPPPPPPP', '..P.P..P..P', '..P..P.P.P', '.P...P..P..P', '.P..P..P...P', '..P..P..P.P', '..P..P.P..P', '.V..V...V..V',
+  ], { P: '#c77dff', L: '#f2c6ff', V: '#9be06a' }, 1, 2),
+  art_eel_battery: () => fromGrid([
+    '....YY', '...YY', '..YY..GGGGGGG', '.YYYYGEEEEEEEG', '...YYGEWEEEEEG', '..YY.GEEEEEEEEG', '.YY..GEEEEEEEG', '.....GGGGGGGG',
+  ], { Y: '#ffe14a', G: '#2a6a5a', E: '#3fae8a', W: '#ffffff' }, 0, 4),
+  art_black_hourglass: () => fromGrid(sym([
+    'BBBBBBB', '.BKKKKK', '..KSSSS', '...KSSS', '....KSS', '.....KS', '.....KK', '....K..', '...K..S', '..K.SSS', '.BKKKKK', 'BBBBBBB',
+  ]), { B: '#8a5232', K: '#3a3550', S: '#2a2433' }, 1, 1),
+  art_first_coin: () => fromGrid(sym([
+    '....YYY', '..YYOOO', '.YOOYYY', '.YOYYYY', 'YOYYYKK', 'YOYYK..', 'YOYYK..', 'YOYYYKK', '.YOYYYY', '.YOOYYY', '..YYOOO', '....YYY',
+  ]), { Y: '#ffcf3a', O: '#e09a12', K: '#3a2414' }, 1, 2),
+  art_pact_skull: () => fromGrid(sym([
+    '...WWWW', '..WWWWW', '.WWWWWW', '.WWWWWW', '.WKKKWW', '.WKKVWW', '.WWWWWW', '..WWWK.', '...WWWW', '...WKWK', '....WWW', 'VV.....',
+  ]), { W: '#efe6d6', K: '#2a2433', V: '#b46bff' }, 1, 1),
+  art_abyss_eye: () => fromGrid(sym([
+    '.......', '....VVV', '..VVVVV', '.VVWWWW', 'VVWWWVV', 'VWWWVKK', 'VWWWVKR', 'VVWWWVV', '.VVWWWW', '..VVVVV', '....VVV',
+  ]), { V: '#6a2a9a', W: '#e9d9ff', K: '#1f1633', R: '#ff3b30' }, 1, 2),
 };
 
 // --- Nodi della mappa ----------------------------------------------------------------------
@@ -232,3 +284,4 @@ export function makeIconTextures(scene: Phaser.Scene): void {
   make(scene, iconKey('misc', 'potion'), POTION);
   make(scene, iconKey('misc', 'coin'), COIN);
 }
+

@@ -1,7 +1,7 @@
 import { AREAS, LAST_AREA_INDEX, type NodeType } from '../data/areas';
 import { ARTIFACTS, ARTIFACT_BY_ID } from '../data/artifacts';
 import { BALANCE } from '../data/balance';
-import { COMPANIONS, companionMaxHp, companionScale } from '../data/companions';
+import { COMPANION_BY_ID, COMPANIONS, companionScale } from '../data/companions';
 import { ENEMY_BY_ID } from '../data/enemies';
 import { EVENTS, type EventDef } from '../data/events';
 import { FRUITS, FRUIT_BY_ID, MAX_FRUIT_LEVEL, fruitAbility } from '../data/fruits';
@@ -84,7 +84,18 @@ export class RunController {
     return this.txCache.e;
   }
   /** Crescita dei compagni nel mare corrente. */
-  get companionScale(): { hp: number; atk: number } { return companionScale(this.run.areaIndex); }
+  get companionScale(): { hp: number; atk: number } {
+    const sc = companionScale(this.run.areaIndex);
+    const mult = this.arts.reduce((m, x) => m * (x.companionHpMult ?? 1), 1);
+    return { hp: sc.hp * mult, atk: sc.atk };
+  }
+
+  /** HP massimi di un compagno in questa run (crescita del mare e Rancio Abbondante). */
+  private compMax(id: string): number {
+    const d = COMPANION_BY_ID.get(id);
+    if (!d) throw new Error(`Compagno sconosciuto: ${id}`);
+    return Math.round(d.stats.maxHp * this.companionScale.hp);
+  }
 
   /**
    * Dopo il boss di un'area si salpa verso la successiva con lo stesso eroe:
@@ -98,7 +109,7 @@ export class RunController {
     const pct = this.tx.areaHealPct;
     this.healPct(pct);
     this.run.companions = this.run.companions.map((c) => {
-      const max = companionMaxHp(c.id, this.run.areaIndex);
+      const max = this.compMax(c.id);
       // F2: chi era KO si rialza salpando, con poca vita
       if (c.hp <= 0) return { ...c, hp: Math.round(max * BALANCE.combat.companionReviveHpPct) };
       return { ...c, hp: Math.min(max, c.hp + Math.round(max * pct)) };
@@ -157,6 +168,19 @@ export class RunController {
       enemyStartHpPct: this.run.nextBattleEnemyHpPct,
       eliteAffixes: Math.max(this.run.areaIndex >= 2 ? 2 : 1, this.tx.eliteAffixMin),
       chargedMult: this.tx.chargedMult,
+      parryShield: sum((x) => x.parryShield) || undefined,
+      guardMult: pick((x) => x.guardMult),
+      parryBoost: sum((x) => x.parryBoost) || undefined,
+      shieldMult: pick((x) => x.shieldMult),
+      specialEnergy: sum((x) => x.specialEnergy) || undefined,
+      atkPerCompanion: sum((x) => x.atkPerCompanion) || undefined,
+      poisonBonus: pick((x) => x.poisonBonus),
+      poisonedVulnMult: pick((x) => x.poisonedVulnMult),
+      retaliatePoison: pick((x) => x.retaliatePoison),
+      energyEvery: pick((x) => x.energyEvery),
+      energyMaxBonus: sum((x) => x.energyMaxBonus) || undefined,
+      firstPowerFree: a.some((x) => x.firstPowerFree) || undefined,
+      selfDamagePerTurn: sum((x) => x.selfDamagePerTurn) || undefined,
     };
   }
 
@@ -284,9 +308,13 @@ export class RunController {
     this.recordOutsideHeal(Math.min(stats.maxHp, hp) - heroHp);
     this.run.currentHp = Math.min(stats.maxHp, Math.max(1, hp));
     // F2: i compagni KO restano KO (si rialzano al Fuoco da campo, al Mercante o salpando)
+    const mess = this.arts.reduce((m, x) => m + (x.companionHealAfterVictoryPct ?? 0), 0); // Gavetta del Cuoco
     this.run.companions = this.run.companions.map((c) => {
       const b = companions.find((x) => x.id === c.id);
-      return b ? { id: c.id, charge: b.charge, hp: Math.max(0, b.hp) } : { ...c, hp: Math.max(0, c.hp) };
+      const hp = Math.max(0, b ? b.hp : c.hp);
+      const max = this.compMax(c.id);
+      const healed = hp > 0 && mess ? Math.min(max, hp + Math.round(max * mess)) : hp;
+      return b ? { id: c.id, charge: b.charge, hp: healed } : { ...c, hp: healed };
     });
   }
 
@@ -347,7 +375,7 @@ export class RunController {
     this.healPct(pct);
     this.run.companions = this.run.companions.map((c) => {
       if (c.hp <= 0) return c;
-      const max = companionMaxHp(c.id, this.run.areaIndex);
+      const max = this.compMax(c.id);
       return { ...c, hp: Math.min(max, c.hp + Math.round(max * pct)) };
     });
   }
@@ -357,7 +385,7 @@ export class RunController {
     this.run.companions = this.run.companions.map((c) => {
       if (c.hp > 0) return c;
       n++;
-      return { ...c, hp: Math.max(1, Math.round(companionMaxHp(c.id, this.run.areaIndex) * pct)) };
+      return { ...c, hp: Math.max(1, Math.round(this.compMax(c.id) * pct)) };
     });
     return n;
   }
@@ -484,7 +512,7 @@ export class RunController {
     if (!def) throw new Error(`Compagno sconosciuto: ${id}`);
     const cs = this.run.companions;
     if (cs.some((c) => c.id === id)) return 'duplicate';
-    const fresh = { id, hp: companionMaxHp(id, this.run.areaIndex), charge: 0 };
+    const fresh = { id, hp: this.compMax(id), charge: 0 };
     if (cs.length >= L.maxCompanions) {
       if (!replaceId) return 'needsReplace';
       const idx = cs.findIndex((c) => c.id === replaceId);
