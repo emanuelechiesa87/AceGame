@@ -602,7 +602,8 @@ export class Battle {
       case 'shield': {
         const amount = target.kind === 'hero' && this.mods.shieldMult ? Math.round(eff.amount * this.mods.shieldMult) : eff.amount;
         const s = this.getStatus(target, 'shield');
-        if (s) { s.value += amount; s.turns = 3; } else target.statuses.push({ id: 'shield', turns: 3, value: amount });
+        // F6: gli scudi si sommano, ma non oltre il doppio dello scudo appena ricevuto (niente accumulo infinito)
+        if (s) { s.value = Math.min(s.value + amount, Math.max(s.value, amount * 2)); s.turns = 3; } else target.statuses.push({ id: 'shield', turns: 3, value: amount });
         ev.push({ t: 'shield', target: target.uid, amount });
         break;
       }

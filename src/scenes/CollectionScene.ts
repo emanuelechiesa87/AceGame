@@ -47,17 +47,18 @@ export class CollectionScene extends BaseScene {
 
     const ar = ARTIFACTS.filter((a) => s.discoveredArtifactIds.includes(a.id));
     section(660, 'ARTEFATTI', ar.length, ARTIFACTS.length);
-    // 17 artefatti: due file di icone; tocca un'icona per leggerne nome ed effetto
-    const info = addBody(this, GAME_WIDTH / 2, 856, 'Tocca un artefatto per leggerlo', 19, '#a89580').setWordWrapWidth(640).setAlign('center');
+    // 34 artefatti: tre file di icone; tocca un'icona per leggerne nome ed effetto
+    const info = addBody(this, GAME_WIDTH / 2, 868, 'Tocca un artefatto per leggerlo', 19, '#a89580').setWordWrapWidth(640).setAlign('center');
     ARTIFACTS.forEach((a, i) => {
-      const perRow = 9, row = Math.floor(i / perRow), col = i % perRow;
+      const perRow = 12, row = Math.floor(i / perRow), col = i % perRow;
       const inRow = Math.min(perRow, ARTIFACTS.length - row * perRow);
-      const x = GAME_WIDTH / 2 + (col - (inRow - 1) / 2) * 76, y = 722 + row * 78;
+      const x = GAME_WIDTH / 2 + (col - (inRow - 1) / 2) * 56, y = 712 + row * 52;
       const known = s.discoveredArtifactIds.includes(a.id);
-      const ic = icon(this, x, y, iconKey('artifact', a.id), 62);
+      const ic = icon(this, x, y, iconKey('artifact', a.id), 48);
+      if (known && a.cursed) this.add.rectangle(x, y, 54, 54).setStrokeStyle(3, 0xb46bff);
       if (!known) ic.setTintFill(0x3a2414);
       ic.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
-        info.setText(known ? `${a.name} · ${RARITY_LABEL[a.rarity]}\n${a.description}` : '??? · ancora da scoprire').setColor(known ? '#fff7e6' : '#a89580');
+        info.setText(known ? `${a.name} · ${a.cursed ? 'Maledetto' : RARITY_LABEL[a.rarity]}\n${a.description}` : '??? · ancora da scoprire').setColor(known ? '#fff7e6' : '#a89580');
       });
     });
 

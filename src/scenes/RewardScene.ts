@@ -71,7 +71,7 @@ export class RewardScene extends BaseScene {
     void this.revealIfWave(data);
   }
 
-  private describe(r: Reward): { key: string; title: string; text: string; tag: string } {
+  private describe(r: Reward): { key: string; title: string; text: string; tag: string; cursed?: boolean } {
     const R = BALANCE.rewards;
     switch (r.kind) {
       case 'awaken': {
@@ -82,7 +82,7 @@ export class RewardScene extends BaseScene {
         const text = nl === BRANCH_LEVEL && f.branches && !c.run.fruitBranch ? `Scegli la strada: ${f.branches.a} o ${f.branches.b.name}.` : `${next.name} (${next.cost}⚡): ${next.description}`;
         return { key: iconKey('fruit', f.id), title: `Risveglio ${ROMAN[nl]}`, text, tag: 'POTERE DEL FRUTTO' };
       }
-      case 'artifact': { const a = ARTIFACT_BY_ID.get(r.id)!; return { key: iconKey('artifact', a.id), title: a.name, text: a.description, tag: `ARTEFATTO · ${RARITY_LABEL[a.rarity]}` }; }
+      case 'artifact': { const a = ARTIFACT_BY_ID.get(r.id)!; return { key: iconKey('artifact', a.id), title: a.name, text: a.description, tag: a.cursed ? 'ARTEFATTO · MALEDETTO' : `ARTEFATTO · ${RARITY_LABEL[a.rarity]}`, cursed: a.cursed }; }
       case 'potion': return { key: iconKey('misc', 'potion'), title: 'Pozione', text: `Cura il ${Math.round(BALANCE.combat.potionHealPct * 100)}% degli HP in battaglia.`, tag: 'OGGETTO' };
       case 'heal': return { key: iconKey('node', 'rest'), title: 'Spuntino', text: `Recuperi subito il ${Math.round(R.healRewardPct * 100)}% degli HP.`, tag: 'CURA' };
       case 'maxHp': return { key: iconKey('node', 'recruit'), title: 'Cuore Robusto', text: `+${R.maxHpUp} HP massimi per questa run.`, tag: 'POTENZIAMENTO' };
@@ -98,7 +98,9 @@ export class RewardScene extends BaseScene {
     const ix = big ? 0 : -w / 2 + 90, iy = big ? -60 : 0;
     const tx = big ? 0 : -w / 2 + 170;
     c.add([g, icon(this, ix, iy, d.key, iconSize)]);
-    c.add(addBody(this, big ? 0 : w / 2 - 24, big ? -h / 2 + 30 : -h / 2 + 28, d.tag, 18, '#ffcf3a').setOrigin(big ? 0.5 : 1, 0.5));
+    // F6: i maledetti hanno il bordo viola
+    if (d.cursed) c.add(this.add.graphics().lineStyle(6, 0xb46bff, 1).strokeRect(-w / 2 + 8, -h / 2 + 8, w - 16, h - 16));
+    c.add(addBody(this, big ? 0 : w / 2 - 24, big ? -h / 2 + 30 : -h / 2 + 28, d.tag, 18, d.cursed ? '#d9a8ff' : '#ffcf3a').setOrigin(big ? 0.5 : 1, 0.5));
     c.add(fitWidth(addTitle(this, tx, big ? 60 : -40, d.title, big ? 48 : 38).setOrigin(big ? 0.5 : 0, 0.5), big ? w - 40 : w - 190));
     c.add(addBody(this, tx, big ? 120 : 30, d.text, 22, '#fff7e6').setOrigin(big ? 0.5 : 0, 0.5).setWordWrapWidth(big ? w - 60 : w - 200).setAlign(big ? 'center' : 'left'));
     c.setScale(0.5);

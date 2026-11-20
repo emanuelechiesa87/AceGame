@@ -15,14 +15,14 @@ export const FRUIT_BRANCHES: Record<string, B> = {
     lv('pwb_ember_5', 'Sole Nero', 'Danno 460% a un nemico, brucia (22/turno) per 3 turni e vulnerabile per 2 turni.', 3, 'enemy', [{ kind: 'status', status: 'vulnerable', turns: 2 }, { kind: 'damage', mult: 4.6 }, { kind: 'status', status: 'burn', turns: 3, value: 22 }]),
   ] } },
   fruit_frost: { a: 'Era Glaciale', b: { name: 'Prigione di Ghiaccio', abilities: [
-    lv('pwb_frost_3', 'Gabbia di Brina', 'Danno 210% a un nemico e lo congela per 2 turni (boss e Capibanda 1).', 3, 'enemy', [{ kind: 'damage', mult: 2.1 }, { kind: 'status', status: 'stun', turns: 2 }]),
-    lv('pwb_frost_4', 'Gabbia di Brina II', 'Danno 250% a un nemico e lo congela per 2 turni (boss e Capibanda 1).', 3, 'enemy', [{ kind: 'damage', mult: 2.5 }, { kind: 'status', status: 'stun', turns: 2 }]),
+    lv('pwb_frost_3', 'Gabbia di Brina', 'Danno 210% a un nemico e lo congela per 1 turno.', 3, 'enemy', [{ kind: 'damage', mult: 2.1 }, { kind: 'status', status: 'stun', turns: 1 }]),
+    lv('pwb_frost_4', 'Gabbia di Brina II', 'Danno 250% a un nemico e lo congela per 1 turno.', 3, 'enemy', [{ kind: 'damage', mult: 2.5 }, { kind: 'status', status: 'stun', turns: 1 }]),
     lv('pwb_frost_5', 'Prigione di Ghiaccio', 'Danno 310% a un nemico, congelato 2 turni (boss e Capibanda 1), vulnerabile e -50% VEL per 3 turni.', 3, 'enemy', [{ kind: 'status', status: 'vulnerable', turns: 3 }, { kind: 'damage', mult: 3.1 }, { kind: 'status', status: 'stun', turns: 2 }, { kind: 'status', status: 'slow', turns: 3, value: 0.5 }]),
   ] } },
   fruit_stone: { a: 'Fortezza', b: { name: 'Valanga', abilities: [
-    lv('pwb_stone_3', 'Frana', 'Scudo 30 a te e massi: danno 190% a TUTTI i nemici.', 2, 'self', [{ kind: 'shield', amount: 30 }, { kind: 'shockwave', mult: 1.9 }]),
-    lv('pwb_stone_4', 'Frana II', 'Scudo 40 a te e massi: danno 230% a TUTTI i nemici.', 2, 'self', [{ kind: 'shield', amount: 40 }, { kind: 'shockwave', mult: 2.3 }]),
-    lv('pwb_stone_5', 'Valanga', 'Scudo 55 e +50% DIF a te per 3 turni, massi: danno 280% a TUTTI i nemici.', 2, 'self', [{ kind: 'shield', amount: 55 }, { kind: 'status', status: 'defUp', turns: 3, value: 0.5 }, { kind: 'shockwave', mult: 2.8 }]),
+    lv('pwb_stone_3', 'Frana', 'Scudo 30 a te e massi: danno 190% a TUTTI i nemici.', 3, 'self', [{ kind: 'shield', amount: 30 }, { kind: 'shockwave', mult: 1.9 }]),
+    lv('pwb_stone_4', 'Frana II', 'Scudo 40 a te e massi: danno 230% a TUTTI i nemici.', 3, 'self', [{ kind: 'shield', amount: 40 }, { kind: 'shockwave', mult: 2.3 }]),
+    lv('pwb_stone_5', 'Valanga', 'Scudo 55 e +50% DIF a te per 3 turni, massi: danno 280% a TUTTI i nemici.', 3, 'self', [{ kind: 'shield', amount: 55 }, { kind: 'status', status: 'defUp', turns: 3, value: 0.5 }, { kind: 'shockwave', mult: 2.8 }]),
   ] } },
   fruit_storm: { a: 'Tempesta', b: { name: 'Saetta', abilities: [
     lv('pwb_storm_3', 'Saetta', 'Un fulmine da 330% su un nemico: lo paralizza sempre.', 3, 'enemy', [{ kind: 'damage', mult: 3.3 }, { kind: 'status', status: 'stun', turns: 1 }]),
@@ -30,14 +30,14 @@ export const FRUIT_BRANCHES: Record<string, B> = {
     lv('pwb_storm_5', 'Saetta Divina', 'Un fulmine da 450% su un nemico: paralizzato e vulnerabile per 2 turni.', 3, 'enemy', [{ kind: 'status', status: 'vulnerable', turns: 2 }, { kind: 'damage', mult: 4.5 }, { kind: 'status', status: 'stun', turns: 1 }]),
   ] } },
   fruit_life: { a: 'Primavera', b: { name: 'Rovo', abilities: [
-    lv('pwb_life_3', 'Rovo', 'Cura il 15% a tutta la squadra e spine: danno 160% a TUTTI i nemici.', 3, 'allAllies', [{ kind: 'heal', pctMaxHp: 0.15 }, { kind: 'shockwave', mult: 1.6 }]),
-    lv('pwb_life_4', 'Rovo II', 'Cura il 17% a tutta la squadra e spine: danno 200% a TUTTI i nemici.', 3, 'allAllies', [{ kind: 'heal', pctMaxHp: 0.17 }, { kind: 'shockwave', mult: 2.0 }]),
-    lv('pwb_life_5', 'Bosco Spinato', 'Cura il 20% e rimuove i malus a tutta la squadra, spine: danno 250% a TUTTI i nemici.', 3, 'allAllies', [{ kind: 'cleanse' }, { kind: 'heal', pctMaxHp: 0.2 }, { kind: 'shockwave', mult: 2.5 }]),
+    lv('pwb_life_3', 'Rovo', 'Cura il 10% a tutta la squadra e spine: danno 160% a TUTTI i nemici.', 3, 'allAllies', [{ kind: 'heal', pctMaxHp: 0.1 }, { kind: 'shockwave', mult: 1.6 }]),
+    lv('pwb_life_4', 'Rovo II', 'Cura il 12% a tutta la squadra e spine: danno 200% a TUTTI i nemici.', 3, 'allAllies', [{ kind: 'heal', pctMaxHp: 0.12 }, { kind: 'shockwave', mult: 2.0 }]),
+    lv('pwb_life_5', 'Bosco Spinato', 'Cura il 14% e rimuove i malus a tutta la squadra, spine: danno 250% a TUTTI i nemici.', 3, 'allAllies', [{ kind: 'cleanse' }, { kind: 'heal', pctMaxHp: 0.14 }, { kind: 'shockwave', mult: 2.5 }]),
   ] } },
   fruit_shadow: { a: 'Eclissi', b: { name: "Lama d'Ombra", abilities: [
-    lv('pwb_shadow_3', "Lama d'Ombra", 'Danno 450% a un nemico, ignora lo scudo. Se lo uccidi: +2⚡.', 3, 'enemy', [{ kind: 'damage', mult: 4.5, pierce: true }, { kind: 'energyOnKill', amount: 2 }]),
-    lv('pwb_shadow_4', "Lama d'Ombra II", 'Danno 550% a un nemico, ignora lo scudo. Se lo uccidi: +2⚡.', 3, 'enemy', [{ kind: 'damage', mult: 5.5, pierce: true }, { kind: 'energyOnKill', amount: 2 }]),
-    lv('pwb_shadow_5', 'Taglio del Vuoto', 'Danno 700% a un nemico, ignora lo scudo. Se lo uccidi: +3⚡.', 3, 'enemy', [{ kind: 'damage', mult: 7, pierce: true }, { kind: 'energyOnKill', amount: 3 }]),
+    lv('pwb_shadow_3', "Lama d'Ombra", 'Danno 500% a un nemico, ignora lo scudo. Se lo uccidi: +2⚡.', 3, 'enemy', [{ kind: 'damage', mult: 5, pierce: true }, { kind: 'energyOnKill', amount: 2 }]),
+    lv('pwb_shadow_4', "Lama d'Ombra II", 'Danno 620% a un nemico, ignora lo scudo. Se lo uccidi: +2⚡.', 3, 'enemy', [{ kind: 'damage', mult: 6.2, pierce: true }, { kind: 'energyOnKill', amount: 2 }]),
+    lv('pwb_shadow_5', 'Taglio del Vuoto', 'Danno 780% a un nemico, ignora lo scudo. Se lo uccidi: +3⚡.', 3, 'enemy', [{ kind: 'damage', mult: 7.8, pierce: true }, { kind: 'energyOnKill', amount: 3 }]),
   ] } },
   fruit_spring: { a: 'Pioggia di Molle', b: { name: 'Molla Carica', abilities: [
     lv('pwb_spring_3', 'Molla Carica', '7 colpi rapidi da 70% su un nemico.', 3, 'enemy', [{ kind: 'damage', mult: 0.7, hits: 7 }]),
@@ -90,9 +90,9 @@ export const FRUIT_BRANCHES: Record<string, B> = {
     lv('pwb_acid_5', 'Corrosione Profonda', 'Scioglie lo scudo, danno 320% a un nemico, acido (27, cresce) per 5 turni e vulnerabile per 3 turni.', 3, 'enemy', [{ kind: 'meltShield' }, { kind: 'status', status: 'vulnerable', turns: 3 }, { kind: 'damage', mult: 3.2 }, { kind: 'status', status: 'acid', turns: 5, value: 27 }]),
   ] } },
   fruit_bubble: { a: 'Mare di Bolle', b: { name: 'Bolla Scudo', abilities: [
-    lv('pwb_bubble_3', 'Bolla Scudo', 'Scudo 30 a tutta la squadra e per 1 turno schivate ogni colpo. Le bolle scoppiano: danno 90% a tutti i nemici.', 3, 'allAllies', [{ kind: 'shield', amount: 30 }, { kind: 'status', status: 'evade', turns: 1, value: 1 }, { kind: 'shockwave', mult: 0.9 }]),
-    lv('pwb_bubble_4', 'Bolla Scudo II', 'Scudo 42 a tutta la squadra e per 1 turno schivate ogni colpo. Le bolle scoppiano: danno 110% a tutti i nemici.', 3, 'allAllies', [{ kind: 'shield', amount: 42 }, { kind: 'status', status: 'evade', turns: 1, value: 1 }, { kind: 'shockwave', mult: 1.1 }]),
-    lv('pwb_bubble_5', 'Cupola di Schiuma', 'Scudo 58 e +40% ATT a tutta la squadra; per 1 turno schivate ogni colpo. Le bolle scoppiano: danno 140% a tutti i nemici.', 3, 'allAllies', [{ kind: 'shield', amount: 58 }, { kind: 'status', status: 'evade', turns: 1, value: 1 }, { kind: 'status', status: 'atkUp', turns: 2, value: 0.4 }, { kind: 'shockwave', mult: 1.4 }]),
+    lv('pwb_bubble_3', 'Bolla Scudo', 'Scudo 30 a tutta la squadra e per 1 turno schivate ogni colpo. Le bolle scoppiano: danno 70% a tutti i nemici.', 3, 'allAllies', [{ kind: 'shield', amount: 30 }, { kind: 'status', status: 'evade', turns: 1, value: 1 }, { kind: 'shockwave', mult: 0.7 }]),
+    lv('pwb_bubble_4', 'Bolla Scudo II', 'Scudo 42 a tutta la squadra e per 1 turno schivate ogni colpo. Le bolle scoppiano: danno 85% a tutti i nemici.', 3, 'allAllies', [{ kind: 'shield', amount: 42 }, { kind: 'status', status: 'evade', turns: 1, value: 1 }, { kind: 'shockwave', mult: 0.85 }]),
+    lv('pwb_bubble_5', 'Cupola di Schiuma', 'Scudo 58 e +40% ATT a tutta la squadra; per 1 turno schivate ogni colpo. Le bolle scoppiano: danno 110% a tutti i nemici.', 3, 'allAllies', [{ kind: 'shield', amount: 58 }, { kind: 'status', status: 'evade', turns: 1, value: 1 }, { kind: 'status', status: 'atkUp', turns: 2, value: 0.4 }, { kind: 'shockwave', mult: 1.1 }]),
   ] } },
   fruit_mine: { a: 'Campo Minato', b: { name: 'Bomba Grappolo', abilities: [
     lv('pwb_mine_3', 'Bomba Grappolo', 'Una mina da 480% sotto un nemico: scoppiando colpisce gli altri al 40%.', 3, 'enemy', [{ kind: 'mine', mult: 4.8, splash: 0.4 }]),

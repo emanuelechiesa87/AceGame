@@ -30,13 +30,13 @@ export interface TideDef { n: number; name: string; desc: string; apply: (e: Tid
 
 export const TIDES: TideDef[] = [
   { n: 1, name: 'Stive vuote', desc: 'Si parte senza pozione', apply: (e) => { e.startingPotions = 0; } },
-  { n: 2, name: 'Borse leggere', desc: 'Monete −20%', apply: (e) => { e.coinMult = 0.8; } },
-  { n: 3, name: 'Bottino magro', desc: 'Ricompense negli scontri normali −25%', apply: (e) => { e.normalRewardChance *= 0.75; } },
+  { n: 2, name: 'Borse leggere', desc: 'Monete −35%', apply: (e) => { e.coinMult = 0.65; } },
+  { n: 3, name: 'Bottino magro', desc: 'Ricompense negli scontri normali −40%', apply: (e) => { e.normalRewardChance *= 0.6; } },
   { n: 4, name: 'Legna umida', desc: 'Fuoco: cura 20%, rianima 30%', apply: (e) => { e.restHealPct = 0.2; e.restRevivePct = 0.3; } },
   { n: 5, name: 'Élite feroci', desc: 'Élite con 2 affissi in ogni mare', apply: (e) => { e.eliteAffixMin = 2; } },
-  { n: 6, name: 'Scaglie dure', desc: 'Tutti i nemici +5% HP', apply: (e) => { e.enemyHp = 1.05; } },
-  { n: 7, name: 'Zanne affilate', desc: 'Nemici normali +8% ATT', apply: (e) => { e.normalAtk = 1.08; } },
-  { n: 8, name: 'Signori del mare', desc: 'Boss +8% HP e ATT', apply: (e) => { e.boss = 1.08; } },
+  { n: 6, name: 'Scaglie dure', desc: 'Tutti i nemici +8% HP', apply: (e) => { e.enemyHp = 1.08; } },
+  { n: 7, name: 'Zanne affilate', desc: 'Nemici normali +10% ATT', apply: (e) => { e.normalAtk = 1.1; } },
+  { n: 8, name: 'Signori del mare', desc: 'Boss +12% HP e ATT', apply: (e) => { e.boss = 1.12; } },
   { n: 9, name: 'Mare grosso', desc: 'Cura salpando: 15%', apply: (e) => { e.areaHealPct = 0.15; } },
   { n: 10, name: 'Abisso', desc: 'Colpi caricati più forti (×2,3)', apply: (e) => { e.chargedMult = 2.3; } },
 ];

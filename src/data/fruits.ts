@@ -31,11 +31,11 @@ export const FRUITS: FruitDef[] = [
     description: 'Croccante come il ghiaccio. Rallenta chiunque la guardi.',
     passive: { def: 2 }, startsUnlocked: true,
     abilities: [
-      lv('pw_frost', 'Morso di Brina', 'Danno 190% e 80% di congelare per 1 turno.', 2, 'enemy', [{ kind: 'damage', mult: 1.9 }, { kind: 'status', status: 'stun', turns: 1, chance: 0.8 }]),
-      lv('pw_frost_2', 'Morso di Brina II', 'Danno 230% e congela sempre per 1 turno.', 2, 'enemy', [{ kind: 'damage', mult: 2.3 }, { kind: 'status', status: 'stun', turns: 1 }]),
-      lv('pw_frost_3', 'Era Glaciale', 'Danno 180% a TUTTI i nemici, 80% di congelarli.', 3, 'allEnemies', [{ kind: 'damage', mult: 1.8 }, { kind: 'status', status: 'stun', turns: 1, chance: 0.8 }]),
-      lv('pw_frost_4', 'Era Glaciale II', 'Danno 220% a TUTTI i nemici e li congela sempre per 1 turno.', 3, 'allEnemies', [{ kind: 'damage', mult: 2.2 }, { kind: 'status', status: 'stun', turns: 1 }]),
-      lv('pw_frost_5', 'Zero Assoluto', 'Danno 260% a TUTTI, li congela per 1 turno e -50% VEL per 3 turni.', 3, 'allEnemies', [{ kind: 'damage', mult: 2.6 }, { kind: 'status', status: 'stun', turns: 1 }, { kind: 'status', status: 'slow', turns: 3, value: 0.5 }]),
+      lv('pw_frost', 'Morso di Brina', 'Danno 190% e 60% di congelare per 1 turno.', 2, 'enemy', [{ kind: 'damage', mult: 1.9 }, { kind: 'status', status: 'stun', turns: 1, chance: 0.6 }]),
+      lv('pw_frost_2', 'Morso di Brina II', 'Danno 230% e 75% di congelare per 1 turno.', 2, 'enemy', [{ kind: 'damage', mult: 2.3 }, { kind: 'status', status: 'stun', turns: 1, chance: 0.75 }]),
+      lv('pw_frost_3', 'Era Glaciale', 'Danno 180% a TUTTI i nemici, 60% di congelarli.', 3, 'allEnemies', [{ kind: 'damage', mult: 1.8 }, { kind: 'status', status: 'stun', turns: 1, chance: 0.6 }]),
+      lv('pw_frost_4', 'Era Glaciale II', 'Danno 220% a TUTTI i nemici e 75% di congelarli per 1 turno.', 3, 'allEnemies', [{ kind: 'damage', mult: 2.2 }, { kind: 'status', status: 'stun', turns: 1, chance: 0.75 }]),
+      lv('pw_frost_5', 'Zero Assoluto', 'Danno 260% a TUTTI, 85% di congelarli per 1 turno e -50% VEL per 3 turni.', 3, 'allEnemies', [{ kind: 'damage', mult: 2.6 }, { kind: 'status', status: 'stun', turns: 1, chance: 0.85 }, { kind: 'status', status: 'slow', turns: 3, value: 0.5 }]),
     ],
   },
   {
@@ -43,11 +43,11 @@ export const FRUITS: FruitDef[] = [
     description: 'Pesante come un sasso. Ti fa la pelle dura.',
     passive: { maxHp: 10 }, startsUnlocked: true,
     abilities: [
-      lv('pw_stone', 'Guscio di Pietra', 'Scudo 35 e corazza (+50% DIF) a tutta la squadra per 2 turni.', 2, 'allAllies', [{ kind: 'shield', amount: 35 }, { kind: 'status', status: 'defUp', turns: 2, value: 0.5 }]),
-      lv('pw_stone_2', 'Guscio di Pietra II', 'Scudo 50 e corazza (+60% DIF) a tutta la squadra per 3 turni.', 2, 'allAllies', [{ kind: 'shield', amount: 50 }, { kind: 'status', status: 'defUp', turns: 3, value: 0.6 }]),
-      lv('pw_stone_3', 'Fortezza di Granito', 'Scudo 70, corazza e furia (+40% ATT) a tutta la squadra per 3 turni.', 2, 'allAllies', [{ kind: 'shield', amount: 70 }, { kind: 'status', status: 'defUp', turns: 3, value: 0.7 }, { kind: 'status', status: 'atkUp', turns: 3, value: 0.4 }]),
-      lv('pw_stone_4', 'Fortezza di Granito II', 'Scudo 90, corazza (+80% DIF) e furia (+50% ATT) a tutta la squadra per 3 turni.', 2, 'allAllies', [{ kind: 'shield', amount: 90 }, { kind: 'status', status: 'defUp', turns: 3, value: 0.8 }, { kind: 'status', status: 'atkUp', turns: 3, value: 0.5 }]),
-      lv('pw_stone_5', 'Montagna Vivente', 'Scudo 120, corazza (+100% DIF) e furia (+70% ATT) a tutta la squadra per 4 turni.', 2, 'allAllies', [{ kind: 'shield', amount: 120 }, { kind: 'status', status: 'defUp', turns: 4, value: 1 }, { kind: 'status', status: 'atkUp', turns: 4, value: 0.7 }]),
+      lv('pw_stone', 'Guscio di Pietra', 'Scudo 28 e corazza (+50% DIF) a tutta la squadra per 2 turni.', 2, 'allAllies', [{ kind: 'shield', amount: 28 }, { kind: 'status', status: 'defUp', turns: 2, value: 0.5 }]),
+      lv('pw_stone_2', 'Guscio di Pietra II', 'Scudo 40 e corazza (+60% DIF) a tutta la squadra per 3 turni.', 2, 'allAllies', [{ kind: 'shield', amount: 40 }, { kind: 'status', status: 'defUp', turns: 3, value: 0.6 }]),
+      lv('pw_stone_3', 'Fortezza di Granito', 'Scudo 45, corazza e furia (+10% ATT) a tutta la squadra per 3 turni.', 3, 'allAllies', [{ kind: 'shield', amount: 45 }, { kind: 'status', status: 'defUp', turns: 3, value: 0.5 }, { kind: 'status', status: 'atkUp', turns: 3, value: 0.1 }]),
+      lv('pw_stone_4', 'Fortezza di Granito II', 'Scudo 58, corazza (+55% DIF) e furia (+15% ATT) a tutta la squadra per 3 turni.', 3, 'allAllies', [{ kind: 'shield', amount: 58 }, { kind: 'status', status: 'defUp', turns: 3, value: 0.55 }, { kind: 'status', status: 'atkUp', turns: 3, value: 0.15 }]),
+      lv('pw_stone_5', 'Montagna Vivente', 'Scudo 80, corazza (+70% DIF) e furia (+20% ATT) a tutta la squadra per 4 turni.', 3, 'allAllies', [{ kind: 'shield', amount: 80 }, { kind: 'status', status: 'defUp', turns: 4, value: 0.7 }, { kind: 'status', status: 'atkUp', turns: 4, value: 0.2 }]),
     ],
   },
   {
@@ -67,11 +67,11 @@ export const FRUITS: FruitDef[] = [
     description: 'Profuma di bosco dopo la pioggia.',
     passive: { def: 1 }, startsUnlocked: false, // F4: cure +6 punti per livello
     abilities: [
-      lv('pw_life', 'Rugiada Viva', 'Cura il 20% a tutta la squadra e +30% ATT per 2 turni.', 3, 'allAllies', [{ kind: 'heal', pctMaxHp: 0.2 }, { kind: 'status', status: 'atkUp', turns: 2, value: 0.3 }]),
-      lv('pw_life_2', 'Rugiada Viva II', 'Cura il 22%, scudo 8 e furia (+35% ATT) per 2 turni a tutti.', 3, 'allAllies', [{ kind: 'heal', pctMaxHp: 0.22 }, { kind: 'shield', amount: 8 }, { kind: 'status', status: 'atkUp', turns: 2, value: 0.35 }]),
-      lv('pw_life_3', 'Fioritura', 'Cura il 24%, scudo 9, furia (+50% ATT) e rimuove i malus a tutti.', 3, 'allAllies', [{ kind: 'cleanse' }, { kind: 'heal', pctMaxHp: 0.24 }, { kind: 'shield', amount: 9 }, { kind: 'status', status: 'atkUp', turns: 3, value: 0.5 }]),
-      lv('pw_life_4', 'Fioritura II', 'Cura il 26%, scudo 13, furia (+50% ATT) e rimuove i malus a tutti.', 3, 'allAllies', [{ kind: 'cleanse' }, { kind: 'heal', pctMaxHp: 0.26 }, { kind: 'shield', amount: 13 }, { kind: 'status', status: 'atkUp', turns: 3, value: 0.5 }]),
-      lv('pw_life_5', 'Primavera Eterna', 'Cura il 28%, scudo 18, furia (+60% ATT) e rimuove i malus a tutti.', 3, 'allAllies', [{ kind: 'cleanse' }, { kind: 'heal', pctMaxHp: 0.28 }, { kind: 'shield', amount: 18 }, { kind: 'status', status: 'atkUp', turns: 3, value: 0.6 }]),
+      lv('pw_life', 'Rugiada Viva', 'Cura il 11% a tutta la squadra e +30% ATT per 2 turni.', 3, 'allAllies', [{ kind: 'heal', pctMaxHp: 0.11 }, { kind: 'status', status: 'atkUp', turns: 2, value: 0.3 }]),
+      lv('pw_life_2', 'Rugiada Viva II', 'Cura il 12%, scudo 8 e furia (+35% ATT) per 2 turni a tutti.', 3, 'allAllies', [{ kind: 'heal', pctMaxHp: 0.12 }, { kind: 'shield', amount: 8 }, { kind: 'status', status: 'atkUp', turns: 2, value: 0.35 }]),
+      lv('pw_life_3', 'Fioritura', 'Cura il 12%, scudo 9, furia (+25% ATT) e rimuove i malus a tutti.', 3, 'allAllies', [{ kind: 'cleanse' }, { kind: 'heal', pctMaxHp: 0.12 }, { kind: 'shield', amount: 9 }, { kind: 'status', status: 'atkUp', turns: 3, value: 0.25 }]),
+      lv('pw_life_4', 'Fioritura II', 'Cura il 13%, scudo 13, furia (+30% ATT) e rimuove i malus a tutti.', 3, 'allAllies', [{ kind: 'cleanse' }, { kind: 'heal', pctMaxHp: 0.13 }, { kind: 'shield', amount: 13 }, { kind: 'status', status: 'atkUp', turns: 3, value: 0.3 }]),
+      lv('pw_life_5', 'Primavera Eterna', 'Cura il 15%, scudo 18, furia (+35% ATT) e rimuove i malus a tutti.', 3, 'allAllies', [{ kind: 'cleanse' }, { kind: 'heal', pctMaxHp: 0.15 }, { kind: 'shield', amount: 18 }, { kind: 'status', status: 'atkUp', turns: 3, value: 0.35 }]),
     ],
   },
   {
@@ -117,9 +117,9 @@ export const FRUITS: FruitDef[] = [
     abilities: [
       lv('pw_fang', 'Risveglio Bestiale', 'Per 3 turni: +120% ATT e +60% DIF. Ruggito: danno 35% a tutti i nemici.', 2, 'self', [{ kind: 'status', status: 'atkUp', turns: 3, value: 1.2 }, { kind: 'status', status: 'defUp', turns: 3, value: 0.6 }, { kind: 'shockwave', mult: 0.35 }]),
       lv('pw_fang_2', 'Risveglio Bestiale II', 'Per 3 turni: +150% ATT e +70% DIF. Ruggito: danno 40% a tutti i nemici.', 2, 'self', [{ kind: 'status', status: 'atkUp', turns: 3, value: 1.5 }, { kind: 'status', status: 'defUp', turns: 3, value: 0.7 }, { kind: 'shockwave', mult: 0.4 }]),
-      lv('pw_fang_3', 'Re della Giungla', 'Per 4 turni: +180% ATT e +90% DIF. Ruggito: danno 45% a tutti i nemici.', 2, 'self', [{ kind: 'status', status: 'atkUp', turns: 4, value: 1.8 }, { kind: 'status', status: 'defUp', turns: 4, value: 0.9 }, { kind: 'shockwave', mult: 0.45 }]),
-      lv('pw_fang_4', 'Re della Giungla II', 'Per 4 turni: +220% ATT e +110% DIF. Ruggito: danno 50% a tutti i nemici.', 2, 'self', [{ kind: 'status', status: 'atkUp', turns: 4, value: 2.2 }, { kind: 'status', status: 'defUp', turns: 4, value: 1.1 }, { kind: 'shockwave', mult: 0.5 }]),
-      lv('pw_fang_5', 'Bestia Primordiale', 'Scudo 30 e per 4 turni: +260% ATT e +130% DIF. Ruggito: danno 60% a tutti i nemici.', 2, 'self', [{ kind: 'shield', amount: 30 }, { kind: 'status', status: 'atkUp', turns: 4, value: 2.6 }, { kind: 'status', status: 'defUp', turns: 4, value: 1.3 }, { kind: 'shockwave', mult: 0.6 }]),
+      lv('pw_fang_3', 'Re della Giungla', 'Per 4 turni: +180% ATT e +90% DIF. Ruggito: danno 55% a tutti i nemici.', 2, 'self', [{ kind: 'status', status: 'atkUp', turns: 4, value: 1.8 }, { kind: 'status', status: 'defUp', turns: 4, value: 0.9 }, { kind: 'shockwave', mult: 0.55 }]),
+      lv('pw_fang_4', 'Re della Giungla II', 'Per 4 turni: +220% ATT e +110% DIF. Ruggito: danno 65% a tutti i nemici.', 2, 'self', [{ kind: 'status', status: 'atkUp', turns: 4, value: 2.2 }, { kind: 'status', status: 'defUp', turns: 4, value: 1.1 }, { kind: 'shockwave', mult: 0.65 }]),
+      lv('pw_fang_5', 'Bestia Primordiale', 'Scudo 30 e per 4 turni: +260% ATT e +130% DIF. Ruggito: danno 80% a tutti i nemici.', 2, 'self', [{ kind: 'shield', amount: 30 }, { kind: 'status', status: 'atkUp', turns: 4, value: 2.6 }, { kind: 'status', status: 'defUp', turns: 4, value: 1.3 }, { kind: 'shockwave', mult: 0.8 }]),
     ],
   },
   {
@@ -212,11 +212,11 @@ export const FRUITS: FruitDef[] = [
     description: 'Se la sbucci, ne escono bolle. Tante. Troppe.',
     passive: { spd: 1 }, startsUnlocked: false,
     abilities: [
-      lv('pw_bubble', 'Bolla Prigione', 'Danno 120% e chiude il nemico in una bolla per 1 turno; poi scoppia (100%).', 2, 'enemy', [{ kind: 'damage', mult: 1.2 }, { kind: 'bubble', turns: 1, popMult: 1 }]),
-      lv('pw_bubble_2', 'Bolla Prigione II', 'Danno 145%, bolla per 2 turni, poi scoppia (110%). I boss restano nella bolla 1 turno.', 2, 'enemy', [{ kind: 'damage', mult: 1.45 }, { kind: 'bubble', turns: 2, popMult: 1.1 }]),
-      lv('pw_bubble_3', 'Mare di Bolle', 'Danno 110% a TUTTI e li chiude in bolle per 1 turno; poi scoppiano (80%).', 3, 'allEnemies', [{ kind: 'damage', mult: 1.1 }, { kind: 'bubble', turns: 1, popMult: 0.8 }]),
-      lv('pw_bubble_4', 'Mare di Bolle II', 'Danno 140% a TUTTI, bolle per 1 turno, poi scoppiano (105%).', 3, 'allEnemies', [{ kind: 'damage', mult: 1.4 }, { kind: 'bubble', turns: 1, popMult: 1.05 }]),
-      lv('pw_bubble_5', 'Bolla Oceanica', 'Danno 160% a TUTTI, bolle per 2 turni (boss 1), poi scoppiano (120%).', 3, 'allEnemies', [{ kind: 'damage', mult: 1.6 }, { kind: 'bubble', turns: 2, popMult: 1.2 }]),
+      lv('pw_bubble', 'Bolla Prigione', 'Danno 80% e chiude il nemico in una bolla per 1 turno; poi scoppia (80%).', 3, 'enemy', [{ kind: 'damage', mult: 0.8 }, { kind: 'bubble', turns: 1, popMult: 0.8 }]),
+      lv('pw_bubble_2', 'Bolla Prigione II', 'Danno 100%, bolla per 1 turno, poi scoppia (100%).', 3, 'enemy', [{ kind: 'damage', mult: 1 }, { kind: 'bubble', turns: 1, popMult: 1 }]),
+      lv('pw_bubble_3', 'Mare di Bolle', 'Danno 90% a TUTTI e li chiude in bolle per 1 turno; poi scoppiano (60%).', 3, 'allEnemies', [{ kind: 'damage', mult: 0.9 }, { kind: 'bubble', turns: 1, popMult: 0.6 }]),
+      lv('pw_bubble_4', 'Mare di Bolle II', 'Danno 115% a TUTTI, bolle per 1 turno, poi scoppiano (80%).', 3, 'allEnemies', [{ kind: 'damage', mult: 1.15 }, { kind: 'bubble', turns: 1, popMult: 0.8 }]),
+      lv('pw_bubble_5', 'Bolla Oceanica', 'Danno 140% a TUTTI, bolle per 1 turno, poi scoppiano (110%).', 3, 'allEnemies', [{ kind: 'damage', mult: 1.4 }, { kind: 'bubble', turns: 1, popMult: 1.1 }]),
     ],
   },
   {
@@ -238,9 +238,9 @@ export const FRUITS: FruitDef[] = [
     abilities: [
       lv('pw_swarm', 'Grappolo', 'Danno 110% e +3 acini (max 6): a fine turno ognuno colpisce (35%). Ogni colpo che subisci ne fa scoppiare uno.', 2, 'enemy', [{ kind: 'damage', mult: 1.1 }, { kind: 'swarm', count: 3, mult: 0.35, max: 6 }]),
       lv('pw_swarm_2', 'Grappolo II', 'Danno 130% e +3 acini (max 6), ognuno colpisce per il 40%.', 2, 'enemy', [{ kind: 'damage', mult: 1.3 }, { kind: 'swarm', count: 3, mult: 0.4, max: 6 }]),
-      lv('pw_swarm_3', 'Vendemmia', 'Danno 120% a TUTTI e +4 acini (max 8), ognuno colpisce per il 40%.', 3, 'allEnemies', [{ kind: 'damage', mult: 1.2 }, { kind: 'swarm', count: 4, mult: 0.4, max: 8 }]),
-      lv('pw_swarm_4', 'Vendemmia II', 'Danno 150% a TUTTI e +4 acini (max 8), ognuno colpisce per il 45%.', 3, 'allEnemies', [{ kind: 'damage', mult: 1.5 }, { kind: 'swarm', count: 4, mult: 0.45, max: 8 }]),
-      lv('pw_swarm_5', 'Tempesta di Chicchi', 'Danno 180% a TUTTI e +5 acini (max 10), ognuno colpisce per il 50%.', 3, 'allEnemies', [{ kind: 'damage', mult: 1.8 }, { kind: 'swarm', count: 5, mult: 0.5, max: 10 }]),
+      lv('pw_swarm_3', 'Vendemmia', 'Danno 140% a TUTTI e +4 acini (max 8), ognuno colpisce per il 45%.', 3, 'allEnemies', [{ kind: 'damage', mult: 1.4 }, { kind: 'swarm', count: 4, mult: 0.45, max: 8 }]),
+      lv('pw_swarm_4', 'Vendemmia II', 'Danno 170% a TUTTI e +4 acini (max 8), ognuno colpisce per il 50%.', 3, 'allEnemies', [{ kind: 'damage', mult: 1.7 }, { kind: 'swarm', count: 4, mult: 0.5, max: 8 }]),
+      lv('pw_swarm_5', 'Tempesta di Chicchi', 'Danno 200% a TUTTI e +5 acini (max 10), ognuno colpisce per il 55%.', 3, 'allEnemies', [{ kind: 'damage', mult: 2 }, { kind: 'swarm', count: 5, mult: 0.55, max: 10 }]),
     ],
   },
   {
