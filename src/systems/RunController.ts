@@ -73,7 +73,8 @@ export class RunController {
   /** Rinforzo dei nemici dell'area corrente (da passare alla battaglia). */
   get enemyScale(): EnemyScale {
     const t = this.tx;
-    return { hp: this.area.scale.hp * t.enemyHp, atk: this.area.scale.atk, tier: { normal: { hp: 1, atk: t.normalAtk }, boss: { hp: t.boss, atk: t.boss } } };
+    const team = this.run.areaIndex >= BALANCE.enemies.teamFromArea ? BALANCE.enemies.team[Math.min(this.run.companions.length, L.maxCompanions)] : { hp: 1, atk: 1 };
+    return { hp: this.area.scale.hp * t.enemyHp * team.hp, atk: this.area.scale.atk * team.atk, tier: { normal: { hp: 1, atk: t.normalAtk }, boss: { hp: t.boss, atk: t.boss } } };
   }
   /** F3 · Marea della run (0 = nessun malus). */
   get tide(): number { return clampTide(this.run.tide); }

@@ -49,6 +49,13 @@ export const BALANCE = {
   enemies: {
     hpMult: 1.55, // F4: era 1.22 (run più lunga, più ricompense raccolte)
     atkMult: 1.23, // F4: era 1.1
+    /**
+     * 0.11.0 · Nemici in base alla squadra: moltiplicatori di HP e ATT con 0, 1, 2 o 3 compagni
+     * reclutati (anche se KO), dal mare `teamFromArea` (0 = primo) in poi. Il primo mare, dove la
+     * squadra si sta formando, resta com'era. Prima, chi saltava un incontro non poteva quasi vincere.
+     */
+    teamFromArea: 1,
+    team: [{ hp: 0.55, atk: 0.55 }, { hp: 0.7, atk: 0.7 }, { hp: 0.85, atk: 0.85 }, { hp: 1.03, atk: 1.03 }],
     /** Ritocchi per grado: scontri normali che logorano, boss meno "muro" (fase 6). */
     tier: {
       normal: { hp: 1.1, atk: 1.4 },

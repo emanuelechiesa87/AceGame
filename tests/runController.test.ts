@@ -170,7 +170,12 @@ describe('RunController', () => {
     expect(ctl.run.stepIndex).toBe(0);
     expect(ctl.run.map.at(-1)!.options).toEqual(['boss']);
     expect(ctl.run.currentHp).toBeGreaterThan(10);
-    expect(ctl.enemyScale.hp).toBeGreaterThan(1);
+    // nemici più forti per via del mare, a parità di squadra
+    const here = ctl.enemyScale.hp;
+    ctl.run.areaIndex--;
+    const before = ctl.enemyScale.hp;
+    ctl.run.areaIndex++;
+    expect(here).toBeGreaterThan(before);
     expect(ctl.awaken()).toBe(true);
     expect(ctl.fruitLevel).toBe(4);
     expect(ctl.canAwaken).toBe(false);
