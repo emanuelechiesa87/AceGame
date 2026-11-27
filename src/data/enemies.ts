@@ -103,7 +103,7 @@ export const ENEMIES: EnemyDef[] = [
     },
   },
   {
-    id: 'en_anemone_queen', name: 'Regina Anemone', tier: 'boss', stats: { maxHp: 230, atk: 12, def: 5, spd: 8 },
+    id: 'en_anemone_queen', name: 'Regina Anemone', tier: 'boss', stats: { maxHp: 172, atk: 13.8, def: 5, spd: 8 },
     pattern: ['lash', 'sting', 'bloom', 'lash', 'crush'],
     enrage: 'royal_bloom',
     phase2: { name: 'Fioritura Tossica', pattern: ['spines', 'toxic', 'lash', 'crush'] },
@@ -163,7 +163,7 @@ export const ENEMIES: EnemyDef[] = [
     },
   },
   {
-    id: 'en_abyss_lighthouse', name: 'Faro Abissale', tier: 'boss', stats: { maxHp: 250, atk: 12, def: 4, spd: 7 },
+    id: 'en_abyss_lighthouse', name: 'Faro Abissale', tier: 'boss', stats: { maxHp: 188, atk: 13.8, def: 4, spd: 7 },
     pattern: ['beam', 'dark', 'chomp', 'beam', 'flash'],
     enrage: 'full_beam',
     phase2: { name: 'Luce Accecante', pattern: ['blind_beam', 'chomp', 'flash', 'beam'] },
@@ -219,7 +219,7 @@ export const ENEMIES: EnemyDef[] = [
     },
   },
   {
-    id: 'en_wreck_admiral', name: 'Ammiraglio Relitto', tier: 'boss', stats: { maxHp: 280, atk: 13, def: 6, spd: 6 },
+    id: 'en_wreck_admiral', name: 'Ammiraglio Relitto', tier: 'boss', stats: { maxHp: 190, atk: 15.6, def: 6, spd: 6 },
     pattern: ['broadside', 'cannon', 'repair', 'broadside', 'drag'],
     enrage: 'boarding',
     phase2: { name: 'Ciurma Fantasma', pattern: ['ghost_call', 'full_broadside', 'cannon', 'drag'] },

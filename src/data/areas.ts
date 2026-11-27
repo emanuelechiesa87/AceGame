@@ -72,11 +72,11 @@ export const AREAS: AreaDef[] = [
   },
   {
     id: 'area_glow_abyss', name: 'Abisso Luminoso', tagline: 'Laggiù qualcosa si accende', steps: 10,
-    nodeWeights: WEIGHTS, groups: ABYSS_GROUPS, scale: { hp: 3.0, atk: 1.85 }, maxFruitLevel: 5, backdrop: 'abyss', tint: 0x8e9ad8,
+    nodeWeights: WEIGHTS, groups: ABYSS_GROUPS, scale: { hp: 3.0, atk: 1.9055 }, maxFruitLevel: 5, backdrop: 'abyss', tint: 0x8e9ad8,
   },
   {
     id: 'area_ship_graveyard', name: 'Cimitero delle Navi', tagline: 'L\'ultimo mare', steps: 10,
-    nodeWeights: WEIGHTS, groups: GRAVE_GROUPS, scale: { hp: 3.35, atk: 2.15 }, maxFruitLevel: 5, backdrop: 'graveyard', tint: 0xb4a8b8,
+    nodeWeights: WEIGHTS, groups: GRAVE_GROUPS, scale: { hp: 3.35, atk: 2.2575 }, maxFruitLevel: 5, backdrop: 'graveyard', tint: 0xb4a8b8,
   },
 ];
 
