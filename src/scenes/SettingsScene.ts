@@ -37,8 +37,8 @@ export class SettingsScene extends BaseScene {
     this.toggleRow(520, 'VIBRAZIONE', () => (set().vibration ? 'SÌ' : 'NO'), () => { upd((s) => (s.vibration = !s.vibration)); Audio.setVibration(set().vibration); Audio.buzz(40); });
 
     panel(this, 40, 670, 640, 380, COLORS.panel, 0.95);
-    addBody(this, 70, 720, 'TUTORIAL', 30, '#ffcf3a').setOrigin(0, 0.5);
-    new Button(this, 520, 720, 'RIVEDI', () => { upd((s) => (s.tutorialDone = false)); this.say('Il tutorial ripartirà alla prossima battaglia'); }, { variant: 'secondary', width: 240, height: 72, fontSize: 30 });
+    new Button(this, 210, 720, 'TUTORIAL', () => { upd((s) => (s.tutorialDone = false)); this.say('Il tutorial ripartirà alla prossima battaglia'); }, { variant: 'secondary', width: 270, height: 72, fontSize: 30 });
+    new Button(this, 510, 720, 'LA STORIA', () => this.goTo('Story', { id: 'intro', next: 'Settings' }), { variant: 'secondary', width: 270, height: 72, fontSize: 30 });
 
     addBody(this, 70, 810, 'SALVATAGGI', 30, '#ffcf3a').setOrigin(0, 0.5);
     addBody(this, 70, 850, 'Copia di sicurezza automatica attiva. Esporta un file per cambiare telefono.', 20, '#fbe9c8').setOrigin(0, 0.5).setWordWrapWidth(580);

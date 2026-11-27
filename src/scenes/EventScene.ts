@@ -13,7 +13,8 @@ import { BiomeBackdrop } from '../ui/BiomeBackdrop';
 import { pickBranch } from '../ui/branchPicker';
 import { Button } from '../ui/Button';
 import { HeroRig } from '../ui/HeroRig';
-import { artifactName, offerArtifact, offerCompanion } from '../ui/Offers';
+import { artifactName, modal, offerArtifact, offerCompanion } from '../ui/Offers';
+import { COMPANION_HINT } from '../data/story';
 import { addBody, addTitle, fitWidth } from '../ui/text';
 import { icon, panel } from '../ui/widgets';
 import { BaseScene } from './BaseScene';
@@ -139,6 +140,7 @@ export class EventScene extends BaseScene {
     const ids = ctl.randomNewCompanions(2);
     if (!ids.length) { this.header('Sentiero tranquillo', 'recruit', 'Nessuno in vista. La tua squadra è già al completo di amici.'); this.done('Prosegui con la tua squadra.'); return; }
     GameSession.discover({ companions: ids });
+    if (!GameSession.save.data.seen?.companionHint) this.companionHint();
     const defs = ids.map((id) => COMPANION_BY_ID.get(id)!);
     const info = (d: (typeof defs)[number]) => `${d.name} (${d.role}): ${d.description}\nSpeciale: ${d.special.name} — ${d.special.description}`;
     // (F4b) due candidati: tocca la figura per leggere chi è
@@ -158,6 +160,18 @@ export class EventScene extends BaseScene {
       ...defs.map((d) => ({ label: `RECLUTA ${d.name.toUpperCase()}!`, act: () => take(d.id), variant: 'primary' as const })),
       { label: 'NO GRAZIE', act: () => this.done(defs.length > 1 ? 'Li saluti e riparti.' : `${defs[0].name} fa spallucce e se ne va.`), variant: 'secondary' as const },
     ]);
+  }
+
+  /** 0.12.0: al primo incontro si spiega quanto contano i compagni. */
+  private companionHint(): void {
+    const m = modal(this);
+    m.add(panel(this, 50, 420, 620, 440, COLORS.panel, 0.98));
+    m.add(addTitle(this, GAME_WIDTH / 2, 490, COMPANION_HINT.title, 46));
+    m.add(addBody(this, GAME_WIDTH / 2, 630, COMPANION_HINT.text, 30, '#fff7e6').setWordWrapWidth(540));
+    m.add(new Button(this, GAME_WIDTH / 2, 780, 'CAPITO!', () => {
+      GameSession.save.update((s) => (s.seen = { ...s.seen, companionHint: true }));
+      m.destroy();
+    }, { width: 340, height: 92, fontSize: 44 }));
   }
 
   private mystery(): void {

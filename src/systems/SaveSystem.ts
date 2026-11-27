@@ -23,6 +23,7 @@ export function emptyPersistentState(now = new Date()): PersistentGameState {
     maxTideUnlocked: 0,
     bestTideByFruit: {},
     selectedTide: 0,
+    seen: {},
     lifetime: { runs: 0, victories: 0, enemiesDefeated: 0 },
     settings: { fastAnimations: false, music: 0.6, sfx: 0.8, vibration: true, tutorialDone: false },
   };
@@ -56,6 +57,7 @@ export function parseSave(raw: string): PersistentGameState {
     metCompanionIds: arr(data.metCompanionIds),
     hallOfFame: Array.isArray(data.hallOfFame) ? data.hallOfFame.slice(0, BALANCE.limits.hallOfFameSize) : [],
     runLog: Array.isArray(data.runLog) ? data.runLog.filter((r) => r && typeof r === 'object' && Array.isArray(r.stats?.areas)).slice(0, 10) : [],
+    seen: { intro: data.seen?.intro === true, companionHint: data.seen?.companionHint === true },
     maxTideUnlocked: clampTide(data.maxTideUnlocked),
     bestTideByFruit: cleanTides(data.bestTideByFruit),
     selectedTide: Math.min(clampTide(data.selectedTide), clampTide(data.maxTideUnlocked)),

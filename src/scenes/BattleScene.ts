@@ -5,6 +5,7 @@ import { COLORS, GAME_HEIGHT, GAME_WIDTH } from '../app/config';
 import { CREATURES, CREATURE_SCALE } from '../pixel/creatures';
 import type { NodeType } from '../data/areas';
 import { COMPANION_BY_ID } from '../data/companions';
+import { BOSS_LINES } from '../data/story';
 import { ENEMY_BY_ID } from '../data/enemies';
 import { FRUIT_BY_ID, fruitOfAbility } from '../data/fruits';
 import { playFruitFx, type FxUnit } from '../ui/fruitFx';
@@ -17,7 +18,7 @@ import { BiomeBackdrop } from '../ui/BiomeBackdrop';
 import { Button } from '../ui/Button';
 import { UnitView } from '../ui/battle/UnitView';
 import { addBody, addTitle } from '../ui/text';
-import { banner, floatText, steppedRect, wait } from '../ui/widgets';
+import { banner, floatText, panel, steppedRect, wait } from '../ui/widgets';
 
 /** Esplosione di quadretti (mine, bolle che scoppiano): solo grafica. */
 function boom(scene: Phaser.Scene, x: number, y: number, colors: number[], radius: number): void {
@@ -137,9 +138,30 @@ export class BattleScene extends BaseScene {
       if (!saved) {
         const opening = this.battle.start();
         this.saveBattle();
+        if (this.node === 'boss') await this.bossLine(this.enemyIds[0]);
         await this.play(opening);
       }
       this.afterResolve();
+    });
+  }
+
+  /** 0.12.0: battuta del boss; sparisce con un tocco o da sola. */
+  private bossLine(bossId: string): Promise<void> {
+    const text = BOSS_LINES[bossId];
+    if (!text) return Promise.resolve();
+    return new Promise((resolve) => {
+      const y = this.bannerY;
+      const c = this.add.container(0, 0).setDepth(650);
+      // l'area di tocco copre lo schermo: il tocco non cambia bersaglio
+      const shade = this.add.rectangle(-400, -800, 1520, 2880, 0x1f1633, 0.35).setOrigin(0).setInteractive();
+      const box = panel(this, 60, y - 100, 600, 200, COLORS.panel, 0.97);
+      const name = addTitle(this, GAME_WIDTH / 2, y - 60, ENEMY_BY_ID.get(bossId)!.name.toUpperCase(), 32).setColor('#ffcf3a');
+      const line = addBody(this, GAME_WIDTH / 2, y + 22, `«${text}»`, 30, '#fff7e6').setWordWrapWidth(540);
+      c.add([shade, box, name, line]);
+      let done = false;
+      const close = () => { if (done) return; done = true; c.destroy(); resolve(); };
+      shade.once('pointerup', close);
+      this.time.delayedCall(4000, close);
     });
   }
 

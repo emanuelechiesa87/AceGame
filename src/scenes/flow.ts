@@ -30,7 +30,7 @@ export function finishNode(go: Go): void {
   delete ctl.run.pending;
   if (ctl.run.stepIndex >= ctl.run.map.length) {
     // boss sconfitto: si salpa verso il mare successivo, oppure la run è vinta
-    if (!ctl.nextArea()) { ctl.run.pending = pending; go('Summary', { result: 'victory' }); return; }
+    if (!ctl.nextArea()) { ctl.run.pending = pending; go('Story', { id: 'finale', next: 'Summary', nextData: { result: 'victory' } }); return; }
     GameSession.persistRun();
     go('NewSea');
     return;

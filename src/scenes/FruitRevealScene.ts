@@ -56,7 +56,9 @@ export class FruitRevealScene extends BaseScene {
       Audio.play('eat');
       // il frutto "contagia" subito l'eroe: colori e stemma del livello I
       hero.setLook(runLook(run), true);
-      this.time.delayedCall(1300, () => this.goTo('Exploration'));
+      // 0.12.0: introduzione alla prima run; alle Maree una sola battuta
+      const story = run.tide ? 'tide' : GameSession.save.data.seen?.intro ? undefined : 'intro';
+      this.time.delayedCall(1300, () => (story ? this.goTo('Story', { id: story, next: 'Exploration' }) : this.goTo('Exploration')));
     }, { width: 400, height: 116, fontSize: 60 }).setDepth(12);
   }
 }

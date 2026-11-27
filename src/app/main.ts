@@ -7,6 +7,7 @@ import { MenuScene } from '../scenes/MenuScene';
 import { CharacterSelectScene } from '../scenes/CharacterSelectScene';
 import { ExplorationScene } from '../scenes/ExplorationScene';
 import { FruitRevealScene } from '../scenes/FruitRevealScene';
+import { StoryScene } from '../scenes/StoryScene';
 import { BattleScene } from '../scenes/BattleScene';
 import { RewardScene } from '../scenes/RewardScene';
 import { EventScene } from '../scenes/EventScene';
@@ -39,7 +40,7 @@ async function start(): Promise<void> {
     input: { activePointers: 2 },
     audio: { noAudio: true }, // suoni e musica sono sintetizzati da systems/Audio.ts
     render: { antialias: true, pixelArt: false },
-    scene: [BootScene, MenuScene, CharacterSelectScene, TideSelectScene, FruitRevealScene, ExplorationScene, BattleScene, RewardScene, EventScene, NewSeaScene, SummaryScene, CollectionScene, RecordsScene, SettingsScene],
+    scene: [BootScene, MenuScene, CharacterSelectScene, TideSelectScene, FruitRevealScene, StoryScene, ExplorationScene, BattleScene, RewardScene, EventScene, NewSeaScene, SummaryScene, CollectionScene, RecordsScene, SettingsScene],
   });
 
   // Esposto solo per il debug da console (es. chrome://inspect sull'S23).

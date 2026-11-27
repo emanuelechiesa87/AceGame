@@ -144,6 +144,8 @@ export interface PersistentGameState {
   maxTideUnlocked?: number;
   /** F3 · Marea più alta vinta con ciascun frutto (id → Marea). */
   bestTideByFruit?: Record<string, number>;
+  /** 0.12.0 · Cose da mostrare una volta sola. */
+  seen?: { intro?: boolean; companionHint?: boolean };
   /** F3 · Ultima Marea scelta al menu. */
   selectedTide?: number;
   lifetime: { runs: number; victories: number; enemiesDefeated: number };

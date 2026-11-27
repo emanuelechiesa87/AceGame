@@ -31,7 +31,7 @@ export function visibleBounds(scene: Phaser.Scene): { top: number; bottom: numbe
 /** Musica di sottofondo per scena (la battaglia la sceglie da sé: normale o boss). */
 const SCENE_MUSIC: Record<string, TrackName | null> = {
   Menu: 'menu', CharacterSelect: 'menu', TideSelect: 'menu', Collection: 'menu', Records: 'menu', Settings: 'menu',
-  FruitReveal: 'map', Exploration: 'map', Event: 'map', Reward: 'map', NewSea: 'map', Summary: null,
+  FruitReveal: 'map', Story: 'map', Exploration: 'map', Event: 'map', Reward: 'map', NewSea: 'map', Summary: null,
 };
 
 export abstract class BaseScene extends Phaser.Scene {
