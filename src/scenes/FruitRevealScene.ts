@@ -44,11 +44,11 @@ export class FruitRevealScene extends BaseScene {
     const card = modal(this);
     card.setDepth(10);
     card.list[0].destroy(); // niente velo: usiamo solo il riquadro
-    fruitCard(this, card, fruitId, GAME_WIDTH / 2, 760, 680, 210).disableInteractive();
+    fruitCard(this, card, fruitId, GAME_WIDTH / 2, 760, 680, 230).disableInteractive();
 
     const hero = new HeroRig(this, 170, 1240, run.avatar === 'a' ? 'm' : 'f', 0.75).idle();
     hero.setDepth(11);
-    addBody(this, GAME_WIDTH / 2, 890, 'Unico frutto della run · tasto POTERE in battaglia\nLe ricompense lo RISVEGLIANO: livello III qui, fino al V nei mari lontani', 24, '#fbe9c8').setDepth(11);
+    addBody(this, GAME_WIDTH / 2, 938, 'Unico frutto della run · tasto POTERE in battaglia\nLe ricompense lo RISVEGLIANO: livello III qui, fino al V nei mari lontani', 24, '#fbe9c8').setDepth(11);
     let eaten = false;
     new Button(this, 440, 1050, 'MANGIALO!', () => {
       if (eaten) return;

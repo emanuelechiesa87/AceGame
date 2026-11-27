@@ -31,7 +31,7 @@ export function fruitCard(scene: Phaser.Scene, parent: Phaser.GameObjects.Contai
     addTitle(scene, x - w / 2 + 140, y - h / 2 + 34, f.name, 36).setOrigin(0, 0.5),
     addBody(scene, x + w / 2 - 24, y - h / 2 + 34, `${RARITY_LABEL[f.rarity]} · ${fruitAbility(f, 1).cost}⚡`, 20, '#ffcf3a').setOrigin(1, 0.5),
     addBody(scene, x - w / 2 + 140, y + 6, `${fruitAbility(f, 1).name}: ${fruitAbility(f, 1).description}`, 19, '#fff7e6').setOrigin(0, 0.5).setWordWrapWidth(w - 170).setAlign('left'),
-    addBody(scene, x - w / 2 + 140, y + h / 2 - 26, `Passiva: ${passiveText(f.passive)}`, 19, '#9be06a').setOrigin(0, 0.5),
+    addBody(scene, x - w / 2 + 140, y + h / 2 - 34, `Passiva: ${passiveText(f.passive)}`, 19, '#9be06a').setOrigin(0, 0.5),
   ]);
   return scene.add.zone(x, y, w, h).setInteractive({ useHandCursor: true });
 }
