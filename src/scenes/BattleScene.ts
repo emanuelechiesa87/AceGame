@@ -80,24 +80,33 @@ export class BattleScene extends BaseScene {
     this.fullRect(0x14233f, 0.15);
 
     // --- setup motore -----------------------------------------------------------
-    const stats = effectiveStats(run);
-    this.enemyIds = ctl.enemyGroup(this.node);
-    this.battle = new Battle(
-      {
-        hero: makeHeroUnit(run.heroName, stats, Math.min(run.currentHp, stats.maxHp)),
-        companions: ctl.companionsReady.map((c, i) => makeCompanionUnit(c.id, `c${i}`, c.hp, c.charge, ctl.companionScale)),
-        enemies: this.enemyIds.map((id, i) => makeEnemyUnit(id, `e${i}`, ctl.enemyScale)),
-        powers: ctl.battlePowers(),
-        potions: run.potions,
-        mods: ctl.battleMods(),
-      },
-      ctl.rng,
-    );
+    // ripresa: lo scontro salvato dopo l'ultima azione; altrimenti uno nuovo
+    const saved = run.pending?.phase === 'battle' ? run.pending : undefined;
+    if (saved) {
+      this.node = saved.node;
+      this.enemyIds = saved.enemyIds;
+      this.battle = Battle.restore(saved.battle, ctl.battlePowers(), ctl.battleMods(), ctl.rng);
+    } else {
+      const stats = effectiveStats(run);
+      this.enemyIds = ctl.enemyGroup(this.node);
+      this.battle = new Battle(
+        {
+          hero: makeHeroUnit(run.heroName, stats, Math.min(run.currentHp, stats.maxHp)),
+          companions: ctl.companionsReady.map((c, i) => makeCompanionUnit(c.id, `c${i}`, c.hp, c.charge, ctl.companionScale)),
+          enemies: this.enemyIds.map((id, i) => makeEnemyUnit(id, `e${i}`, ctl.enemyScale)),
+          powers: ctl.battlePowers(),
+          potions: run.potions,
+          mods: ctl.battleMods(),
+        },
+        ctl.rng,
+      );
+    }
 
     // --- unità ---------------------------------------------------------------------
     // squadra in basso a sinistra (posti fissi), nemici in alto a destra (posti calcolati per non sovrapporsi)
     const spots = allySpots(this.frame);
-    this.battle.alive('ally').forEach((u, i) => this.addView(u, spots[i]));
+    // i posti contano anche chi è a terra, così chi riprende lo scontro ritrova la squadra dov'era
+    this.battle.units.filter((u) => u.side === 'ally').forEach((u, i) => { if (u.hp > 0) this.addView(u, spots[i]); });
     this.battle.enemies().forEach((u) => this.addView(u, this.enemySpot(u)));
     this.sortDepth();
 
@@ -125,7 +134,11 @@ export class BattleScene extends BaseScene {
     void this.revealIfWave(data);
     void Promise.all(entrances).then(async () => {
       await banner(this, this.bannerY, title, this.node === 'battle' ? 0x1f6fb2 : COLORS.hot, 72, 500 / s);
-      await this.play(this.battle.start());
+      if (!saved) {
+        const opening = this.battle.start();
+        this.saveBattle();
+        await this.play(opening);
+      }
       this.afterResolve();
     });
   }
@@ -411,8 +424,15 @@ export class BattleScene extends BaseScene {
     this.speed = GameSession.save.data.settings.fastAnimations ? 2 : 1;
     this.setInputEnabled(false);
     const ev = this.battle.act(a);
+    this.saveBattle();
     await this.play(ev);
     this.afterResolve();
+  }
+
+  /** Salva lo scontro appena il motore ha deciso l'esito, prima delle animazioni. */
+  private saveBattle(): void {
+    GameSession.run!.pending = { phase: 'battle', node: this.node, enemyIds: this.enemyIds, battle: this.battle.snapshot() };
+    GameSession.persistRun();
   }
 
   private tutorialOn = false;
@@ -635,6 +655,7 @@ export class BattleScene extends BaseScene {
     // F2: monete sempre, scelta della ricompensa garantita solo con élite e boss
     const coins = ctl.rollCoins(this.node);
     const offered = ctl.rewardOffered(this.node);
+    ctl.run.pending = { phase: 'reward', node: this.node, coins, offered };
     GameSession.persistRun();
     this.goTo('Reward', { node: this.node, mode: 'battle', coins, offered }, 'wave');
   }

@@ -32,6 +32,10 @@ export interface BattleSetup {
  * - Le speciali dei compagni sono azioni gratuite durante il turno del protagonista.
  * - Deterministico a parità di stato e seed.
  */
+/** Foto dello scontro in corso (solo dati): salvata dopo ogni azione per riprendere esattamente da lì. */
+export type BattleSnapshot = Record<(typeof SNAPSHOT_KEYS)[number], unknown> & { alarmed: string[] };
+const SNAPSHOT_KEYS = ['units', 'energy', 'potions', 'phase', 'round', 'queue', 'nextUid', 'lethalSaved', 'reviveUsed', 'focusUid', 'koCount', 'swarmMult', 'tally', 'chargedHit', 'parried', 'freePowerUsed'] as const;
+
 export class Battle {
   readonly units: Unit[];
   readonly powers: Ability[];
@@ -84,6 +88,20 @@ export class Battle {
     for (let i = 0; i < n && pool.length; i++) e.affixes.push(pool.splice(Math.floor(this.rng.next() * pool.length), 1)[0]);
     if (hasAffix(e, 'armored')) { e.def += AF.armored.def; e.statuses.push({ id: 'shield', turns: 3, value: Math.round(e.maxHp * AF.armored.shieldPct) }); }
     if (hasAffix(e, 'commander')) for (const o of this.enemies()) if (o !== e) this.addStatus(o, { id: 'atkUp', turns: 99, value: AF.commander.atkUp });
+  }
+
+  // --- salvataggio ---------------------------------------------------------------
+  snapshot(): BattleSnapshot {
+    const self = this as unknown as Record<string, unknown>;
+    const data = Object.fromEntries(SNAPSHOT_KEYS.map((k) => [k, self[k]]));
+    return JSON.parse(JSON.stringify({ ...data, alarmed: [...this.alarmed] })) as BattleSnapshot;
+  }
+
+  /** Ricostruisce lo scontro salvato senza rifare la preparazione (che consumerebbe il generatore casuale). */
+  static restore(snap: BattleSnapshot, powers: Ability[], mods: BattleMods, rng: Rng): Battle {
+    const data = JSON.parse(JSON.stringify(snap)) as BattleSnapshot;
+    const b = Object.create(Battle.prototype) as Battle;
+    return Object.assign(b as object, data, { alarmed: new Set(data.alarmed), powers, mods, rng }) as unknown as Battle;
   }
 
   // --- interrogazioni ----------------------------------------------------------

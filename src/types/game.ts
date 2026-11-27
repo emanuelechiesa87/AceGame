@@ -1,4 +1,13 @@
 import type { NodeType } from '../data/areas';
+import type { BattleSnapshot } from '../systems/combat/Battle';
+import type { ShopItem } from '../systems/RunController';
+
+/** A che punto è la tappa in corso: serve a CONTINUA per ripartire da lì, senza rigiocare nulla. */
+export type PendingNode =
+  | { phase: 'battle'; node: NodeType; enemyIds: string[]; battle: BattleSnapshot }
+  | { phase: 'reward'; node: NodeType; coins: number; offered: boolean }
+  | { phase: 'shop'; items: ShopItem[]; bought: number[] }
+  | { phase: 'done' };
 
 export type AvatarVariant = 'a' | 'b';
 
@@ -52,6 +61,8 @@ export interface RunState {
   areaIndex: number;
   stepIndex: number;
   map: MapStep[];
+  /** Stato della tappa in corso (assente = tappa non ancora iniziata o senza progressi). */
+  pending?: PendingNode;
   baseStats: Stats; // statistiche base + bonus permanenti di run (altari, livelli)
   currentHp: number;
   activeFruitIds: string[]; // un solo frutto per run

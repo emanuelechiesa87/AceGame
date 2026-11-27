@@ -63,6 +63,9 @@ export class EventScene extends BaseScene {
     if (mood === 'good') this.hero.cheer('happy', 'shout');
     if (mood === 'bad') this.hero.setExpression('closed', 'ouch');
     GameSession.ctl!.completeEvent();
+    // l'effetto è applicato: si salva subito, così non si può rifare la scelta chiudendo l'app
+    GameSession.run!.pending = { phase: 'done' };
+    GameSession.persistRun();
     this.choices([{ label: 'CONTINUA', act: () => finishNode((k, d) => this.goTo(k, d)) }]);
   }
 
@@ -85,7 +88,9 @@ export class EventScene extends BaseScene {
   /** F2: il Mercante. Si compra quanto si vuole (se bastano le monete), poi si riparte. */
   private shop(): void {
     const ctl = GameSession.ctl!;
-    const items = ctl.shopOffers();
+    const run = GameSession.run!;
+    const saved = run.pending?.phase === 'shop' ? run.pending : undefined;
+    const items = saved ? saved.items : ctl.shopOffers();
     const art = items.find((i): i is Extract<ShopItem, { kind: 'artifact' }> => i.kind === 'artifact');
     const intro = art ? `Sul banco: ${artifactName(art.id)}. ` : '';
     this.header('Mercante', 'shop', '');
@@ -102,7 +107,8 @@ export class EventScene extends BaseScene {
       }
     };
     this.buttons.forEach((b) => b.destroy());
-    const bought = new Set<number>();
+    const bought = new Set<number>(saved?.bought);
+    const save = (): void => { run.pending = { phase: 'shop', items, bought: [...bought] }; GameSession.persistRun(); };
     const refresh = (): void => items.forEach((it, i) => this.buttons[i].setEnabled(!bought.has(i) && ctl.coins >= it.price));
     this.buttons = items.map((it, i) => new Button(this, 200 + (i % 2) * 320, 1030 + Math.floor(i / 2) * 94, label(it), () => {
       if (bought.has(i) || !ctl.buy(it)) return;
@@ -110,13 +116,15 @@ export class EventScene extends BaseScene {
       Audio.play('reward');
       let msg = 'Affare fatto!';
       if (it.kind === 'artifact') { offerArtifact(it.id); msg = `Ora hai: ${artifactName(it.id)}!`; }
-      if (it.kind === 'awaken') { this.hero.setLook(runLook(GameSession.run), true); msg = 'Il frutto si risveglia!'; void pickBranch(this); }
+      if (it.kind === 'awaken') { this.hero.setLook(runLook(GameSession.run), true); msg = 'Il frutto si risveglia!'; }
       if (it.kind === 'revive') msg = 'I compagni si rimettono in piedi!';
       if (it.kind === 'heal') msg = 'Una zuppa calda: HP su!';
       if (it.kind === 'potion') msg = 'Una pozione in più nello zaino.';
       this.hero.cheer('happy', 'shout');
       status(msg);
       refresh();
+      // col Risveglio si salva solo dopo l'eventuale scelta della strada
+      if (it.kind === 'awaken') void pickBranch(this).then(save); else save();
     }, { width: 300, height: 86, fontSize: 30, variant: 'secondary' }));
     refresh();
     const leave = new Button(this, GAME_WIDTH / 2, 1214, 'RIPARTI', () => {

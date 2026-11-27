@@ -8,6 +8,7 @@ import { GameSession } from '../state/GameSession';
 import { modal } from '../ui/Offers';
 import { addBody, addTitle, gradientFill } from '../ui/text';
 import { BaseScene } from './BaseScene';
+import { resumeNode } from './flow';
 import { setUpdateSafe } from '../app/pwa';
 
 export class MenuScene extends BaseScene {
@@ -41,7 +42,7 @@ export class MenuScene extends BaseScene {
 
     const canResume = GameSession.hasSavedRun();
     if (canResume) {
-      new Button(this, cx, 930, 'CONTINUA', () => { if (GameSession.resumeRun()) this.goTo('Exploration'); else this.scene.restart(); }, { width: 540, height: 112, fontSize: 60 });
+      new Button(this, cx, 930, 'CONTINUA', () => { if (GameSession.resumeRun()) resumeNode((k, d, st) => this.goTo(k, d, st)); else this.scene.restart(); }, { width: 540, height: 112, fontSize: 60 });
       new Button(this, cx, 1046, 'NUOVA RUN', () => this.confirmNew(), { width: 420, height: 88, fontSize: 44, variant: 'danger' });
     } else {
       new Button(this, cx, 1000, 'NUOVA RUN', () => this.goTo('CharacterSelect'), { width: 540, height: 124, fontSize: 64 });
